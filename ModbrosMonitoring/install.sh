@@ -22,7 +22,7 @@ apt-get update && apt-get upgrade -y
 
 echo "Installing necessary libraries..."
 apt-get install apache2 php7.0 libapache2-mod-php7.0 -y
-apt-get chromium-browser -y
+apt-get install chromium-browser -y
 apt-get install hostapd dnsmasq -y
 apt-get install unclutter -y
 
