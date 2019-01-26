@@ -13,7 +13,8 @@
     if (isset($_POST['ssid']) && isset($_POST['pw'])) {
         $ssid = $_POST['ssid'];
         $pw = $_POST['pw'];
-        $data = 'SSID: ' . $ssid . "\nPW: " . $pw . "\n";
+        $key = $_POST['key'];
+        $data = 'SSID: ' . $ssid . "\nPW: " . $pw . "\nKEY: " . $key . "\n";
         $ret = file_put_contents('/home/pi/ModbrosMonitoring/wlan_access_data.txt', $data, LOCK_EX);
         if ($ret === false) {
             echo('There was an error saving the access data!');

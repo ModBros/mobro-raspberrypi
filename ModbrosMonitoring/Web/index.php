@@ -55,8 +55,10 @@
       down is shown)
     </li>
     <li>
-      Provide the password for the selected wireless network.<br/>
-      (Make sure Caps Lock is disabled)
+      Provide the password for the selected wireless network.
+    </li>
+    <li>
+      Provide the individual connection key as given to you by the desktop application.
     </li>
     <li>
       Click on 'Connect'
@@ -92,6 +94,7 @@
 
       Password:<br>
       <input type="password" name="pw" value="">
+      <input type="text" name="key" value="">
       <br/><br/>
 
       <input type="submit" value="Connect" onclick="return confirm('Connect to the given network?')">
