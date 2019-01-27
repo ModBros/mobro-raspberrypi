@@ -94,6 +94,7 @@
 
       Password:<br>
       <input type="password" name="pw" value="">
+      Key:<br>
       <input type="text" name="key" value="">
       <br/><br/>
 
