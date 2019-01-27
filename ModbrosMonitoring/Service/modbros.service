@@ -3,11 +3,13 @@ Description=ModBros Monitoring
 After=network.target
 
 [Service]
-WorkingDirectory=TODO
+Type=simple
+WorkingDirectory=/home/pi/ModbrosMonitoring
+ExecStart=/home/pi/ModbrosMonitoring/Service/modbros.sh
 StandardOutput=inherit
 StandardError=inherit
-Restart=always
-User=pi
+Restart=on-abort
+User=root
 
 [Install]
 WantedBy=multi-user.target
