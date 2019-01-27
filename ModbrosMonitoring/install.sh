@@ -102,11 +102,23 @@ sed -i -e "s/#DAEMON_CONF=\"\"/DAEMON_CONF=\"\/etc\/hostapd\/hostapd.conf\"/g" /
 echo "Setting script permissions..."
 
 chmod +x ./*.sh
+chmod 644 ./Service/modbros.service
+
+
+# =============================
+# Set custom wallpaper
+# =============================
+
+echo "Setting custom ModBros wallpaper..."
+
+pcmanfm --set-wallpaper $(pwd)/Resources/modbros_wallpaper.png
 
 
 # =============================
 # Scan for available networks
 # =============================
+
+echo "Scanning for available networks..."
 
 iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > /var/www/html/modbros/networks
 
@@ -115,18 +127,17 @@ iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > /var/www/html/mo
 # Service
 # =============================
 
-#
-#echo "installing ModBros service"
-#
-#cp modbros.service /etc/sytemd/system/modbros.service
-#systemctl start myscript.service
-#systemctl enable myscript.service
+
+echo "installing ModBros service"
+
+#cp ./Service/modbros.service /lib/systemd/system/modbros.service
+#systemctl daemon-reload
+#systemctl enable modbros.service
+#systemctl start modbros.service
 
 
-# TODO option to provide SSID and PW right away
+echo "Done. Rebooting..."
 
-echo "done. outro bla bla"
-
-# TODO reboot ??
+reboot
 
 exit 0
