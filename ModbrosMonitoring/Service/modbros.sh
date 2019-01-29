@@ -6,8 +6,8 @@
 # ==========================================================
 
 
-MIKE_URL='http://localhost'
-FAKE_DISCOVERY_TIME=20
+MIKE_URL='http://192.168.8.170'
+FAKE_DISCOVERY_TIME=10
 
 
 # =============================
