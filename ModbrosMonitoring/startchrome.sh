@@ -5,6 +5,14 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-chromium-browser --kiosk $1
+chromium-browser \
+    --kiosk \
+    --no-wifi \
+    --no-default-browser-check \
+    --no-service-autorun \
+    --allow-insecure-localhost \
+    --noerrdialogs \
+    --disable-infobars \
+    --app=$1
 
 exit 0

@@ -26,6 +26,7 @@ apt-get install chromium-browser -y
 apt-get install hostapd dnsmasq -y
 apt-get install unclutter -y
 
+
 # =============================
 # Stop and disable access point services
 # =============================
@@ -77,6 +78,7 @@ if [[ ! -f /etc/default/hostapd.orig ]]; then
     cp /etc/default/hostapd /etc/default/hostapd.orig
 fi
 
+
 # =============================
 # Configure DHCP (dnsmasq)
 # =============================
@@ -102,6 +104,7 @@ sed -i -e "s/#DAEMON_CONF=\"\"/DAEMON_CONF=\"\/etc\/hostapd\/hostapd.conf\"/g" /
 echo "Setting script permissions..."
 
 chmod +x ./*.sh
+chmod +x ./Service/modbros.sh
 chmod 644 ./Service/modbros.service
 
 
@@ -124,17 +127,29 @@ iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > /var/www/html/mo
 
 
 # =============================
+# Setting user permissions
+# =============================
+
+cp -f ./Config/010_wwwdata-wifi /etc/sudoers.d
+
+chmod 0440 /etc/sudoers.d/010_wwwdata-wifi
+
+
+# =============================
 # Service
 # =============================
 
-
 echo "installing ModBros service"
 
-#cp ./Service/modbros.service /lib/systemd/system/modbros.service
-#systemctl daemon-reload
-#systemctl enable modbros.service
-#systemctl start modbros.service
+cp ./Service/modbros.service /lib/systemd/system/modbros.service
+systemctl daemon-reload
+systemctl enable modbros.service
+systemctl start modbros.service
 
+
+# =============================
+# Reboot
+# =============================
 
 echo "Done. Rebooting..."
 

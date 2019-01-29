@@ -9,7 +9,7 @@ ExecStart=/home/pi/ModbrosMonitoring/Service/modbros.sh
 StandardOutput=inherit
 StandardError=inherit
 Restart=on-abort
-User=root
+User=pi
 
 [Install]
 WantedBy=multi-user.target
