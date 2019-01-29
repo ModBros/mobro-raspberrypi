@@ -82,6 +82,7 @@ while true; do
                 # chrome not yet running -> check website availability + connect
                 handle_connecting
             fi
+            # TODO fix bug
             # else: we're connected and showing a page -> done
         fi
     else

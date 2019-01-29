@@ -16,12 +16,6 @@ if [[ ! -f /etc/wpa_supplicant/wpa_supplicant.conf.orig ]]; then
     exit 1
 fi
 
-# =============================
-# read SSID and PW from file
-# =============================
-
-# TODO
-
 
 # =============================
 # Stop access point services
@@ -38,12 +32,13 @@ systemctl stop hostapd
 cp -f /etc/dhcpcd.conf.orig /etc/dhcpcd.conf
 service dhcpcd restart
 
+
 # =============================
 # configure network
 # =============================
 
 #cp -f /etc/wpa_supplicant/wpa_supplicant.conf.orig /etc/wpa_supplicant/wpa_supplicant.conf.tmp
-cat ./Config/wpa_supplicant.conf > /etc/wpa_supplicant/wpa_supplicant.conf.tmp
+cat ../Config/wpa_supplicant.conf > /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 
 sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf.tmp
