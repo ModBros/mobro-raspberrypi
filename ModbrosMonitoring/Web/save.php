@@ -57,6 +57,7 @@
               } else {
                   echo "wifi access data successfully saved \n($ret bytes written)\n";
                   echo "trying to connect to network '" . $ssid . "' using the provided password...\n";
+                  shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/stopchrome.sh');
                   $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/connectwifi.sh ' . $ssid . ' ' . $pw . ' 2>&1');
                   echo "\n" . $response;
               }
