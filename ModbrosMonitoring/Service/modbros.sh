@@ -5,10 +5,13 @@
 # TODO explanation stuff
 # ==========================================================
 
+HOSTS_FILE='/home/pi/ModbrosMonitoring/data/hosts.txt'
+WIFI_FILE='/home/pi/ModbrosMonitoring/data/wifi.txt'
 
-MIKE_URL='http://192.168.8.170'
-FAKE_DISCOVERY_TIME=10
-
+URL_NOTFOUND='http://localhost/modbros/notfound.php'
+URL_HOTSPOT='http://localhost/modbros/hotspot.php'
+URL_CONNECTING='http://localhost/modbros/connecting.php'
+MOBRO_PORT='87633'
 
 # =============================
 # Functions
@@ -22,15 +25,13 @@ update_pi () {
 }
 
 start_chrome() {
-#    local sc_path=$(realpath ./startchrome.sh)
-#    runusr -l pi -c "$sc_path $1"
     DISPLAY=:0 ./startchrome.sh $1 &
 }
 
 create_access_point () {
     sudo ./createaccesspoint.sh
     sudo ./stopchrome.sh
-    start_chrome http://localhost/modbros/hotspot.php
+    start_chrome ${URL_HOTSPOT}
     until systemctl is-active --quiet hostapd; do
         sleep 1
     done
@@ -40,22 +41,32 @@ handle_connecting () {
     ./stopchrome.sh
     start_chrome http://localhost/modbros/connecting.php
 
-    # TODO network discovery
-    # TODO read connection key from file to ping
+    # search available IPs on the network
+    FOUND=0
+    sudo arp-scan --interface=wlan0 --localnet | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
+    # 3rd line contains MoBro connection key
+    KEY=$(cat "$WIFI_FILE" | sed -n 3p)
+    while read IP; do
+        echo "Trying IP: $IP with key: $KEY"
+        if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' "$IP:$MOBRO_PORT/discover?key=$KEY") -eq 200 ]]; then
+            # found MoBro application -> done
+            echo "MoBro application found"
+            start_chrome "$IP:$MOBRO_PORT/index.html"
+            FOUND=1
 
-    sleep ${FAKE_DISCOVERY_TIME}
-
-    COUNTER=0
-    while [[ $(curl -o /dev/null --silent --write-out '%{http_code}' localhost/modbros/notfound.php) -ne 200 ]]; do
-        let COUNTER+=1
-        if [[ ${COUNTER} -eq 10 ]]; then
-            ./stopchrome.sh
-            start_chrome http://localhost/modbros/notfound.php
+            # write to file to find it faster on next boot
+            echo "$IP" > "${HOSTS_FILE}"
+            break
         fi
-        echo "website not reachable"
-        sleep 5
-    done
-    start_chrome ${MIKE_URL}
+        sleep 1
+    done < "${HOSTS_FILE}"
+
+    if [[ ${FOUND} -ne 1 ]]; then
+        # couldn't find application -> delete IPs
+        echo "No MoBro found"
+        truncate -s 0 "${HOSTS_FILE}"
+        start_chrome ${URL_NOTFOUND}
+    fi
 }
 
 # =============================
@@ -88,7 +99,7 @@ while true; do
     else
         # hotstop running -> check if chrome is up
         if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
-            start_chrome http://localhost/modbros/hotspot.php
+            start_chrome ${URL_HOTSPOT}
         fi
     fi
 

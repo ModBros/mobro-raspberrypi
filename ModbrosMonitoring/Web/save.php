@@ -51,14 +51,15 @@
               $ssid = $_POST['ssid'];
               $pw = $_POST['pw'];
               $key = $_POST['key'];
-              $data = 'SSID: ' . $ssid . "\nPW: " . $pw . "\nKEY: " . $key . "\n";
-              $ret = file_put_contents('/home/pi/ModbrosMonitoring/wlan_access_data.txt', $data, LOCK_EX);
+              $data = $ssid . "\n" . $pw . "\n" . $key;
+              $ret = file_put_contents('/home/pi/ModbrosMonitoring/data/wifi.txt', $data, LOCK_EX);
               if ($ret === false) {
                   echo('There was an error saving the access data!');
               } else {
                   echo "wifi access data successfully saved \n($ret bytes written)\n";
                   echo "trying to connect to network '" . $ssid . "' using the provided password...\n";
-                  shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/stopchrome.sh');
+                  $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/stopchrome.sh');
+                  echo "\n" . $response;
                   $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/connectwifi.sh ' . $ssid . ' ' . $pw . ' 2>&1');
                   echo "\n" . $response;
               }

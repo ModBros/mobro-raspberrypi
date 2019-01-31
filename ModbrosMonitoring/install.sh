@@ -40,6 +40,7 @@ echo " done"
 echo -n "Installing additional necessary tools..."
 apt-get install unclutter -y > /dev/null
 apt-get install curl -y > /dev/null
+apt-get install arp-scan -y > /dev/null
 apt-get install hostapd dnsmasq -y > /dev/null
 echo " done"
 
