@@ -11,20 +11,27 @@
 </style>
 <body>
 
-<div id="container">
-  <h3>ModBros Monitoring</h3>
-  <p>
-    Bummer... <br/>
-    It seems like the Raspberry is unable to locate your ModBros Monitoring Application on your PC :(
-  </p>
-  <ul>
-    <li>
-      Are you sure it is installed correctly and up and running?
-    </li>
-    <li>
-      Are you sure the Raspberry is connected to the same wireless network as your PC?
-    </li>
-  </ul>
+<div id="container" class="container">
+  <div class="card mt-3">
+    <div class="card-header">
+      <h3 class="m-0">ModBros Monitoring Setup</h3>
+    </div>
+
+    <div class="card-body">
+      <p>
+        Bummer... <br/>
+        It seems like the Raspberry is unable to locate your ModBros Monitoring Application on your PC :(
+      </p>
+      <ul>
+        <li>
+          Are you sure it is installed correctly and up and running?
+        </li>
+        <li>
+          Are you sure the Raspberry is connected to the same wireless network as your PC?
+        </li>
+      </ul>
+    </div>
+  </div>
 </div>
 
 </body>
