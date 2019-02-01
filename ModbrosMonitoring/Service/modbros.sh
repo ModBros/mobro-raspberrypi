@@ -2,16 +2,21 @@
 
 # ==========================================================
 # Modbros Monitoring Service - Raspberry Pi
-# TODO explanation stuff
+#
+# Created with <3 in Austria by: (c) ModBros 2019
+# Contact: mod-bros.com
 # ==========================================================
 
+# Files
 HOSTS_FILE='/home/pi/ModbrosMonitoring/data/hosts.txt'
 WIFI_FILE='/home/pi/ModbrosMonitoring/data/wifi.txt'
+VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
 
+#URLs
 URL_NOTFOUND='http://localhost/modbros/notfound.php'
 URL_HOTSPOT='http://localhost/modbros/hotspot.php'
 URL_CONNECTING='http://localhost/modbros/connecting.php'
-MOBRO_PORT='87633'
+MOBRO_PORT='42100'
 
 # =============================
 # Functions
@@ -44,14 +49,14 @@ handle_connecting () {
     # search available IPs on the network
     FOUND=0
     sudo arp-scan --interface=wlan0 --localnet | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
-    # 3rd line contains MoBro connection key
-    KEY=$(cat "$WIFI_FILE" | sed -n 3p)
+    KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
+    VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
     while read IP; do
         echo "Trying IP: $IP with key: $KEY"
         if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' "$IP:$MOBRO_PORT/discover?key=$KEY") -eq 200 ]]; then
             # found MoBro application -> done
             echo "MoBro application found"
-            start_chrome "$IP:$MOBRO_PORT/index.html"
+            start_chrome "$IP:$MOBRO_PORT?version=$VERSION"
             FOUND=1
 
             # write to file to find it faster on next boot
