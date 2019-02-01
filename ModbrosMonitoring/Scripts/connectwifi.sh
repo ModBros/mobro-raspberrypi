@@ -21,8 +21,12 @@ fi
 # Stop access point services
 # =============================
 
+echo -n "stopping access point services..."
+
 systemctl stop dnsmasq
 systemctl stop hostapd
+
+echo " done"
 
 
 # =============================
@@ -37,6 +41,8 @@ service dhcpcd restart
 # configure network
 # =============================
 
+echo -n "configuring network..."
+
 #cp -f /etc/wpa_supplicant/wpa_supplicant.conf.orig /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 cat ../Config/wpa_supplicant.conf > /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 
@@ -45,11 +51,17 @@ sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 
 mv -f /etc/wpa_supplicant/wpa_supplicant.conf.tmp /etc/wpa_supplicant/wpa_supplicant.conf
 
+echo " done"
+
 
 # =============================
 # restart networking
 # =============================
 
+echo "restarting networking..."
+
 #ifconfig wlan0 up
 #wpa_cli -i wlan0 reconfigure
 service networking restart
+
+echo " done"

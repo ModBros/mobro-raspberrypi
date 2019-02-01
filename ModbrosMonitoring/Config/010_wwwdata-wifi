@@ -1,2 +1,1 @@
-www-data ALL=(root) NOPASSWD: /home/pi/ModbrosMonitoring/Scripts/connectwifi.sh
-www-data ALL=(root) NOPASSWD: /home/pi/ModbrosMonitoring/Scripts/stopchrome.sh
+www-data ALL=(root) NOPASSWD: /home/pi/ModbrosMonitoring/Scripts/ui_connect.sh

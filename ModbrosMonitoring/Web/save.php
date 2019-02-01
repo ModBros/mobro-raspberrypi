@@ -41,7 +41,7 @@
 
   <div class="card mt-3">
     <div class="card-header">
-      <h3 class="m-0">Script output:</h3>
+      <h3 class="m-0">Output:</h3>
     </div>
 
     <div class="card-body">
@@ -58,9 +58,7 @@
               } else {
                   echo "wifi access data successfully saved \n($ret bytes written)\n";
                   echo "trying to connect to network '" . $ssid . "' using the provided password...\n";
-                  $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/stopchrome.sh');
-                  echo "\n" . $response;
-                  $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo /home/pi/ModbrosMonitoring/Scripts/connectwifi.sh ' . $ssid . ' ' . $pw . ' 2>&1');
+                  $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo ./ui_connect.sh ' . $ssid . ' ' . $pw);
                   echo "\n" . $response;
               }
           } else {
