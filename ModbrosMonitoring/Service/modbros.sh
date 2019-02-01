@@ -12,11 +12,14 @@ HOSTS_FILE='/home/pi/ModbrosMonitoring/data/hosts.txt'
 WIFI_FILE='/home/pi/ModbrosMonitoring/data/wifi.txt'
 VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
 
-#URLs
+# URLs
 URL_NOTFOUND='http://localhost/modbros/notfound.php'
 URL_HOTSPOT='http://localhost/modbros/hotspot.php'
 URL_CONNECTING='http://localhost/modbros/connecting.php'
 MOBRO_PORT='42100'
+
+# Global Vars
+CURR_URL=''
 
 # =============================
 # Functions
@@ -29,34 +32,37 @@ update_pi () {
     sudo apt-get autoclean -y
 }
 
-start_chrome() {
-    DISPLAY=:0 ./startchrome.sh $1 &
+show_page() {
+    if [[ "$CURR_URL" != "$1" ]]; then
+        CURR_URL="$1"
+        ./stopchrome.sh
+        DISPLAY=:0 ./startchrome.sh $1 &
+    fi
 }
 
 create_access_point () {
     sudo ./createaccesspoint.sh
-    sudo ./stopchrome.sh
-    start_chrome ${URL_HOTSPOT}
+    show_page ${URL_HOTSPOT}
     until systemctl is-active --quiet hostapd; do
         sleep 1
     done
 }
 
 handle_connecting () {
-    ./stopchrome.sh
-    start_chrome http://localhost/modbros/connecting.php
+    show_page http://localhost/modbros/connecting.php
 
     # search available IPs on the network
     FOUND=0
     sudo arp-scan --interface=wlan0 --localnet | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
     VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
+    PI_VERSION=$(cat /proc/device-tree/model)   # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
     while read IP; do
         echo "Trying IP: $IP with key: $KEY"
         if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' "$IP:$MOBRO_PORT/discover?key=$KEY") -eq 200 ]]; then
             # found MoBro application -> done
             echo "MoBro application found"
-            start_chrome "$IP:$MOBRO_PORT?version=$VERSION"
+            show_page "$IP:$MOBRO_PORT?version=$VERSION&name=$PI_VERSION"
             FOUND=1
 
             # write to file to find it faster on next boot
@@ -70,7 +76,7 @@ handle_connecting () {
         # couldn't find application -> delete IPs
         echo "No MoBro found"
         truncate -s 0 "${HOSTS_FILE}"
-        start_chrome ${URL_NOTFOUND}
+        show_page ${URL_NOTFOUND}
     fi
 }
 
@@ -104,7 +110,7 @@ while true; do
     else
         # hotstop running -> check if chrome is up
         if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
-            start_chrome ${URL_HOTSPOT}
+            show_page ${URL_HOTSPOT}
         fi
     fi
 
