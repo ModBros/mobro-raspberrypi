@@ -15,17 +15,25 @@ VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
 # URLs
 URL_NOTFOUND='http://localhost/modbros/notfound.php'
 URL_HOTSPOT='http://localhost/modbros/hotspot.php'
-URL_CONNECTING='http://localhost/modbros/connecting.php'
+URL_CONNECT_MOBRO='http://localhost/modbros/connecting.php'
+URL_CONNECT_WIFI='http://localhost/modbros/connectwifi.php'
+
+# Ports
 MOBRO_PORT='42100'
 
 # Global Vars
+STARTUP_DELAY=30  # in seconds
+LOOP_INTERVAL=5   # in seconds
+CHECK_INTERVAL=30 # in loops (30x5=150s -> every 2.5 minutes)
 CURR_URL=''
+HOTSPOT_COUNTER=0
+BACKGROUND_COUNTER=0
 
 # =============================
 # Functions
 # =============================
 
-update_pi () {
+update_pi() {
     sudo apt-get update
     sudo apt-get upgrade -y
     sudo apt-get autoremove --purge -y
@@ -40,7 +48,7 @@ show_page() {
     fi
 }
 
-create_access_point () {
+create_access_point() {
     sudo ./createaccesspoint.sh
     show_page ${URL_HOTSPOT}
     until systemctl is-active --quiet hostapd; do
@@ -48,9 +56,12 @@ create_access_point () {
     done
 }
 
-handle_connecting () {
-    show_page http://localhost/modbros/connecting.php
+connect_wifi() {
+    show_page ${URL_CONNECT_WIFI}
+    ./connectwifi.sh $1 $2
+}
 
+service_discovery() {
     # search available IPs on the network
     FOUND=0
     sudo arp-scan --interface=wlan0 --localnet | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
@@ -80,11 +91,41 @@ handle_connecting () {
     fi
 }
 
+handle_connecting() {
+    show_page ${URL_CONNECT_MOBRO}
+    service_discovery
+}
+
+hotspot_check() {
+    HOTSPOT_COUNTER=$((HOTSPOT_COUNTER+1))
+    if [[ ${HOTSPOT_COUNTER} -ge 20 ]]; then
+        HOTSPOT_COUNTER=0
+        SSID=$(cat "$WIFI_FILE" | sed -n 1p)      # 1st line contains SSID
+        PW=$(cat "$WIFI_FILE" | sed -n 2p)        # 2nd line contains PW
+        if ! [[ -z ${SSID} || -z ${PW} ]]; then
+            # wifi configured -> try again
+            echo "trying again to connect to $SSID"
+            connect_wifi "$SSID" "$PW"
+            sleep 15
+        fi
+    fi
+}
+
+background_check() {
+    BACKGROUND_COUNTER=$((BACKGROUND_COUNTER+1))
+    if [[ ${BACKGROUND_COUNTER} -ge 20 ]]; then
+        BACKGROUND_COUNTER=0
+        echo "running service discovery again"
+        service_discovery
+    fi
+}
+
+
 # =============================
-# Main Logic
+# Main Logic Loop
 # =============================
 
-sleep 30    # startup delay
+sleep ${STARTUP_DELAY}    # startup delay
 #update_pi   # make sure everything is up to date
 
 while true; do
@@ -92,29 +133,34 @@ while true; do
     if ! systemctl is-active --quiet hostapd
     then
         # no hotspot running
-        echo "no hotspot running"
 
         if ! [[ $(iwgetid) ]]; then
             # not connected to wifi -> create hotspot
-            echo "not connected to wifi"
             create_access_point
         else
             # connected to wifi
+
             if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
                 # chrome not yet running -> check website availability + connect
                 handle_connecting
+            else
+
+                # we're connected and showing a page
+                # keep checking in background (page still response / page becomes available)
+                background_check
             fi
-            # TODO fix bug
-            # else: we're connected and showing a page -> done
         fi
     else
         # hotstop running -> check if chrome is up
         if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
             show_page ${URL_HOTSPOT}
         fi
+
+        # check hotspot -> if open too long, try to connect to wifi again
+        hotspot_check
     fi
 
-    sleep 5 # TODO
+    sleep ${LOOP_INTERVAL}
 done
 
 exit 1
