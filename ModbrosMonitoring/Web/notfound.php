@@ -20,8 +20,8 @@
 
     <div class="card-body">
       <p>
-        Bummer... <br/>
-        It seems like the Raspberry is unable to locate your ModBros Monitoring Application on your PC :(
+        Bummer... &#9785; <br/>
+        It seems like the Raspberry is unable to locate your ModBros Monitoring Application on your PC.
       </p>
       <ul>
         <li>
