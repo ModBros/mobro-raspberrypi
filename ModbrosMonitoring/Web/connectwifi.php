@@ -23,7 +23,7 @@
           <?php
           $ssid = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 1p');
           if (isset($ssid) && trim($ssid) !== '') {
-              echo 'Now trying to connect to: <b>' . $ssid . '</b>';
+              echo 'Now trying to connect to: <br/><br/><b>' . $ssid . '</b>';
           } else {
               echo '<b>Error while trying to connect!</b>';
           }

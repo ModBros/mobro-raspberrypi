@@ -25,9 +25,19 @@ fi
 systemctl stop dnsmasq
 systemctl stop hostapd
 
+until ! systemctl is-active --quiet dnsmasq; do
+    sleep 1
+done
+
+until ! systemctl is-active --quiet hostapd; do
+    sleep 1
+done
+
 # =============================
 # Scan for available networks
 # =============================
+
+sleep 5
 
 iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > /var/www/html/modbros/networks
 

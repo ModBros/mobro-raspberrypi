@@ -19,14 +19,36 @@ fi
 #echo "On a Raspberry Pi 3 with a clean install of 'Raspian Stretch with desktop'
 #(excluding the recommended software) this will take up to about TODO minutes."
 
+# =============================
+# removing not needed packages
+# =============================
+
+echo -n "Cleaning up and removing not needed packages..."
+
+# TODO
+
+#apt-get remove --purge git -y > /dev/null
+#apt-get remove --purge omxplayer -y > /dev/null
+#apt-get remove --purge alsa-utils -y > /dev/null
+#apt-get remove --purge qpdfview -y > /dev/null
+#apt-get remove --purge epiphany-browser -y > /dev/null
+#apt-get remove --purge oracle-java8-jdk -y > /dev/null
+#apt-get remove --purge vlc -y > /dev/null
+#
+#apt-get autoremove --purge -y > /dev/null
+#apt-get autoclean -y > /dev/null
+
+echo " done"
 
 # =============================
 # update & install dependencies
 # =============================
 
+# TODO
 echo -n "Updating your Raspberry..."
 apt-get update > /dev/null
 apt-get upgrade -y > /dev/null
+apt-get dist-upgrade -y > /dev/null
 echo " done"
 
 echo -n "Installing web server and php..."
@@ -119,15 +141,18 @@ echo " done"
 
 
 # =============================
-# Set script permissions
+# Set permissions
 # =============================
 
-echo -n "Setting script permissions..."
+echo -n "Setting script and file permissions..."
 
-chmod +x ./*.sh
-chmod +x ./Scripts/*.sh
-chmod +x ./Service/modbros.sh
+chmod 777 ./*.sh
+chmod 777 ./Scripts/*.sh
+chmod 777 ./Service/modbros.sh
+
 chmod 644 ./Service/modbros.service
+chmod 666 ./data/*
+chmod 444 ./Config/*
 
 echo " done"
 
@@ -140,7 +165,7 @@ echo -n "Setting necessary user permissions..."
 
 cp -f ./Config/010_wwwdata-wifi /etc/sudoers.d
 
-chmod 0440 /etc/sudoers.d/010_wwwdata-wifi
+chmod 440 /etc/sudoers.d/010_wwwdata-wifi
 
 echo " done"
 
@@ -151,7 +176,7 @@ echo " done"
 
 echo -n "Setting custom ModBros wallpaper..."
 
-pcmanfm --set-wallpaper $(pwd)/Resources/modbros_wallpaper.png
+pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
 
 echo " done"
 

@@ -26,6 +26,14 @@ echo -n "stopping access point services..."
 systemctl stop dnsmasq
 systemctl stop hostapd
 
+until ! systemctl is-active --quiet dnsmasq; do
+    sleep 1
+done
+
+until ! systemctl is-active --quiet hostapd; do
+    sleep 1
+done
+
 echo " done"
 
 
