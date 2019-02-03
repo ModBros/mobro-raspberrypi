@@ -58,9 +58,6 @@
               } else {
                   echo "wifi access data successfully saved \n($ret bytes written)\n";
                   echo "trying to connect to network '" . $ssid . "' using the provided password...\n";
-                  $response = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && ./ui_connect.sh');
-                  $response2 = shell_exec('cd /home/pi/ModbrosMonitoring/Scripts && sudo ./connectwifi.sh ' . $ssid . ' ' . $pw .' &');
-                  echo "\n" . $response . "\n" . $response2;
               }
           } else {
               echo('Error! Missing data!');
