@@ -1,6 +1,13 @@
 #!/bin/bash
 
-# intro message like "youre about to install the modbros monitoring service"
+# ==========================================================
+# Modbros Monitoring Service - Raspberry Pi
+#
+# installation script
+#
+# Created with <3 in Austria by: (c) ModBros 2019
+# Contact: mod-bros.com
+# ==========================================================
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script requires root privileges"
@@ -14,10 +21,6 @@ if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' http://www.google.
     exit 1
 fi
 
-
-# TODO intro
-#echo "On a Raspberry Pi 3 with a clean install of 'Raspian Stretch with desktop'
-#(excluding the recommended software) this will take up to about TODO minutes."
 
 # =============================
 # removing not needed packages
@@ -176,7 +179,7 @@ echo " done"
 
 echo -n "Setting custom ModBros wallpaper..."
 
-pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
+DISPLAY=:0 pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
 
 echo " done"
 

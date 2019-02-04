@@ -3,6 +3,8 @@
 # ==========================================================
 # Modbros Monitoring Service - Raspberry Pi
 #
+# systemd service
+#
 # Created with <3 in Austria by: (c) ModBros 2019
 # Contact: mod-bros.com
 # ==========================================================
@@ -12,6 +14,7 @@ HOSTS_FILE='/home/pi/ModbrosMonitoring/data/hosts.txt'
 WIFI_FILE='/home/pi/ModbrosMonitoring/data/wifi.txt'
 VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
 LOG_FILE='/home/pi/ModbrosMonitoring/data/log.txt'
+MOBRO_FOUND_FLAG='/home/pi/ModbrosMonitoring/data/mobro_found.txt'
 
 # URLs
 URL_NOTFOUND='http://localhost/modbros/notfound.php'
@@ -31,7 +34,6 @@ HOTSPOT_COUNTER=0
 BACKGROUND_COUNTER=0
 LAST_CHECKED_SSID=''
 LAST_CHECKED_PW=''
-MOBRO_FOUND=0
 
 # =============================
 # Functions
@@ -87,13 +89,16 @@ connect_wifi() {
 try_ip() {
     # $1 = IP, $2 = key
     log "service_discovery" "Trying IP: $1 with key: $2"
-    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 0.25 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
+    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 1 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
         VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
         PI_VERSION=$(cat /proc/device-tree/model)   # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
         show_page "http://$1:$MOBRO_PORT?version=$VERSION&name=$PI_VERSION"
-        MOBRO_FOUND=1
+
+        # write found (use file as kind of global variable)
+        # -> this function is started in a sub process!
+        echo "1" > "${MOBRO_FOUND_FLAG}"
 
         # write to file to find it faster on next boot
         echo "$1" > "${HOSTS_FILE}"
@@ -104,56 +109,62 @@ service_discovery() {
     # search available IPs on the network
     log "service_discovery" "starting service discovery"
 
-    MOBRO_FOUND=0
+    echo "0" > "${MOBRO_FOUND_FLAG}"
     sudo arp-scan --interface=wlan0 --localnet | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
 
     while read IP; do
         try_ip "$IP" "$KEY"
-        if [[ ${MOBRO_FOUND} -eq 1 ]]; then
+        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
             # found MoBro application -> done
             break
         fi
     done < "${HOSTS_FILE}"
 
     # get the 3rd digit of our own IP on the wireless network for effective scanning
-    # e.g. 192.168.0.180 => 0
+    # e.g. 192.168.0.180 -> 0 -> try range 192.168.0.X
     PI_IP_3=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | cut -d . -f 3)
 
     if ! [[ -z ${PI_IP_3} ]]; then
         log "service_discovery" "got 3rd PI IP digit. trying all IPs in range 192.168.$PI_IP_3.X"
         for i in {0..255}
         do
-            try_ip "192.168.$PI_IP_3.$i" "$KEY"
-            if [[ ${MOBRO_FOUND} -eq 1 ]]; then
-                # found MoBro application -> done
-                break
-            fi
+            try_ip "192.168.$PI_IP_3.$i" "$KEY" &
+            pids[${i}]=$! # remember pids of started sub processes
         done
+
+        # wait for all started checks to finish
+        for pid in ${pids[*]}; do
+            wait $pid
+        done
+        unset $pid
     fi
 
-
-    if [[ ${MOBRO_FOUND} -ne 1 ]]; then
-        # couldn't find application -> try all IPs in range 192.168.X.X
+    # fallback -> brute force approach -> try everything in range 192.168.X.X
+    if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
         log "service_discovery" "using 'brute force' and just trying ips in range 192.168.X.X"
         for i in {0..255}
         do
             for j in {0..255}
             do
-                try_ip "192.168.$i.$j" "$KEY"
-                if [[ ${MOBRO_FOUND} -eq 1 ]]; then
-                    # found MoBro application -> done
-                    break
-                fi
+                try_ip "192.168.$i.$j" "$KEY" &
+                pids[${j}]=$! # remember pids of started sub processes
             done
-            if [[ ${MOBRO_FOUND} -eq 1 ]]; then
-                # found MoBro application -> done
+
+            # wait for all started checks to finish
+            for pid in ${pids[*]}; do
+                wait $pid
+            done
+            unset $pid
+
+            # no need to continue if found
+            if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
                 break
             fi
         done
     fi
 
-    if [[ ${MOBRO_FOUND} -ne 1 ]]; then
+    if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
         truncate -s 0 "${HOSTS_FILE}"
@@ -219,6 +230,11 @@ log "Main" "starting service"
 
 sleep ${STARTUP_DELAY}    # startup delay
 #update_pi   # make sure everything is up to date
+
+#disable blank screen
+DISPLAY=:0 xset s off
+DISPLAY=:0 xset -dpms
+DISPLAY=:0 xset s noblank
 
 while true; do
     log "Main" "Loop start"
