@@ -26,7 +26,7 @@ URL_CONNECT_WIFI='http://localhost/modbros/connectwifi.php'
 MOBRO_PORT='42100'
 
 # Global Vars
-STARTUP_DELAY=30  # in seconds
+STARTUP_DELAY=20  # in seconds
 LOOP_INTERVAL=5   # in seconds
 CHECK_INTERVAL=60 # in loops (60x5=300s -> every 5 minutes)
 CURR_URL=''
@@ -57,7 +57,7 @@ show_page() {
         sudo ./stopchrome.sh
         sleep 1
         DISPLAY=:0 ./startchrome.sh "$1" &
-        sleep 10
+        sleep 5
         log "show_page" "done"
     fi
 }
@@ -120,25 +120,6 @@ service_discovery() {
             break
         fi
     done < "${HOSTS_FILE}"
-
-    # get the 3rd digit of our own IP on the wireless network for effective scanning
-    # e.g. 192.168.0.180 -> 0 -> try range 192.168.0.X
-    PI_IP_3=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | cut -d . -f 3)
-
-    if ! [[ -z ${PI_IP_3} ]]; then
-        log "service_discovery" "got 3rd PI IP digit. trying all IPs in range 192.168.$PI_IP_3.X"
-        for i in {0..255}
-        do
-            try_ip "192.168.$PI_IP_3.$i" "$KEY" &
-            pids[${i}]=$! # remember pids of started sub processes
-        done
-
-        # wait for all started checks to finish
-        for pid in ${pids[*]}; do
-            wait $pid
-        done
-        unset $pid
-    fi
 
     # fallback -> brute force approach -> try everything in range 192.168.X.X
     if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then

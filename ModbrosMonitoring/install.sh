@@ -28,18 +28,16 @@ fi
 
 echo -n "Cleaning up and removing not needed packages..."
 
-# TODO
+apt-get remove --purge git -y > /dev/null
+apt-get remove --purge omxplayer -y > /dev/null
+apt-get remove --purge alsa-utils -y > /dev/null
+apt-get remove --purge qpdfview -y > /dev/null
+apt-get remove --purge epiphany-browser -y > /dev/null
+apt-get remove --purge oracle-java8-jdk -y > /dev/null
+apt-get remove --purge vlc -y > /dev/null
 
-#apt-get remove --purge git -y > /dev/null
-#apt-get remove --purge omxplayer -y > /dev/null
-#apt-get remove --purge alsa-utils -y > /dev/null
-#apt-get remove --purge qpdfview -y > /dev/null
-#apt-get remove --purge epiphany-browser -y > /dev/null
-#apt-get remove --purge oracle-java8-jdk -y > /dev/null
-#apt-get remove --purge vlc -y > /dev/null
-#
-#apt-get autoremove --purge -y > /dev/null
-#apt-get autoclean -y > /dev/null
+apt-get autoremove --purge -y > /dev/null
+apt-get autoclean -y > /dev/null
 
 echo " done"
 
