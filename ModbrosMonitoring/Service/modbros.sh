@@ -155,6 +155,19 @@ service_discovery() {
 
 handle_connecting() {
     log "handle_connecting" "start connecting"
+
+    IP=$(cat "$HOSTS_FILE" | sed -n 1p) # get 1st host if present (from last successful connection)
+    KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
+    if ! [[ -z ${IP} || -z ${KEY} ]]; then
+        try_ip "$IP" "$KEY"
+        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
+            # found MoBro application -> done
+            log "handle_connecting" "found previous valid host - done"
+            return
+        fi
+    fi
+
+    # no host or no longer valid -> start discovery
     show_page ${URL_CONNECT_MOBRO}
     service_discovery
 }
