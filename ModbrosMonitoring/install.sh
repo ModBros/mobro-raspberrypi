@@ -26,30 +26,28 @@ fi
 # removing not needed packages
 # =============================
 
-echo -n "Cleaning up and removing not needed packages..."
-
-apt-get remove --purge git -y > /dev/null
-apt-get remove --purge omxplayer -y > /dev/null
-apt-get remove --purge alsa-utils -y > /dev/null
-apt-get remove --purge qpdfview -y > /dev/null
-apt-get remove --purge epiphany-browser -y > /dev/null
-apt-get remove --purge oracle-java8-jdk -y > /dev/null
-apt-get remove --purge vlc -y > /dev/null
-
-apt-get autoremove --purge -y > /dev/null
-apt-get autoclean -y > /dev/null
-
-echo " done"
+#echo -n "Cleaning up and removing not needed packages..."
+#
+#apt-get remove --purge git -y > /dev/null
+#apt-get remove --purge omxplayer -y > /dev/null
+#apt-get remove --purge alsa-utils -y > /dev/null
+#apt-get remove --purge qpdfview -y > /dev/null
+#apt-get remove --purge epiphany-browser -y > /dev/null
+#apt-get remove --purge oracle-java8-jdk -y > /dev/null
+#apt-get remove --purge vlc -y > /dev/null
+#
+#apt-get autoremove --purge -y > /dev/null
+#apt-get autoclean -y > /dev/null
+#
+#echo " done"
 
 # =============================
 # update & install dependencies
 # =============================
 
-# TODO
-echo -n "Updating your Raspberry..."
+echo -n "Updating Raspberry..."
 apt-get update > /dev/null
 apt-get upgrade -y > /dev/null
-apt-get dist-upgrade -y > /dev/null
 echo " done"
 
 echo -n "Installing web server and php..."

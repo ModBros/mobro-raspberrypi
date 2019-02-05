@@ -57,7 +57,7 @@ show_page() {
         sudo ./stopchrome.sh
         sleep 1
         DISPLAY=:0 ./startchrome.sh "$1" &
-        sleep 5
+        sleep 10
         log "show_page" "done"
     fi
 }
