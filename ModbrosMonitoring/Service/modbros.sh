@@ -34,6 +34,9 @@ HOTSPOT_COUNTER=0
 BACKGROUND_COUNTER=0
 LAST_CHECKED_SSID=''
 LAST_CHECKED_PW=''
+PI_VERSION=$(cat /proc/device-tree/model)   # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
+
 
 # =============================
 # Functions
@@ -50,14 +53,30 @@ log() {
     echo "$(date "+%m%d%Y %T") [$1] $2" >> "$LOG_FILE"
 }
 
+sleep_short() {
+    if [[ ${PI_VERSION} == *"Zero"* ]]; then
+      sleep 10
+    else
+      sleep 5
+    fi
+}
+
+sleep_long() {
+    if [[ ${PI_VERSION} == *"Zero"* ]]; then
+      sleep 30
+    else
+      sleep 15
+    fi
+}
+
 show_page() {
     if [[ "$CURR_URL" != "$1" ]]; then
         log "show_page" "switching to page $1"
         CURR_URL="$1"
         sudo ./stopchrome.sh
-        sleep 1
+        sleep_short
         DISPLAY=:0 ./startchrome.sh "$1" &
-        sleep 10
+        sleep_long
         log "show_page" "done"
     fi
 }
@@ -76,7 +95,7 @@ connect_wifi() {
     log "connect_wifi" "connecting to wifi: $1 $2"
     show_page ${URL_CONNECT_WIFI}
     sudo ./connectwifi.sh $1 $2
-    sleep 15
+    sleep_long
     if [[ $(iwgetid) ]]; then
         log "connect_wifi" "connected"
         handle_connecting
@@ -92,9 +111,7 @@ try_ip() {
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 1 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
-        VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
-        PI_VERSION=$(cat /proc/device-tree/model)   # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-        show_page "http://$1:$MOBRO_PORT?version=$VERSION&name=$PI_VERSION"
+        show_page "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
 
         # write found (use file as kind of global variable)
         # -> this function is started in a sub process!
@@ -215,21 +232,22 @@ background_check() {
 
 
 # =============================
-# Main Logic Loop
+# Startup + Main Logic Loop
 # =============================
 
+# clear log
 echo '' > "$LOG_FILE"
 
 log "Main" "starting service"
 
-sleep ${STARTUP_DELAY}    # startup delay
-#update_pi   # make sure everything is up to date
+sleep ${STARTUP_DELAY}
 
-#disable blank screen
+# disable blank screen
 DISPLAY=:0 xset s off
 DISPLAY=:0 xset -dpms
 DISPLAY=:0 xset s noblank
 
+# main loop
 while true; do
     log "Main" "Loop start"
     if ! systemctl is-active --quiet hostapd
@@ -267,5 +285,7 @@ while true; do
     log "Main" "Loop end"
     sleep ${LOOP_INTERVAL}
 done
+
+log "Main" "unexpected shutdown"
 
 exit 1
