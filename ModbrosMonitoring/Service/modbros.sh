@@ -16,25 +16,26 @@ VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
 LOG_FILE='/home/pi/ModbrosMonitoring/data/log.txt'
 MOBRO_FOUND_FLAG='/home/pi/ModbrosMonitoring/data/mobro_found.txt'
 
-# URLs
+# URLs (local pages)
 URL_NOTFOUND='http://localhost/modbros/notfound.php'
 URL_HOTSPOT='http://localhost/modbros/hotspot.php'
 URL_CONNECT_MOBRO='http://localhost/modbros/connecting.php'
 URL_CONNECT_WIFI='http://localhost/modbros/connectwifi.php'
 
 # Ports
-MOBRO_PORT='42100'
+MOBRO_PORT='42100'     # port of the MoBro desktop application
 
 # Global Vars
-STARTUP_DELAY=20  # in seconds
-LOOP_INTERVAL=5   # in seconds
-CHECK_INTERVAL=60 # in loops (60x5=300s -> every 5 minutes)
-CURR_URL=''
-HOTSPOT_COUNTER=0
-BACKGROUND_COUNTER=0
-LAST_CHECKED_SSID=''
-LAST_CHECKED_PW=''
-PI_VERSION=$(cat /proc/device-tree/model)   # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+LOOP_INTERVAL=5        # in seconds
+CHECK_INTERVAL=60      # in loops (60x5=300s -> every 5 minutes)
+CURR_URL=''            # to save currently active page
+HOTSPOT_COUNTER=0      # counter variable for connection retry in hotspot mode
+BACKGROUND_COUNTER=0   # counter variable for background alive check in wifi mode
+LAST_CHECKED_SSID=''   # remember last checked wifi credentials
+LAST_CHECKED_PW=''     # remember last checked wifi credentials
+
+# versions
+PI_VERSION=$(cat /proc/device-tree/model)           # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
 SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
 
 
@@ -57,7 +58,7 @@ sleep_short() {
     if [[ ${PI_VERSION} == *"Zero"* ]]; then
       sleep 10
     else
-      sleep 5
+      sleep 2
     fi
 }
 
@@ -75,7 +76,7 @@ show_page() {
         CURR_URL="$1"
         sudo ./stopchrome.sh
         sleep_short
-        DISPLAY=:0 ./startchrome.sh "$1" &
+        ./startchrome.sh "$1" &
         sleep_long
         log "show_page" "done"
     fi
@@ -235,17 +236,24 @@ background_check() {
 # Startup + Main Logic Loop
 # =============================
 
+# env vars
+export DISPLAY=:0
+
 # clear log
 echo '' > "$LOG_FILE"
 
 log "Main" "starting service"
 
-sleep ${STARTUP_DELAY}
+# startup delay
+sleep_long
 
 # disable blank screen
-DISPLAY=:0 xset s off
-DISPLAY=:0 xset -dpms
-DISPLAY=:0 xset s noblank
+xset s off
+xset -dpms
+xset s noblank
+
+# reset flag
+echo "0" > "${MOBRO_FOUND_FLAG}"
 
 # main loop
 while true; do

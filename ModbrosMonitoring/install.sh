@@ -65,6 +65,11 @@ apt-get install arp-scan -y > /dev/null
 apt-get install hostapd dnsmasq -y > /dev/null
 echo " done"
 
+echo -n "Removing no longer relevant packages..."
+apt-get autoremove --purge -y > /dev/null
+apt-get autoclean -y > /dev/null
+echo " done"
+
 # =============================
 # Stop and disable access point services
 # =============================
@@ -175,7 +180,8 @@ echo " done"
 
 echo -n "Setting custom ModBros wallpaper..."
 
-DISPLAY=:0 pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
+export DISPLAY=:0
+pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
 
 echo " done"
 
@@ -187,6 +193,19 @@ echo " done"
 echo -n "Scanning for available wireless networks..."
 
 iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > /var/www/html/modbros/networks
+
+echo " done"
+
+
+# =============================
+# Display drivers
+# =============================
+
+echo -n "Pulling display drivers..."
+
+rm -rf LCD-show
+git clone https://github.com/goodtft/LCD-show.git
+chmod -R 755 LCD-show
 
 echo " done"
 
