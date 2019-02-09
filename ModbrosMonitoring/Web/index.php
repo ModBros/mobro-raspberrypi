@@ -70,9 +70,8 @@
       <ol>
         <li>
           Select the desired network from the drop down list.<br/>
-          (Or provide the SSID of the network in case the Raspberry was unable to identify available networks and no
-          drop
-          down is shown)
+          (Or provide the SSID of the network in case the Raspberry was unable to identify the available networks or your
+          network is not listed)
         </li>
         <li>
           Provide the password for the selected wireless network.
@@ -104,18 +103,20 @@
                     }
                 }
                 echo '</select>';
+                echo '<label class="mt-2">Manuel SSID: (overrides network selection)</label><br>';
+                echo '<input type="text" name="ssid_manual" value="" placeholder="SSID (Optional)" class="form-control">';
                 fclose($file);
             } else {
-                echo 'SSID:<br>';
-                echo '<input type="text" name="ssid" value="">';
+                echo '<label class="mt-2">SSID:</label><br>';
+                echo '<input type="text" name="ssid_manual" value="" placeholder="WiFi SSID" class="form-control">';
             }
             ?>
 
           <label class="mt-2">Password:</label><br>
-          <input type="password" name="pw" value="" class="form-control">
+          <input type="password" name="pw" value="" placeholder="Password" class="form-control">
 
           <label class="mt-2">Key:</label><br>
-          <input type="text" name="key" value="mobro" class="form-control">
+          <input type="text" name="key" value="mobro" placeholder="Connection Key" class="form-control">
 
           <input type="submit" value="Connect" class="btn btn-primary w-100 mt-3"
                  onclick="return confirm('Connect to the given network?')">

@@ -47,8 +47,8 @@
     <div class="card-body">
       <pre>
           <?php
-          if (isset($_POST['ssid']) && isset($_POST['pw']) && isset($_POST['key'])) {
-              $ssid = $_POST['ssid'];
+          if (isset($_POST['pw']) && isset($_POST['key']) && (isset($_POST['ssid']) || isset($_POST['ssid_manual']))) {
+              $ssid = (empty($_POST['ssid_manual']) ? $_POST['ssid'] : $_POST['ssid_manual']);
               $pw = $_POST['pw'];
               $key = $_POST['key'];
               $data = $ssid . "\n" . $pw . "\n" . $key;
