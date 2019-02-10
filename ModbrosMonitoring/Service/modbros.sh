@@ -255,9 +255,6 @@ xset s noblank
 # reset flag
 echo "0" > "${MOBRO_FOUND_FLAG}"
 
-# set custom wallpaper
-pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
-
 # main loop
 while true; do
     log "Main" "Loop start"
