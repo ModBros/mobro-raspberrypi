@@ -178,12 +178,12 @@ echo " done"
 # Set custom wallpaper
 # =============================
 
-echo -n "Setting custom ModBros wallpaper..."
-
-export DISPLAY=:0
-pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
-
-echo " done"
+#echo -n "Setting custom ModBros wallpaper..."
+#
+#export DISPLAY=:0
+#pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
+#
+#echo " done"
 
 
 # =============================
