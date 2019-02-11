@@ -23,18 +23,24 @@
           <?php
           $ssid = shell_exec('iwgetid wlan0 -r');
           if (isset($ssid) && trim($ssid) !== '') {
-              echo 'Your Raspberry is currently connected to: <b>' . $ssid . '</b>';
+              echo 'Currently connected to: <b>' . $ssid . '</b>';
           } else {
               echo '<b>Currently not connected!</b>';
           }
           ?>
       </p>
       <p>
-        Now searching your network for the running ModBros Monitoring application on your PC...
+          <?php
+          $key = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 3p');
+          if (isset($key) && trim($key) !== '') {
+              echo 'Now searching your network for the ModBros Monitoring application on your PC using key <b>' . $key . '</b>';
+          } else {
+              echo 'Now searching your network for the running ModBros Monitoring application on your PC...';
+          }
+          ?>
       </p>
       <p>
         This might take some time.<br>
-        Once the application is located, your monitoring data will appear right here on this screen :)
       </p>
     </div>
   </div>
