@@ -23,16 +23,17 @@ URL_CONNECT_MOBRO='http://localhost/modbros/connecting.php'
 URL_CONNECT_WIFI='http://localhost/modbros/connectwifi.php'
 
 # Ports
-MOBRO_PORT='42100'     # port of the MoBro desktop application
+MOBRO_PORT='42100'       # port of the MoBro desktop application
 
 # Global Vars
-LOOP_INTERVAL=5        # in seconds
-CHECK_INTERVAL=60      # in loops (60x5=300s -> every 5 minutes)
-CURR_URL=''            # to save currently active page
-HOTSPOT_COUNTER=0      # counter variable for connection retry in hotspot mode
-BACKGROUND_COUNTER=0   # counter variable for background alive check in wifi mode
-LAST_CHECKED_SSID=''   # remember last checked wifi credentials
-LAST_CHECKED_PW=''     # remember last checked wifi credentials
+LOOP_INTERVAL=5          # in seconds
+CHECK_INTERVAL=60        # in loops (60x5=300s -> every 5 minutes)
+CURR_URL=''              # to save currently active page
+HOTSPOT_COUNTER=0        # counter variable for connection retry in hotspot mode
+BACKGROUND_COUNTER=0     # counter variable for background alive check in wifi mode
+LAST_CHECKED_SSID=''     # remember last checked wifi credentials
+LAST_CHECKED_PW=''       # remember last checked wifi credentials
+NUM_CORES=$(nproc --all) # number of available cores
 
 # versions
 PI_VERSION=$(cat /proc/device-tree/model)           # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
@@ -54,19 +55,12 @@ log() {
     echo "$(date "+%m%d%Y %T") [$1] $2" >> "$LOG_FILE"
 }
 
-sleep_short() {
+sleep_pi() {
     if [[ ${PI_VERSION} == *"Zero"* ]]; then
-      sleep 10
+      sleep $(($1 * 2))
+      sleep 5
     else
-      sleep 2
-    fi
-}
-
-sleep_long() {
-    if [[ ${PI_VERSION} == *"Zero"* ]]; then
-      sleep 30
-    else
-      sleep 15
+      sleep $1
     fi
 }
 
@@ -75,9 +69,9 @@ show_page() {
         log "show_page" "switching to page $1"
         CURR_URL="$1"
         sudo ./stopchrome.sh
-        sleep_short
+        sleep_pi 1
         ./startchrome.sh "$1" &
-        sleep_long
+        sleep_pi 5
         log "show_page" "done"
     fi
 }
@@ -96,10 +90,11 @@ connect_wifi() {
     log "connect_wifi" "connecting to wifi: $1 $2"
     show_page ${URL_CONNECT_WIFI}
     sudo ./connectwifi.sh $1 $2
-    sleep_long
+    sleep_pi 15
     if [[ $(iwgetid) ]]; then
         log "connect_wifi" "connected"
-        handle_connecting
+        # apparently needed for correct connection and arp-scan to work
+        sudo reboot
     else
         log "connect_wifi" "not connected"
         create_access_point
@@ -109,7 +104,7 @@ connect_wifi() {
 try_ip() {
     # $1 = IP, $2 = key
     log "service_discovery" "Trying IP: $1 with key: $2"
-    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 1 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
+    if [[ $(curl -o /dev/null --silent --max-time 10 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
         show_page "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
@@ -139,28 +134,33 @@ service_discovery() {
         fi
     done < "${HOSTS_FILE}"
 
-    # fallback -> brute force approach -> try everything in range 192.168.X.X
-    if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
-        log "service_discovery" "using 'brute force' and just trying ips in range 192.168.X.X"
+    # get current IP of pi to scan in same range
+    PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.{3}[0-9]*).*/\2/p')
+    if ! [[ -z ${PI_IP} ]]; then
+        PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
+        PI_IP_2=$(echo "$PI_IP" | cut -d . -f 2)
+        PI_IP_3=$(echo "$PI_IP" | cut -d . -f 3)
+        log "service_discovery" "trying all IPs in range $PI_IP_1.$PI_IP_2.$PI_IP_3.X"
         for i in {0..255}
         do
-            for j in {0..255}
+            for j in $(seq $NUM_CORES)
             do
-                try_ip "192.168.$i.$j" "$KEY" &
-                pids[${j}]=$! # remember pids of started sub processes
+                try_ip "$PI_IP_1.$PI_IP_2.$PI_IP_3.$i" "$KEY" &
+                # remember pids of started sub processes
+                pids[${j}]=$!
             done
 
             # wait for all started checks to finish
             for pid in ${pids[*]}; do
                 wait $pid
             done
-            unset $pid
 
             # no need to continue if found
             if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
                 break
             fi
         done
+        unset $pids
     fi
 
     if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
@@ -245,7 +245,7 @@ echo '' > "$LOG_FILE"
 log "Main" "starting service"
 
 # startup delay
-sleep_long
+sleep_pi 15
 
 # disable blank screen
 xset s off
