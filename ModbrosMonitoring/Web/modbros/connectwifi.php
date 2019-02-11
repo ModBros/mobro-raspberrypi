@@ -23,11 +23,15 @@
           <?php
           $ssid = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 1p');
           if (isset($ssid) && trim($ssid) !== '') {
-              echo 'Now trying to connect to: <br/><br/><b>' . $ssid . '</b>';
+              echo 'Now trying to connect to: <br/><b>' . $ssid . '</b>';
           } else {
               echo '<b>Error while trying to connect!</b>';
           }
           ?>
+      </p>
+      <p>
+        Note: After a successful connection your Pi will perform a quick reboot.<br>
+        This is intended and normal.
       </p>
     </div>
   </div>

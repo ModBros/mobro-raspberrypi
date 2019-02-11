@@ -85,15 +85,18 @@ systemctl disable hostapd.service
 # copy Web
 # =============================
 
-echo -n "Copying web resources..."
-rm -rf /var/www/html/modbros/*
+echo -n "Configuring and copying web resources..."
 
 if [[ ! -d /var/www/html/modbros ]]; then
     mkdir /var/www/html/modbros
 fi
 
+rm -rf /var/www/html/modbros/*
+
 chmod +rx ./Web/favicon.ico
-cp -rf ./Web/* /var/www/html/modbros/
+cp -rf ./Web/modbros/* /var/www/html/modbros/
+cp -rf ./Web/modbros/index.html /var/www/html/index.html
+
 echo " done"
 
 echo -n "Restarting web server..."
