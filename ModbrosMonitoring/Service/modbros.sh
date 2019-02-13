@@ -106,7 +106,7 @@ connect_wifi() {
 try_ip() {
     # $1 = IP, $2 = key
     log "service_discovery" "Trying IP: $1 with key: $2"
-    if [[ $(curl -o /dev/null --silent --max-time 10 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
+    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
         show_page "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
@@ -125,18 +125,18 @@ service_discovery() {
     log "service_discovery" "starting service discovery"
 
     echo "0" > "${MOBRO_FOUND_FLAG}"
-    sudo arp-scan --interface=wlan0 --localnet | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
+    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
 
     while read IP; do
         try_ip "$IP" "$KEY"
         if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
             # found MoBro application -> done
-            break
+            return
         fi
     done < "${HOSTS_FILE}"
 
-    # get current IP of pi to scan in same range
+    # fallback: get current IP of pi to try all host in range
     PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
     if ! [[ -z ${PI_IP} ]]; then
         PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
@@ -164,7 +164,7 @@ service_discovery() {
 
             # no need to continue if found
             if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
-                break
+                return
             fi
         done
     fi
