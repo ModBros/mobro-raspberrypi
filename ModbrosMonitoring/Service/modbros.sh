@@ -52,7 +52,9 @@ update_pi() {
 }
 
 log() {
-    echo "$(date "+%m%d%Y %T") [$1] $2" >> "$LOG_FILE"
+    LOG_DATE=$(date "+%m%d%Y %T");
+    TEMP=$(vcgencmd measure_temp)
+    echo "$LOG_DATE | $TEMP : [$1] $2" >> "$LOG_FILE"
 }
 
 sleep_pi() {
