@@ -135,7 +135,7 @@ service_discovery() {
     done < "${HOSTS_FILE}"
 
     # get current IP of pi to scan in same range
-    PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.{3}[0-9]*).*/\2/p')
+    PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
     if ! [[ -z ${PI_IP} ]]; then
         PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
         PI_IP_2=$(echo "$PI_IP" | cut -d . -f 2)
