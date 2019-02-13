@@ -73,7 +73,7 @@ show_page() {
         sudo ./stopchrome.sh
         sleep_pi 1
         ./startchrome.sh "$1" &
-        sleep_pi 5
+        sleep_pi 10
         log "show_page" "done"
     fi
 }
@@ -106,7 +106,7 @@ connect_wifi() {
 try_ip() {
     # $1 = IP, $2 = key
     log "service_discovery" "Trying IP: $1 with key: $2"
-    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
+    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
         show_page "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
