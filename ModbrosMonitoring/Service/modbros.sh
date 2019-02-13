@@ -141,26 +141,30 @@ service_discovery() {
         PI_IP_2=$(echo "$PI_IP" | cut -d . -f 2)
         PI_IP_3=$(echo "$PI_IP" | cut -d . -f 3)
         log "service_discovery" "trying all IPs in range $PI_IP_1.$PI_IP_2.$PI_IP_3.X"
-        for i in {0..255}
-        do
+
+        PI_IP_4=0
+        while [[ ${PI_IP_4} -lt 255 ]]; do
             for j in $(seq $NUM_CORES)
             do
-                try_ip "$PI_IP_1.$PI_IP_2.$PI_IP_3.$i" "$KEY" &
-                # remember pids of started sub processes
-                pids[${j}]=$!
+                try_ip "$PI_IP_1.$PI_IP_2.$PI_IP_3.$PI_IP_4" "$KEY" &
+                pids[${j}]=$! # remember pids of started sub processes
+                if [[ PI_IP_4 -ge 255 ]]; then
+                    break;
+                fi
+                PI_IP_4=$((PI_IP_4 + 1))
             done
 
             # wait for all started checks to finish
             for pid in ${pids[*]}; do
                 wait $pid
             done
+            unset $pids
 
             # no need to continue if found
             if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
                 break
             fi
         done
-        unset $pids
     fi
 
     if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
