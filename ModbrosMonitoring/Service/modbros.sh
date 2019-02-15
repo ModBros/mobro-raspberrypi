@@ -92,7 +92,7 @@ connect_wifi() {
     log "connect_wifi" "connecting to wifi: $1 $2"
     show_page ${URL_CONNECT_WIFI}
     sudo ./connectwifi.sh $1 $2
-    sleep_pi 15
+    sleep_pi 20
     if [[ $(iwgetid) ]]; then
         log "connect_wifi" "connected"
         # apparently needed for correct connection and arp-scan to work
