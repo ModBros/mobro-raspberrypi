@@ -31,8 +31,7 @@ CHECK_INTERVAL=60        # in loops (60x5=300s -> every 5 minutes)
 CURR_URL=''              # to save currently active page
 HOTSPOT_COUNTER=0        # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0     # counter variable for background alive check in wifi mode
-LAST_CHECKED_SSID=''     # remember last checked wifi credentials
-LAST_CHECKED_PW=''       # remember last checked wifi credentials
+LAST_CHECKED_WIFI=''     # remember timestamp of last checked wifi credentials
 NUM_CORES=$(nproc --all) # number of available cores
 
 # versions
@@ -197,15 +196,16 @@ handle_connecting() {
 }
 
 hotspot_check() {
-    SSID=$(cat "$WIFI_FILE" | sed -n 1p)      # 1st line contains SSID
-    PW=$(cat "$WIFI_FILE" | sed -n 2p)        # 2nd line contains PW
-    if ! [[ -z ${SSID} || -z ${PW} ]]; then
-        if [[ ${SSID} != ${LAST_CHECKED_SSID} ]]; then
-            if [[ ${PW} != ${LAST_CHECKED_PW} ]]; then
+    UPDATED=$(cat "$WIFI_FILE" | sed -n 4p)        # 4th line contains updated timestamp
+    if ! [[ -z ${UPDATED} ]]; then
+        if [[ ${UPDATED} != ${LAST_CHECKED_WIFI} ]]; then
+            SSID=$(cat "$WIFI_FILE" | sed -n 1p)   # 1st line contains SSID
+            PW=$(cat "$WIFI_FILE" | sed -n 2p)     # 2nd line contains PW
+            if ! [[ -z ${SSID} || -z ${PW} ]]; then
                 # if there is new access data -> instantly try connecting
-                LAST_CHECKED_SSID=${SSID}
-                LAST_CHECKED_PW=${PW}
-                log "hotspot_check" "trying to connect with $SSID and $PW"
+                LAST_CHECKED_WIFI=${UPDATED}
+                HOTSPOT_COUNTER=0
+                log "hotspot_check" "new credentials found. trying to connect with $SSID and $PW"
                 connect_wifi "$SSID" "$PW"
                 return
             fi
@@ -218,7 +218,7 @@ hotspot_check() {
         HOTSPOT_COUNTER=0
         if ! [[ -z ${SSID} || -z ${PW} ]]; then
             # wifi configured -> try again
-            log "hotspot_check" "trying to connect with $SSID and $PW"
+            log "hotspot_check" "trying again to connect with $SSID and $PW"
             connect_wifi "$SSID" "$PW"
         fi
     else

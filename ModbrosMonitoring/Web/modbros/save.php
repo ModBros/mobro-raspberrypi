@@ -51,7 +51,8 @@
               $ssid = (empty($_POST['ssid_manual']) ? $_POST['ssid'] : $_POST['ssid_manual']);
               $pw = $_POST['pw'];
               $key = $_POST['key'];
-              $data = $ssid . "\n" . $pw . "\n" . $key;
+              $updated = time();
+              $data = $ssid . "\n" . $pw . "\n" . $key . "\n" . $updated;
               $ret = file_put_contents('/home/pi/ModbrosMonitoring/data/wifi.txt', $data, LOCK_EX);
               if ($ret === false) {
                   echo('There was an error saving the access data!');
