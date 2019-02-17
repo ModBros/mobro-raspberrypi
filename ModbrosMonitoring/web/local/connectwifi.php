@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ModBros Monitoring Setup</title>
-  <link href="./bootstrap.min.css" rel="stylesheet"/>
+  <link href="../bootstrap.min.css" rel="stylesheet"/>
 </head>
 <style>
   body {
@@ -25,7 +25,7 @@
           $key = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 3p');
           if (isset($ssid) && trim($ssid) !== '') {
               echo 'Trying to connect to: <b>' . $ssid . '</b><br/>';
-              echo 'Using connection key: <b>' . $key . '</b>';
+              echo 'Connection key: <b>' . $key . '</b>';
           } else {
               echo '<b>Error while trying to connect!</b>';
           }

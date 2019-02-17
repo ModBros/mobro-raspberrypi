@@ -13,14 +13,17 @@
 HOSTS_FILE='/home/pi/ModbrosMonitoring/data/hosts.txt'
 WIFI_FILE='/home/pi/ModbrosMonitoring/data/wifi.txt'
 VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
-LOG_FILE='/home/pi/ModbrosMonitoring/data/log.txt'
 MOBRO_FOUND_FLAG='/home/pi/ModbrosMonitoring/data/mobro_found.txt'
 
+# Directories
+LOG_DIR='/home/pi/ModbrosMonitoring/log'
+
 # URLs (local pages)
-URL_NOTFOUND='http://localhost/modbros/notfound.php'
-URL_HOTSPOT='http://localhost/modbros/hotspot.php'
-URL_CONNECT_MOBRO='http://localhost/modbros/connecting.php'
-URL_CONNECT_WIFI='http://localhost/modbros/connectwifi.php'
+URL_MODBROS='http://localhost/local/index.php'             # page 1
+URL_HOTSPOT='http://localhost/local/hotspot.php'           # page 2
+URL_CONNECT_WIFI='http://localhost/local/connectwifi.php'  # page 3
+URL_CONNECT_MOBRO='http://localhost/local/connecting.php'  # page 4
+URL_NOTFOUND='http://localhost/local/notfound.php'         # page 5
 
 # Ports
 MOBRO_PORT='42100'       # port of the MoBro desktop application
@@ -28,20 +31,23 @@ MOBRO_PORT='42100'       # port of the MoBro desktop application
 # Global Vars
 LOOP_INTERVAL=5          # in seconds
 CHECK_INTERVAL=60        # in loops (60x5=300s -> every 5 minutes)
-CURR_URL=''              # to save currently active page
 HOTSPOT_COUNTER=0        # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0     # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''     # remember timestamp of last checked wifi credentials
+CURR_PAGE=''             # save currently active page
+CURR_MODE=''             # save currently active mode
+CURR_MOBRO_URL=''        # save current MoBro Url
 NUM_CORES=$(nproc --all) # number of available cores
+
 
 # versions
 PI_VERSION=$(cat /proc/device-tree/model)           # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
 SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
 
 
-# =============================
+# ==========================================================
 # Functions
-# =============================
+# ==========================================================
 
 update_pi() {
     sudo apt-get update
@@ -53,7 +59,7 @@ update_pi() {
 log() {
     LOG_DATE=$(date "+%m%d%Y %T");
     TEMP=$(vcgencmd measure_temp)
-    echo "$LOG_DATE | $TEMP : [$1] $2" >> "$LOG_FILE"
+    echo "$LOG_DATE | $TEMP : [$1] $2" >> "$LOG_DIR/log.txt"
 }
 
 sleep_pi() {
@@ -65,22 +71,79 @@ sleep_pi() {
     fi
 }
 
+start_chrome() {
+    log "chromium" "starting browser"
+    chromium-browser \
+        --allow-insecure-localhost \
+        --no-wifi \
+        --no-default-browser-check \
+        --no-service-autorun \
+        --disable-infobars \
+        --noerrdialogs \
+        --incognito \
+        --kiosk \
+        ${URL_MODBROS} ${URL_HOTSPOT} ${URL_CONNECT_WIFI} ${URL_CONNECT_MOBRO} ${URL_NOTFOUND} \
+        &
+}
+
+stop_chrome() {
+    sudo pkill -o chromium
+}
+
+show_mobro() {
+    log "chromium" "switching to MoBro application"
+    stop_chrome
+    sleep_pi 2
+    chromium-browser \
+        --no-default-browser-check \
+        --no-service-autorun \
+        --disable-infobars \
+        --noerrdialogs \
+        --incognito \
+        --kiosk \
+        --app=$1 \
+        &
+    sleep_pi 10
+}
+
 show_page() {
-    if [[ "$CURR_URL" != "$1" ]]; then
-        log "show_page" "switching to page $1"
-        CURR_URL="$1"
-        sudo ./stopchrome.sh
-        sleep_pi 1
-        ./startchrome.sh "$1" &
-        sleep_pi 10
-        log "show_page" "done"
-    fi
+    case "$1" in
+        [1-5])
+            if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
+                start_chrome
+                sleep_pi 15
+            elif [[ "$CURR_MODE" != "local" ]]; then
+                stop_chrome
+                sleep_pi 5
+                start_chrome
+                sleep_pi 15
+            fi
+            CURR_MODE='local'
+            if [[ "$CURR_PAGE" != "$1" ]]; then
+                log "chromium" "switching to local page $1"
+                CURR_PAGE="$1"
+                xdotool windowactivate $(xdotool search --onlyvisible --class chromium | head -1)
+                xdotool key "ctrl+$1"
+                if [[ "$1" != "1" ]]; then
+                    # reload if not index page
+                    xdotool key "ctrl+F5"
+                fi
+            fi
+            ;;
+        *)
+            if [[ "$CURR_MODE" != "mobro" || "$CURR_PAGE" != "$1" ]]; then
+                show_mobro "$1"
+            fi
+            CURR_MODE='mobro'
+            CURR_PAGE="$1"
+            ;;
+    esac
 }
 
 create_access_point() {
     log "create_access_point" "creating access point"
     sudo ./createaccesspoint.sh
-    show_page ${URL_HOTSPOT}
+    show_page 2
     until systemctl is-active --quiet hostapd; do
         sleep 1
     done
@@ -89,7 +152,7 @@ create_access_point() {
 
 connect_wifi() {
     log "connect_wifi" "connecting to wifi: $1 $2"
-    show_page ${URL_CONNECT_WIFI}
+    show_page 3
     sudo ./connectwifi.sh $1 $2
     sleep_pi 20
     if [[ $(iwgetid) ]]; then
@@ -172,27 +235,8 @@ service_discovery() {
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
         truncate -s 0 "${HOSTS_FILE}"
-        show_page ${URL_NOTFOUND}
+        show_page 5
     fi
-}
-
-handle_connecting() {
-    log "handle_connecting" "start connecting"
-
-    IP=$(cat "$HOSTS_FILE" | sed -n 1p) # get 1st host if present (from last successful connection)
-    KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
-    if ! [[ -z ${IP} || -z ${KEY} ]]; then
-        try_ip "$IP" "$KEY"
-        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
-            # found MoBro application -> done
-            log "handle_connecting" "found previous valid host - done"
-            return
-        fi
-    fi
-
-    # no host or no longer valid -> start discovery
-    show_page ${URL_CONNECT_MOBRO}
-    service_discovery
 }
 
 hotspot_check() {
@@ -231,6 +275,9 @@ background_check() {
     if [[ ${BACKGROUND_COUNTER} -ge ${CHECK_INTERVAL} ]]; then
         log "background_check" "starting background check"
         BACKGROUND_COUNTER=0
+        if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
+            show_page 4
+        fi
         service_discovery
     else
         log "background_check" "skipping background check"
@@ -238,68 +285,91 @@ background_check() {
 }
 
 
-# =============================
-# Startup + Main Logic Loop
-# =============================
+# ==========================================================
+# Startup Sequence
+# ==========================================================
 
-# env vars
-export DISPLAY=:0
+# copy log files to preserve the previous 5 starts
+mv -f "$LOG_DIR/log_3.txt" "$LOG_DIR/log_4.txt" 2>/dev/null
+mv -f "$LOG_DIR/log_2.txt" "$LOG_DIR/log_3.txt" 2>/dev/null
+mv -f "$LOG_DIR/log_1.txt" "$LOG_DIR/log_2.txt" 2>/dev/null
+mv -f "$LOG_DIR/log_0.txt" "$LOG_DIR/log_1.txt" 2>/dev/null
+cp -f "$LOG_DIR/log.txt" "$LOG_DIR/log_0.txt" 2>/dev/null
 
-# clear log
-echo '' > "$LOG_FILE"
+# clear current log
+echo '' > "$LOG_DIR/log.txt"
 
 log "Main" "starting service"
 
 # startup delay
+# (to allow for wifi connection)
 sleep_pi 15
+
+# env vars
+export DISPLAY=:0
+
+# reset flag
+echo "0" > "${MOBRO_FOUND_FLAG}"
 
 # disable blank screen
 xset s off
 xset -dpms
 xset s noblank
 
-# reset flag
-echo "0" > "${MOBRO_FOUND_FLAG}"
+# start chrome to show default page
+show_page 1
 
-# main loop
+# startup wifi check
+if [[ $(iwgetid) ]]; then
+    log "Main" "connected to wifi"
+    IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
+    KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
+    if ! [[ -z ${IP} || -z ${KEY} ]]; then
+        log "Main" "found previously used host - checking"
+        try_ip "$IP" "$KEY"
+        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
+            log "Main" "found previously used host - success"
+        else
+            log "Main" "previous host invalid, continuing"
+        fi
+    fi
+
+    if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
+        # no previous present or no longer valid -> start service discovery
+        log "Main" "no previous or invalid - starting search"
+        show_page 4
+        service_discovery
+    fi
+else
+    log "Main" "no wifi connection"
+    # not connected to wifi -> start hotspot
+    create_access_point
+fi
+
+# ==========================================================
+# Main Loop
+# ==========================================================
+
+log "Main" "Entering main loop"
 while true; do
-    log "Main" "Loop start"
     if ! systemctl is-active --quiet hostapd
     then
         # no hotspot running
         log "Main" "no hotspot"
         if ! [[ $(iwgetid) ]]; then
-            # not connected to wifi -> create hotspot
             log "Main" "no wifi"
             create_access_point
         else
-            # connected to wifi
             log "Main" "wifi connected"
-            if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
-                # chrome not yet running -> check website availability + connect
-                handle_connecting
-            else
-                # we're connected and showing a page
-                # keep checking in background (page still response / page becomes available)
-                background_check
-            fi
+            # we're connected - keep checking in background (page still response / page becomes available)
+            background_check
         fi
     else
         log "Main" "hotspot up"
-
-        # hotstop running -> check if chrome is up
-        if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
-            show_page ${URL_HOTSPOT}
-        fi
-
-        # check hotspot -> if open too long, try to connect to wifi again
+        # check for new wifi data + if hotspot open too long, try to connect to wifi again
         hotspot_check
     fi
-
-    log "Main" "Loop end"
     sleep ${LOOP_INTERVAL}
 done
 
 log "Main" "unexpected shutdown"
-
-exit 1

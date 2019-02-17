@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ModBros Monitoring Setup</title>
-  <link href="./bootstrap.min.css" rel="stylesheet"/>
+  <link href="../bootstrap.min.css" rel="stylesheet"/>
 </head>
 <style>
   body {

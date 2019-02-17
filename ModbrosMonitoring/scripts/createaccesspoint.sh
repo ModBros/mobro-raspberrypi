@@ -57,7 +57,7 @@ cp -f /etc/wpa_supplicant/wpa_supplicant.conf.orig /etc/wpa_supplicant/wpa_suppl
 # =============================
 
 cp -f /etc/dhcpcd.conf.orig /etc/dhcpcd.conf.tmp
-cat ../Config/dhcpcd.conf >> /etc/dhcpcd.conf.tmp
+cat ../config/dhcpcd.conf >> /etc/dhcpcd.conf.tmp
 
 mv -f /etc/dhcpcd.conf.tmp /etc/dhcpcd.conf
 

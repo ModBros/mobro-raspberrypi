@@ -52,7 +52,7 @@ service dhcpcd restart
 echo -n "configuring network..."
 
 #cp -f /etc/wpa_supplicant/wpa_supplicant.conf.orig /etc/wpa_supplicant/wpa_supplicant.conf.tmp
-cat ../Config/wpa_supplicant.conf > /etc/wpa_supplicant/wpa_supplicant.conf.tmp
+cat ../config/wpa_supplicant.conf > /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 
 sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf.tmp
 sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf.tmp

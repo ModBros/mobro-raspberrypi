@@ -62,6 +62,7 @@ echo -n "Installing additional necessary tools..."
 apt-get install unclutter -y > /dev/null
 apt-get install curl -y > /dev/null
 apt-get install arp-scan -y > /dev/null
+apt-get install xdotool -y > /dev/null
 apt-get install hostapd dnsmasq -y > /dev/null
 echo " done"
 
@@ -87,15 +88,21 @@ systemctl disable hostapd.service
 
 echo -n "Configuring and copying web resources..."
 
+rm -rf /var/www/html/*
+
 if [[ ! -d /var/www/html/modbros ]]; then
     mkdir /var/www/html/modbros
 fi
 
-rm -rf /var/www/html/modbros/*
+if [[ ! -d /var/www/html/local ]]; then
+    mkdir /var/www/html/local
+fi
 
-chmod +rx ./Web/favicon.ico
-cp -rf ./Web/modbros/* /var/www/html/modbros/
-cp -rf ./Web/modbros/index.html /var/www/html/index.html
+chmod +rx ./web/favicon.ico
+cp -rf ./web/modbros/* /var/www/html/modbros/
+cp -rf ./web/local/* /var/www/html/local/
+cp -rf ./web/index.html /var/www/html/
+cp -rf ./web/bootstrap* /var/www/html/
 
 echo " done"
 
@@ -132,7 +139,7 @@ echo " done"
 # =============================
 
 echo -n "Configuring the DHCP server (dnsmasq)..."
-cp ./Config/dnsmasq.conf /etc/dnsmasq.conf
+cp ./config/dnsmasq.conf /etc/dnsmasq.conf
 echo " done"
 
 # =============================
@@ -141,7 +148,7 @@ echo " done"
 
 echo -n "Configuring the access point host software (hostapd)..."
 
-cp ./Config/hostapd.conf /etc/hostapd/hostapd.conf
+cp ./config/hostapd.conf /etc/hostapd/hostapd.conf
 sed -i -e "s/#DAEMON_CONF=\"\"/DAEMON_CONF=\"\/etc\/hostapd\/hostapd.conf\"/g" /etc/default/hostapd
 
 echo " done"
@@ -154,12 +161,13 @@ echo " done"
 echo -n "Setting script and file permissions..."
 
 chmod 777 ./*.sh
-chmod 777 ./Scripts/*.sh
-chmod 777 ./Service/modbros.sh
+chmod 777 ./scripts/*.sh
+chmod 777 ./service/modbros.sh
 
-chmod 644 ./Service/modbros.service
+chmod 644 ./service/modbros.service
 chmod 666 ./data/*
-chmod 444 ./Config/*
+chmod 666 ./log/*
+chmod 444 ./config/*
 
 echo " done"
 
@@ -170,7 +178,7 @@ echo " done"
 
 echo -n "Setting necessary user permissions..."
 
-cp -f ./Config/010_wwwdata-wifi /etc/sudoers.d
+cp -f ./config/010_wwwdata-wifi /etc/sudoers.d
 
 chmod 440 /etc/sudoers.d/010_wwwdata-wifi
 
@@ -219,7 +227,7 @@ echo " done"
 
 echo -n "Installing the ModBros service..."
 
-cp ./Service/modbros.service /lib/systemd/system/modbros.service
+cp ./service/modbros.service /lib/systemd/system/modbros.service
 systemctl daemon-reload
 systemctl enable modbros.service
 systemctl start modbros.service
