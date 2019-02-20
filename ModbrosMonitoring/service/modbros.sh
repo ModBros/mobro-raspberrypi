@@ -34,8 +34,8 @@ CHECK_INTERVAL=60        # in loops (60x5=300s -> every 5 minutes)
 HOTSPOT_COUNTER=0        # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0     # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''     # remember timestamp of last checked wifi credentials
-CURR_PAGE=''             # save currently active page
-CURR_MODE=''             # save currently active mode
+CURR_PAGE='1'            # save currently active page
+CURR_MODE='local'        # save currently active mode
 CURR_MOBRO_URL=''        # save current MoBro Url
 NUM_CORES=$(nproc --all) # number of available cores
 
@@ -65,7 +65,6 @@ log() {
 sleep_pi() {
     if [[ ${PI_VERSION} == *"Zero"* ]]; then
       sleep $(($1 * 2))
-      sleep 5
     else
       sleep $1
     fi
@@ -301,23 +300,28 @@ echo '' > "$LOG_DIR/log.txt"
 
 log "Main" "starting service"
 
-# startup delay
-# (to allow for wifi connection)
-sleep_pi 15
-
 # env vars
 export DISPLAY=:0
 
 # reset flag
 echo "0" > "${MOBRO_FOUND_FLAG}"
 
+# start chrome to show default page
+start_chrome
+
+# wait for wifi connection if configured
+for i in {1..30}
+do
+    if [[ $(iwgetid) ]]; then
+        break;
+    fi
+    sleep 1
+done
+
 # disable blank screen
 xset s off
 xset -dpms
 xset s noblank
-
-# start chrome to show default page
-show_page 1
 
 # startup wifi check
 if [[ $(iwgetid) ]]; then
