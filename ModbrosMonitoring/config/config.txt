@@ -1,0 +1,13 @@
+# Rasperry Configuration
+
+disable_overscan=1
+dtparam=audio=off
+
+gpu_mem=128
+disable_splash=1
+initial_turbo=10
+temp_limit=70
+dtoverlay=pi3-disable-bt
+
+start_x=0
+enable_uart=0

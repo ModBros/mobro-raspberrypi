@@ -21,8 +21,8 @@
     <div class="card-body">
       <p>
           <?php
-          $ssid = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 1p');
-          $key = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 3p');
+          $ssid = shell_exec('cat /home/modbros/ModbrosMonitoring/data/wifi.txt | sed -n 1p');
+          $key = shell_exec('cat /home/modbros/ModbrosMonitoring/data/wifi.txt | sed -n 3p');
           if (isset($ssid) && trim($ssid) !== '') {
               echo 'Trying to connect to: <b>' . $ssid . '</b><br/>';
               echo 'Connection key: <b>' . $key . '</b>';
@@ -30,9 +30,6 @@
               echo '<b>Error while trying to connect!</b>';
           }
           ?>
-      </p>
-      <p>
-        <u>Note</u>: After a successful connection your Pi will perform a quick reboot.
       </p>
     </div>
   </div>

@@ -31,7 +31,7 @@
       </p>
       <p>
           <?php
-          $key = shell_exec('cat /home/pi/ModbrosMonitoring/data/wifi.txt | sed -n 3p');
+          $key = shell_exec('cat /home/modbros/ModbrosMonitoring/data/wifi.txt | sed -n 3p');
           if (isset($key) && trim($key) !== '') {
               echo 'Now searching your network for the ModBros Monitoring application on your PC using key <b>' . $key . '</b>';
           } else {

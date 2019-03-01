@@ -4,19 +4,21 @@
 # Modbros Monitoring Service - Raspberry Pi
 #
 # systemd service
+# (intended for and tested only on clean Raspbian Stretch)
 #
 # Created with <3 in Austria by: (c) ModBros 2019
 # Contact: mod-bros.com
 # ==========================================================
 
 # Files
-HOSTS_FILE='/home/pi/ModbrosMonitoring/data/hosts.txt'
-WIFI_FILE='/home/pi/ModbrosMonitoring/data/wifi.txt'
-VERSION_FILE='/home/pi/ModbrosMonitoring/data/version.txt'
-MOBRO_FOUND_FLAG='/home/pi/ModbrosMonitoring/data/mobro_found.txt'
+HOSTS_FILE='/home/modbros/ModbrosMonitoring/data/hosts.txt'
+WIFI_FILE='/home/modbros/ModbrosMonitoring/data/wifi.txt'
+VERSION_FILE='/home/modbros/ModbrosMonitoring/data/version.txt'
+MOBRO_FOUND_FLAG='/home/modbros/ModbrosMonitoring/data/mobro_found.txt'
+NETWORKS_FILE='/home/modbros/ModbrosMonitoring/web/modbros/networks'
 
 # Directories
-LOG_DIR='/home/pi/ModbrosMonitoring/log'
+LOG_DIR='/home/modbros/ModbrosMonitoring/log'
 
 # URLs (local pages)
 URL_MODBROS='http://localhost/local/index.php'             # page 1
@@ -29,15 +31,18 @@ URL_NOTFOUND='http://localhost/local/notfound.php'         # page 5
 MOBRO_PORT='42100'       # port of the MoBro desktop application
 
 # Global Vars
-LOOP_INTERVAL=5          # in seconds
-CHECK_INTERVAL=60        # in loops (60x5=300s -> every 5 minutes)
-HOTSPOT_COUNTER=0        # counter variable for connection retry in hotspot mode
-BACKGROUND_COUNTER=0     # counter variable for background alive check in wifi mode
-LAST_CHECKED_WIFI=''     # remember timestamp of last checked wifi credentials
-CURR_PAGE='1'            # save currently active page
-CURR_MODE='local'        # save currently active mode
-CURR_MOBRO_URL=''        # save current MoBro Url
-NUM_CORES=$(nproc --all) # number of available cores
+AP_SSID='ModBros_Configuration'  # SSID of the created access point
+AP_PW='modbros123'               # password of the created access point
+LOOP_INTERVAL=5                  # in seconds
+CHECK_INTERVAL_HOTSPOT=60        # in loops (60x5=300s -> every 5 minutes)
+CHECK_INTERVAL_BACKGROUND=10     # in loops
+HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
+BACKGROUND_COUNTER=0             # counter variable for background alive check in wifi mode
+LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi credentials
+CURR_PAGE='1'                    # save currently active page
+CURR_MODE='local'                # save currently active mode
+CURR_MOBRO_URL=''                # save current MoBro Url
+NUM_CORES=$(nproc --all)         # number of available cores
 
 
 # versions
@@ -49,16 +54,9 @@ SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
 # Functions
 # ==========================================================
 
-update_pi() {
-    sudo apt-get update
-    sudo apt-get upgrade -y
-    sudo apt-get autoremove --purge -y
-    sudo apt-get autoclean -y
-}
-
 log() {
     LOG_DATE=$(date "+%m%d%Y %T");
-    TEMP=$(vcgencmd measure_temp)
+    TEMP=$(sudo vcgencmd measure_temp)
     echo "$LOG_DATE | $TEMP : [$1] $2" >> "$LOG_DIR/log.txt"
 }
 
@@ -72,36 +70,29 @@ sleep_pi() {
 
 start_chrome() {
     log "chromium" "starting browser"
-    chromium-browser \
-        --allow-insecure-localhost \
-        --no-wifi \
-        --no-default-browser-check \
-        --no-service-autorun \
-        --disable-infobars \
-        --noerrdialogs \
-        --incognito \
-        --kiosk \
-        ${URL_MODBROS} ${URL_HOTSPOT} ${URL_CONNECT_WIFI} ${URL_CONNECT_MOBRO} ${URL_NOTFOUND} \
-        &
+    sudo xinit ./startchrome.sh \
+        ${URL_MODBROS} \
+        ${URL_HOTSPOT} \
+        ${URL_CONNECT_WIFI} \
+        ${URL_CONNECT_MOBRO} \
+        ${URL_NOTFOUND} \
+        &>> "$LOG_DIR/log.txt" &
 }
 
 stop_chrome() {
-    sudo pkill -o chromium
+    # clean up previously running apps; gracefully at first then harshly
+    sudo killall -TERM chromium-browser 2>/dev/null;
+    sudo killall -TERM matchbox-window-manager 2>/dev/null;
+    sleep_pi 2
+    sudo killall -9 chromium-browser 2>/dev/null;
+    sudo killall -9 matchbox-window-manager 2>/dev/null;
+    sleep_pi 1
 }
 
 show_mobro() {
-    log "chromium" "switching to MoBro application"
+    log "chromium" "switching to MoBro application on '$1'"
     stop_chrome
-    sleep_pi 2
-    chromium-browser \
-        --no-default-browser-check \
-        --no-service-autorun \
-        --disable-infobars \
-        --noerrdialogs \
-        --incognito \
-        --kiosk \
-        --app=$1 \
-        &
+    sudo xinit ./showmobro.sh "$1" &>> "$LOG_DIR/log.txt" &
     sleep_pi 10
 }
 
@@ -110,13 +101,11 @@ show_page() {
         [1-5])
             if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
                 start_chrome
-                sleep_pi 15
             elif [[ "$CURR_MODE" != "local" ]]; then
                 stop_chrome
-                sleep_pi 5
                 start_chrome
-                sleep_pi 15
             fi
+            sleep_pi 15
             CURR_MODE='local'
             if [[ "$CURR_PAGE" != "$1" ]]; then
                 log "chromium" "switching to local page $1"
@@ -141,23 +130,62 @@ show_page() {
 
 create_access_point() {
     log "create_access_point" "creating access point"
-    sudo ./createaccesspoint.sh
+
+    # scan for available wifi networks
+    sudo ifconfig wlan0 up
+    sleep_pi 2
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
+
+    # create access point
+    sudo create_ap \
+        -w 2 \
+        -m none \
+        --isolate-clients \
+        --freq-band 2.4 \
+        --driver nl80211 \
+        --no-virt \
+        --daemon \
+        -g 192.168.4.1 \
+        wlan0 $AP_SSID $AP_PW \
+        &>> "$LOG_DIR/log.txt"
+
     show_page 2
-    until systemctl is-active --quiet hostapd; do
-        sleep 1
+    until [[ $(create_ap --list-running | grep wlan0 | wc -l) -gt 0 ]]; do
+        log "create_access_point" "waiting for access point.."
+        sleep 2
     done
-    log "create_access_point" "done"
+    log "create_access_point" "access point up"
 }
 
 connect_wifi() {
     log "connect_wifi" "connecting to wifi: $1 $2"
     show_page 3
-    sudo ./connectwifi.sh $1 $2
+
+    # stop access point
+    sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
+    sleep 2
+
+    until [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; do
+        log "connect_wifi" "waiting for access point to stop.."
+        sleep 2
+    done
+
+    # configure wifi
+    sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+    sudo sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf
+    sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
+
+    sudo systemctl restart dhcpcd.service
+    sudo systemctl restart networking.service
+
+    # wait for connection
     sleep_pi 20
-    if [[ $(iwgetid) ]]; then
+
+    if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
-        # apparently needed for correct connection and arp-scan to work
-        sudo reboot
+        show_page 4
+        service_discovery
     else
         log "connect_wifi" "not connected"
         create_access_point
@@ -256,7 +284,7 @@ hotspot_check() {
     fi
 
     HOTSPOT_COUNTER=$((HOTSPOT_COUNTER+1))
-    if [[ ${HOTSPOT_COUNTER} -ge ${CHECK_INTERVAL} ]]; then
+    if [[ ${HOTSPOT_COUNTER} -ge ${CHECK_INTERVAL_HOTSPOT} ]]; then
         log "hotspot_check" "start hotspot check"
         HOTSPOT_COUNTER=0
         if ! [[ -z ${SSID} || -z ${PW} ]]; then
@@ -271,7 +299,7 @@ hotspot_check() {
 
 background_check() {
     BACKGROUND_COUNTER=$((BACKGROUND_COUNTER+1))
-    if [[ ${BACKGROUND_COUNTER} -ge ${CHECK_INTERVAL} ]]; then
+    if [[ ${BACKGROUND_COUNTER} -ge ${CHECK_INTERVAL_BACKGROUND} ]]; then
         log "background_check" "starting background check"
         BACKGROUND_COUNTER=0
         if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
@@ -306,25 +334,27 @@ export DISPLAY=:0
 # reset flag
 echo "0" > "${MOBRO_FOUND_FLAG}"
 
+# disable dnsmasq and hostapd
+log "Main" "disabling services: dnsmasq, hostapd"
+sudo systemctl stop dnsmasq &>> "$LOG_DIR/log.txt"
+sudo systemctl disable dnsmasq.service &>> "$LOG_DIR/log.txt"
+sudo systemctl stop hostapd &>> "$LOG_DIR/log.txt"
+sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
+
 # start chrome to show default page
 start_chrome
 
 # wait for wifi connection if configured
 for i in {1..30}
 do
-    if [[ $(iwgetid) ]]; then
+    if [[ $(iwgetid wlan0 --raw) ]]; then
         break;
     fi
     sleep 1
 done
 
-# disable blank screen
-xset s off
-xset -dpms
-xset s noblank
-
 # startup wifi check
-if [[ $(iwgetid) ]]; then
+if [[ $(iwgetid wlan0 --raw) ]]; then
     log "Main" "connected to wifi"
     IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
@@ -350,17 +380,22 @@ else
     create_access_point
 fi
 
+# disable blank screen
+log "Main" "disabling screen fade"
+xset s off &>> "$LOG_DIR/log.txt"
+xset -dpms &>> "$LOG_DIR/log.txt"
+xset s noblank &>> "$LOG_DIR/log.txt"
+
 # ==========================================================
 # Main Loop
 # ==========================================================
 
 log "Main" "Entering main loop"
 while true; do
-    if ! systemctl is-active --quiet hostapd
-    then
+    if [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; then
         # no hotspot running
         log "Main" "no hotspot"
-        if ! [[ $(iwgetid) ]]; then
+        if ! [[ $(iwgetid wlan0 --raw) ]]; then
             log "Main" "no wifi"
             create_access_point
         else

@@ -4,12 +4,12 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/ModbrosMonitoring/scripts
-ExecStart=/home/pi/ModbrosMonitoring/service/modbros.sh
-StandardOutput=inherit
-StandardError=inherit
+WorkingDirectory=/home/modbros/ModbrosMonitoring/scripts
+ExecStart=/home/modbros/ModbrosMonitoring/service/modbros.sh
+StandardOutput=null
+StandardError=null
 Restart=on-abort
-User=pi
+User=modbros
 
 [Install]
 WantedBy=multi-user.target

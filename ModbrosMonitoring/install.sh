@@ -4,6 +4,7 @@
 # Modbros Monitoring Service - Raspberry Pi
 #
 # installation script
+# (intended for and tested only on clean Raspbian Stretch lite)
 #
 # Created with <3 in Austria by: (c) ModBros 2019
 # Contact: mod-bros.com
@@ -22,145 +23,71 @@ if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' http://www.google.
 fi
 
 
-# =============================
-# removing not needed packages
-# =============================
-
-#echo -n "Cleaning up and removing not needed packages..."
-#
-#apt-get remove --purge git -y > /dev/null
-#apt-get remove --purge omxplayer -y > /dev/null
-#apt-get remove --purge alsa-utils -y > /dev/null
-#apt-get remove --purge qpdfview -y > /dev/null
-#apt-get remove --purge epiphany-browser -y > /dev/null
-#apt-get remove --purge oracle-java8-jdk -y > /dev/null
-#apt-get remove --purge vlc -y > /dev/null
-#
-#apt-get autoremove --purge -y > /dev/null
-#apt-get autoclean -y > /dev/null
-#
-#echo " done"
-
-# =============================
-# update & install dependencies
-# =============================
+# ==========================================================
+# update Pi
+# ==========================================================
 
 echo -n "Updating Raspberry..."
 apt-get update > /dev/null
-apt-get upgrade -y > /dev/null
+apt-get dist-upgrade -y > /dev/null
 echo " done"
 
-echo -n "Installing web server and php..."
-apt-get install apache2 php7.0 libapache2-mod-php7.0 -y > /dev/null
-echo " done"
 
-echo -n "Installing chrome..."
-apt-get install chromium-browser -y > /dev/null
-echo " done"
+# ==========================================================
+# install dependencies
+# ==========================================================
 
-echo -n "Installing additional necessary tools..."
-apt-get install unclutter -y > /dev/null
-apt-get install curl -y > /dev/null
-apt-get install arp-scan -y > /dev/null
-apt-get install xdotool -y > /dev/null
-apt-get install hostapd dnsmasq -y > /dev/null
-echo " done"
+echo "Installing dependencies:"
+while read dep; do
+    echo -n "Installing $dep..."
+    apt-get -y install $dep > /dev/null
+    echo " done"
+done < "./dependencies.txt"
 
-echo -n "Removing no longer relevant packages..."
-apt-get autoremove --purge -y > /dev/null
-apt-get autoclean -y > /dev/null
-echo " done"
 
-# =============================
+# ==========================================================
 # Stop and disable access point services
-# =============================
+# ==========================================================
 
-systemctl stop dnsmasq
-systemctl stop hostapd
+systemctl stop dnsmasq > /dev/null
+systemctl stop hostapd > /dev/null
 
-systemctl disable dnsmasq.service
-systemctl disable hostapd.service
+systemctl disable dnsmasq.service > /dev/null
+systemctl disable hostapd.service > /dev/null
 
 
-# =============================
-# copy Web
-# =============================
+# ==========================================================
+# configuring web server and resources
+# ==========================================================
 
-echo -n "Configuring and copying web resources..."
+echo -n "Configuring web server and resources..."
 
-rm -rf /var/www/html/*
+rm -rf /var/www/*
 
-if [[ ! -d /var/www/html/modbros ]]; then
-    mkdir /var/www/html/modbros
-fi
+chmod +rx ./web/modbros/favicon.ico
+ln -s /home/modbros/ModbrosMonitoring/web /var/www/html
 
-if [[ ! -d /var/www/html/local ]]; then
-    mkdir /var/www/html/local
-fi
+sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.0/fpm/php.ini
+cat ./config/15-fastcgi-php.conf > /etc/lighttpd/conf-available/15-fastcgi-php.conf
 
-chmod +rx ./web/favicon.ico
-cp -rf ./web/modbros/* /var/www/html/modbros/
-cp -rf ./web/local/* /var/www/html/local/
-cp -rf ./web/index.html /var/www/html/
-cp -rf ./web/bootstrap* /var/www/html/
+lighttpd-enable-mod fastcgi > /dev/null
+lighttpd-enable-mod fastcgi-php > /dev/null
 
 echo " done"
 
 echo -n "Restarting web server..."
-service apache2 restart
+service lighttpd force-reload > /dev/null
+service lighttpd restart > /dev/null
+systemctl enable lighttpd.service > /dev/null
 echo " done"
 
 
-# =============================
-# backup original config files
-# =============================
-
-echo -n "Backup up original configuration files..."
-
-if [[ ! -f /etc/dhcpcd.conf.orig ]]; then
-    cp /etc/dhcpcd.conf /etc/dhcpcd.conf.orig
-fi
-
-if [[ ! -f /etc/wpa_supplicant/wpa_supplicant.conf.orig ]]; then
-    cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.orig
-fi
-
-if [[ ! -f /etc/dnsmasq.conf.orig ]]; then
-    cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-fi
-
-if [[ ! -f /etc/default/hostapd.orig ]]; then
-    cp /etc/default/hostapd /etc/default/hostapd.orig
-fi
-echo " done"
-
-# =============================
-# Configure DHCP (dnsmasq)
-# =============================
-
-echo -n "Configuring the DHCP server (dnsmasq)..."
-cp ./config/dnsmasq.conf /etc/dnsmasq.conf
-echo " done"
-
-# =============================
-# Configure access point (hostapd)
-# =============================
-
-echo -n "Configuring the access point host software (hostapd)..."
-
-cp ./config/hostapd.conf /etc/hostapd/hostapd.conf
-sed -i -e "s/#DAEMON_CONF=\"\"/DAEMON_CONF=\"\/etc\/hostapd\/hostapd.conf\"/g" /etc/default/hostapd
-
-echo " done"
-
-
-# =============================
+# ==========================================================
 # Set permissions
-# =============================
+# ==========================================================
 
 echo -n "Setting script and file permissions..."
 
-chmod 777 ./*.sh
 chmod 777 ./scripts/*.sh
 chmod 777 ./service/modbros.sh
 
@@ -172,45 +99,33 @@ chmod 444 ./config/*
 echo " done"
 
 
-# =============================
+# ==========================================================
 # Setting user permissions
-# =============================
+# ==========================================================
 
 echo -n "Setting necessary user permissions..."
 
-cp -f ./config/010_wwwdata-wifi /etc/sudoers.d
+cp -f ./config/010_modbros-nopasswd /etc/sudoers.d
 
-chmod 440 /etc/sudoers.d/010_wwwdata-wifi
+chmod 440 /etc/sudoers.d/010_modbros-nopasswd
 
 echo " done"
 
 
-# =============================
-# Set custom wallpaper
-# =============================
-
-#echo -n "Setting custom ModBros wallpaper..."
-#
-#export DISPLAY=:0
-#pcmanfm --set-wallpaper /home/pi/ModbrosMonitoring/Resources/modbros_wallpaper.png
-#
-#echo " done"
-
-
-# =============================
+# ==========================================================
 # Scan for available networks
-# =============================
+# ==========================================================
 
 echo -n "Scanning for available wireless networks..."
 
-iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > /var/www/html/modbros/networks
+iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > ./web/modbros/networks
 
 echo " done"
 
 
-# =============================
+# ==========================================================
 # Display drivers
-# =============================
+# ==========================================================
 
 echo -n "Pulling display drivers..."
 
@@ -221,22 +136,50 @@ chmod -R 755 LCD-show
 echo " done"
 
 
-# =============================
-# Service
-# =============================
+# ==========================================================
+# createAp
+# ==========================================================
 
-echo -n "Installing the ModBros service..."
+echo -n "Installing access point script..."
 
-cp ./service/modbros.service /lib/systemd/system/modbros.service
-systemctl daemon-reload
-systemctl enable modbros.service
-systemctl start modbros.service
+rm -rf create_ap
+git clone https://github.com/oblique/create_ap
+chmod -R 755 create_ap
+cd create_ap
+make install
+cd ..
+rm -rf create_ap
 
 echo " done"
 
-# =============================
+# ==========================================================
+# Cleanup
+# ==========================================================
+
+echo -n "Removing no longer relevant packages..."
+apt-get purge git make -y > /dev/null
+apt-get autoremove --purge -y > /dev/null
+apt-get autoclean -y > /dev/null
+apt-get clean -y > /dev/null
+echo " done"
+
+
+# ==========================================================
+# Service
+# ==========================================================
+
+echo -n "Installing the ModBros service..."
+
+ln -s /home/modbros/ModbrosMonitoring/service/modbros.service /lib/systemd/system/modbros.service
+systemctl daemon-reload
+systemctl enable modbros.service
+systemctl stop modbros.service
+
+echo " done"
+
+# ==========================================================
 # Reboot
-# =============================
+# ==========================================================
 
 echo "Installation completed"
 echo "Rebooting..."
