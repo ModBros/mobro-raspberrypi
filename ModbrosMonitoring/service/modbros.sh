@@ -28,7 +28,7 @@ URL_CONNECT_MOBRO='http://localhost/local/connecting.php'  # page 4
 URL_NOTFOUND='http://localhost/local/notfound.php'         # page 5
 
 # Ports
-MOBRO_PORT='42100'       # port of the MoBro desktop application
+MOBRO_PORT='42100'               # port of the MoBro desktop application
 
 # Global Vars
 AP_SSID='ModBros_Configuration'  # SSID of the created access point
@@ -61,10 +61,10 @@ log() {
 }
 
 sleep_pi() {
-    if [[ ${PI_VERSION} == *"Zero"* ]]; then
-      sleep $(($1 * 2))
+    if [[ ${NUM_CORES} -gt 1 ]]; then
+        sleep $1
     else
-      sleep $1
+        sleep $2
     fi
 }
 
@@ -77,23 +77,24 @@ start_chrome() {
         ${URL_CONNECT_MOBRO} \
         ${URL_NOTFOUND} \
         &>> "$LOG_DIR/log.txt" &
+    sleep_pi 10 60
 }
 
 stop_chrome() {
     # clean up previously running apps; gracefully at first then harshly
     sudo killall -TERM chromium-browser 2>/dev/null;
     sudo killall -TERM matchbox-window-manager 2>/dev/null;
-    sleep_pi 2
+    sleep_pi 2 5
     sudo killall -9 chromium-browser 2>/dev/null;
     sudo killall -9 matchbox-window-manager 2>/dev/null;
-    sleep_pi 1
+    sleep_pi 1 5
 }
 
 show_mobro() {
     log "chromium" "switching to MoBro application on '$1'"
     stop_chrome
     sudo xinit ./showmobro.sh "$1" &>> "$LOG_DIR/log.txt" &
-    sleep_pi 10
+    sleep_pi 10 30
 }
 
 show_page() {
@@ -105,7 +106,6 @@ show_page() {
                 stop_chrome
                 start_chrome
             fi
-            sleep_pi 15
             CURR_MODE='local'
             if [[ "$CURR_PAGE" != "$1" ]]; then
                 log "chromium" "switching to local page $1"
@@ -133,8 +133,10 @@ create_access_point() {
 
     # scan for available wifi networks
     sudo ifconfig wlan0 up
-    sleep_pi 2
+    sleep_pi 2 5
     sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
+
+    show_page 2
 
     # create access point
     sudo create_ap \
@@ -149,7 +151,6 @@ create_access_point() {
         wlan0 $AP_SSID $AP_PW \
         &>> "$LOG_DIR/log.txt"
 
-    show_page 2
     until [[ $(create_ap --list-running | grep wlan0 | wc -l) -gt 0 ]]; do
         log "create_access_point" "waiting for access point.."
         sleep 2
@@ -180,7 +181,7 @@ connect_wifi() {
     sudo systemctl restart networking.service
 
     # wait for connection
-    sleep_pi 20
+    sleep_pi 20 30
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
@@ -326,7 +327,7 @@ cp -f "$LOG_DIR/log.txt" "$LOG_DIR/log_0.txt" 2>/dev/null
 # clear current log
 echo '' > "$LOG_DIR/log.txt"
 
-log "Main" "starting service"
+log "Startup" "starting service"
 
 # env vars
 export DISPLAY=:0
@@ -335,53 +336,75 @@ export DISPLAY=:0
 echo "0" > "${MOBRO_FOUND_FLAG}"
 
 # disable dnsmasq and hostapd
-log "Main" "disabling services: dnsmasq, hostapd"
+log "Startup" "disabling services: dnsmasq, hostapd"
 sudo systemctl stop dnsmasq &>> "$LOG_DIR/log.txt"
 sudo systemctl disable dnsmasq.service &>> "$LOG_DIR/log.txt"
 sudo systemctl stop hostapd &>> "$LOG_DIR/log.txt"
 sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
 
-# start chrome to show default page
-start_chrome
+# check if wifi is configured
+# (skip if no network set - e.g. first boot)
+if [[ $(cat "$WIFI_FILE" | wc -l) -ge 1 ]]; then
 
-# wait for wifi connection if configured
-for i in {1..30}
-do
-    if [[ $(iwgetid wlan0 --raw) ]]; then
-        break;
+    if [[ ${NUM_CORES} -gt 1 ]]; then
+        # immediately start chrome and show default page
+        # (only on multicore Pi (2&3). PI Zero takes too long)
+        show_page 1
     fi
-    sleep 1
-done
 
-# startup wifi check
+    # scan for available networks to check if configured one is in range
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
+    WAIT_WIFI=1
+    if [[ $(cat "$NETWORKS_FILE" | wc -l) -ge 1 ]]; then # check if scan returned anything first
+        SSID=$(cat "$WIFI_FILE" | sed -n 1p) # SSID of configured network
+        if [[ $(cat "$NETWORKS_FILE" | grep "$SSID" | wc -l) -eq 0 ]]; then
+            log "Startup" "configured wifi network not in range"
+            WAIT_WIFI=0
+        fi
+        unset ${SSID}
+    fi
+
+    if [[ ${WAIT_WIFI} -eq 1 ]]; then
+        log "Startup" "waiting for wifi connection..."
+        for i in {1..15}
+        do
+            if [[ $(iwgetid wlan0 --raw) ]]; then
+                break;
+            fi
+            sleep 2
+        done
+    fi
+    unset ${WAIT_WIFI}
+fi
+
 if [[ $(iwgetid wlan0 --raw) ]]; then
-    log "Main" "connected to wifi"
+    log "Startup" "connected to wifi"
     IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
     if ! [[ -z ${IP} || -z ${KEY} ]]; then
-        log "Main" "found previously used host - checking"
+        log "Startup" "found previously used host - checking"
         try_ip "$IP" "$KEY"
         if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
-            log "Main" "found previously used host - success"
+            log "Startup" "found previously used host - success"
         else
-            log "Main" "previous host invalid, continuing"
+            log "Startup" "previous host invalid, continuing"
         fi
     fi
 
     if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
         # no previous present or no longer valid -> start service discovery
-        log "Main" "no previous or invalid - starting search"
+        log "Startup" "no previous or invalid - starting search"
         show_page 4
         service_discovery
     fi
 else
-    log "Main" "no wifi connection"
+    log "Startup" "no wifi connection"
     # not connected to wifi -> start hotspot
     create_access_point
 fi
 
 # disable blank screen
-log "Main" "disabling screen fade"
+log "Startup" "disabling screen fade"
 xset s off &>> "$LOG_DIR/log.txt"
 xset -dpms &>> "$LOG_DIR/log.txt"
 xset s noblank &>> "$LOG_DIR/log.txt"
