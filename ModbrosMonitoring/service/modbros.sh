@@ -181,7 +181,13 @@ connect_wifi() {
     sudo systemctl restart networking.service
 
     # wait for connection
-    sleep_pi 20 30
+    for i in {1..15}
+    do
+        if [[ $(iwgetid wlan0 --raw) ]]; then
+            break;
+        fi
+        sleep 2
+    done
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
