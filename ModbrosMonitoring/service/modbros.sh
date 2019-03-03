@@ -342,15 +342,15 @@ sudo systemctl disable dnsmasq.service &>> "$LOG_DIR/log.txt"
 sudo systemctl stop hostapd &>> "$LOG_DIR/log.txt"
 sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
 
+# immediately start chrome and show default page
+# (only on multicore Pi (2&3). PI Zero takes too long)
+if [[ ${NUM_CORES} -gt 1 ]]; then
+    show_page 1
+fi
+
 # check if wifi is configured
 # (skip if no network set - e.g. first boot)
-if [[ $(cat "$WIFI_FILE" | wc -l) -ge 1 ]]; then
-
-    if [[ ${NUM_CORES} -gt 1 ]]; then
-        # immediately start chrome and show default page
-        # (only on multicore Pi (2&3). PI Zero takes too long)
-        show_page 1
-    fi
+if [[ $(cat "$WIFI_FILE" | wc -l) -ge 4 ]]; then
 
     # scan for available networks to check if configured one is in range
     sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
