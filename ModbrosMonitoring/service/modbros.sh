@@ -17,6 +17,9 @@ VERSION_FILE='/home/modbros/ModbrosMonitoring/data/version.txt'
 MOBRO_FOUND_FLAG='/home/modbros/ModbrosMonitoring/data/mobro_found.txt'
 NETWORKS_FILE='/home/modbros/ModbrosMonitoring/web/modbros/networks'
 
+# Resources
+MODBROS_LOGO='/home/modbros/ModbrosMonitoring/resources/modbros.png'
+
 # Directories
 LOG_DIR='/home/modbros/ModbrosMonitoring/log'
 
@@ -60,6 +63,30 @@ log() {
     echo "$LOG_DATE | $TEMP : [$1] $2" >> "$LOG_DIR/log.txt"
 }
 
+wait_window() {
+    until [[ $(xdotool search --onlyvisible --class "$1" | wc -l) -gt 0 ]]; do
+        log "helper" "waiting for $1 to become available.."
+        sleep 2
+    done
+}
+
+sleep_cpu() {
+    CPU_USAGE=$(top -b -d1 -n1|grep -i "Cpu(s)"|head -c21|cut -d ' ' -f3|cut -d '%' -f1)
+    until [[ $(echo "$CPU_USAGE>20.0" | bc) -eq 0 ]]; do
+        log "helper" "cpu usage currently at $CPU_USAGE. waiting for it to come down..."
+        sleep 2
+    done
+}
+
+stop_process() {
+    log "helper" "stopping processes: $@"
+    # clean up previously running apps; gracefully at first then harshly
+    sudo killall -TERM $@ 2>/dev/null;
+    sleep_pi 1 2
+    sudo killall -9 $@ 2>/dev/null;
+    sleep_pi 1 2
+}
+
 sleep_pi() {
     if [[ ${NUM_CORES} -gt 1 ]]; then
         sleep $1
@@ -68,33 +95,60 @@ sleep_pi() {
     fi
 }
 
+show_logo() {
+    log "feh" "showing logo $1"
+    feh \
+        --fullscreen \
+        --hide-pointer \
+        --no-menus \
+        --zoom fill \
+        --image-bg "white" \
+        $1 &>> "$LOG_DIR/log.txt" &
+}
+
+init_x() {
+    log "init_x" "starting x server"
+    sudo xinit \
+        /bin/sh -c "exec /usr/bin/matchbox-window-manager -use_titlebar no -use_cursor no" \
+        -- -nocursor \
+        &>> "$LOG_DIR/log.txt" &
+}
+
 start_chrome() {
     log "chromium" "starting browser"
-    sudo xinit ./startchrome.sh \
+    chromium-browser \
+        --allow-insecure-localhost \
+        --no-wifi \
+        --no-default-browser-check \
+        --no-service-autorun \
+        --disable-infobars \
+        --noerrdialogs \
+        --incognito \
+        --kiosk \
         ${URL_MODBROS} \
         ${URL_HOTSPOT} \
         ${URL_CONNECT_WIFI} \
         ${URL_CONNECT_MOBRO} \
         ${URL_NOTFOUND} \
         &>> "$LOG_DIR/log.txt" &
-    sleep_pi 10 60
-}
-
-stop_chrome() {
-    # clean up previously running apps; gracefully at first then harshly
-    sudo killall -TERM chromium-browser 2>/dev/null;
-    sudo killall -TERM matchbox-window-manager 2>/dev/null;
-    sleep_pi 2 5
-    sudo killall -9 chromium-browser 2>/dev/null;
-    sudo killall -9 matchbox-window-manager 2>/dev/null;
-    sleep_pi 1 5
+    sleep_pi 5 15
+    sleep_cpu
+    wait_window "chromium"
 }
 
 show_mobro() {
     log "chromium" "switching to MoBro application on '$1'"
-    stop_chrome
-    sudo xinit ./showmobro.sh "$1" &>> "$LOG_DIR/log.txt" &
-    sleep_pi 10 30
+    chromium-browser \
+        --no-default-browser-check \
+        --no-service-autorun \
+        --disable-infobars \
+        --noerrdialogs \
+        --incognito \
+        --kiosk \
+        --app=$1 \
+        &>> "$LOG_DIR/log.txt" &
+    sleep_cpu
+    wait_window "chromium"
 }
 
 show_page() {
@@ -103,24 +157,32 @@ show_page() {
             if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
                 start_chrome
             elif [[ "$CURR_MODE" != "local" ]]; then
-                stop_chrome
+                stop_process "chromium-browser"
                 start_chrome
             fi
             CURR_MODE='local'
             if [[ "$CURR_PAGE" != "$1" ]]; then
                 log "chromium" "switching to local page $1"
                 CURR_PAGE="$1"
-                xdotool windowactivate $(xdotool search --onlyvisible --class chromium | head -1)
-                xdotool key "ctrl+$1"
+                xdotool windowactivate $(xdotool search --onlyvisible --class chromium | head -1) &>> "$LOG_DIR/log.txt"
+                xdotool key "ctrl+$1" &>> "$LOG_DIR/log.txt"
                 if [[ "$1" != "1" ]]; then
                     # reload if not index page
                     xdotool key "ctrl+F5"
                 fi
             fi
+            if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
+                stop_process "feh"
+            fi
             ;;
         *)
             if [[ "$CURR_MODE" != "mobro" || "$CURR_PAGE" != "$1" ]]; then
+                if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -eq 0 ]]; then
+                    show_logo ${MODBROS_LOGO}
+                fi
+                stop_process "chromium-browser"
                 show_mobro "$1"
+                stop_process "feh"
             fi
             CURR_MODE='mobro'
             CURR_PAGE="$1"
@@ -192,6 +254,7 @@ connect_wifi() {
     if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
         show_page 4
+        sleep_pi 5 10
         service_discovery
     else
         log "connect_wifi" "not connected"
@@ -221,7 +284,7 @@ service_discovery() {
     log "service_discovery" "starting service discovery"
 
     echo "0" > "${MOBRO_FOUND_FLAG}"
-    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" >> "${HOSTS_FILE}"
+    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>> "$LOG_DIR/log.txt" 1>> "${HOSTS_FILE}"
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
 
     while read IP; do
@@ -233,7 +296,7 @@ service_discovery() {
     done < "${HOSTS_FILE}"
 
     # fallback: get current IP of pi to try all host in range
-    PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+    PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>> "$LOG_DIR/log.txt")
     if ! [[ -z ${PI_IP} ]]; then
         PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
         PI_IP_2=$(echo "$PI_IP" | cut -d . -f 2)
@@ -348,11 +411,14 @@ sudo systemctl disable dnsmasq.service &>> "$LOG_DIR/log.txt"
 sudo systemctl stop hostapd &>> "$LOG_DIR/log.txt"
 sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
 
-# immediately start chrome and show default page
-# (only on multicore Pi (2&3). PI Zero takes too long)
-if [[ ${NUM_CORES} -gt 1 ]]; then
-    show_page 1
-fi
+# start x
+init_x
+
+# show background
+show_logo ${MODBROS_LOGO}
+
+# wait for CPU usage to come down
+sleep_cpu
 
 # check if wifi is configured
 # (skip if no network set - e.g. first boot)
@@ -409,11 +475,6 @@ else
     create_access_point
 fi
 
-# disable blank screen
-log "Startup" "disabling screen fade"
-xset s off &>> "$LOG_DIR/log.txt"
-xset -dpms &>> "$LOG_DIR/log.txt"
-xset s noblank &>> "$LOG_DIR/log.txt"
 
 # ==========================================================
 # Main Loop

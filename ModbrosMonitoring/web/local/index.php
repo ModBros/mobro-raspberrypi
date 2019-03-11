@@ -11,7 +11,7 @@
   }
 
   .bg {
-    background-image: url("modbros_wallpaper.png");
+    background-image: url("background.png");
     height: 100%;
     background-position: center;
     background-repeat: no-repeat;

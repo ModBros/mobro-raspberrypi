@@ -52,7 +52,7 @@
               $pw = $_POST['pw'];
               $key = $_POST['key'];
               $updated = time();
-              $data = $ssid . "\n" . $pw . "\n" . $key . "\n" . $updated;
+              $data = $ssid . "\n" . $pw . "\n" . $key . "\n" . $updated . "\n";
               $ret = file_put_contents('/home/modbros/ModbrosMonitoring/data/wifi.txt', $data, LOCK_EX);
               if ($ret === false) {
                   echo('There was an error saving the access data!');
