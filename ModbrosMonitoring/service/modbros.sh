@@ -305,7 +305,7 @@ service_discovery() {
 
         PI_IP_4=0
         while [[ ${PI_IP_4} -lt 255 ]]; do
-            for j in $(seq $NUM_CORES)
+            for j in $(seq $((2*$NUM_CORES)))
             do
                 try_ip "$PI_IP_1.$PI_IP_2.$PI_IP_3.$PI_IP_4" "$KEY" &
                 pids[${j}]=$! # remember pids of started sub processes
