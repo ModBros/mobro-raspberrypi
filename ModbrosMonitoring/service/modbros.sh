@@ -21,16 +21,15 @@ NETWORKS_FILE='/home/modbros/ModbrosMonitoring/web/modbros/networks'
 # Resources
 IMAGE_MODBROS='/home/modbros/ModbrosMonitoring/resources/modbros.png'
 IMAGE_UPDATE='/home/modbros/ModbrosMonitoring/resources/update.png'
+IMAGE_NOTFOUND='/home/modbros/ModbrosMonitoring/resources/notfound.png'
+IMAGE_CONNECTWIFI='/home/modbros/ModbrosMonitoring/resources/connectwifi.png'
+IMAGE_DISCOVERY='/home/modbros/ModbrosMonitoring/resources/discovery.png'
+IMAGE_HOTSPOT='/home/modbros/ModbrosMonitoring/resources/hotspot.png'
+IMAGE_WIFIFAILED='/home/modbros/ModbrosMonitoring/resources/wififailed.png'
+IMAGE_WIFISUCCESS='/home/modbros/ModbrosMonitoring/resources/wifisuccess.png'
 
 # Directories
 LOG_DIR='/home/modbros/ModbrosMonitoring/log'
-
-# URLs (local pages)
-URL_MODBROS='http://localhost/local/index.php'             # page 1
-URL_HOTSPOT='http://localhost/local/hotspot.php'           # page 2
-URL_CONNECT_WIFI='http://localhost/local/connectwifi.php'  # page 3
-URL_CONNECT_MOBRO='http://localhost/local/connecting.php'  # page 4
-URL_NOTFOUND='http://localhost/local/notfound.php'         # page 5
 
 # Ports
 MOBRO_PORT='42100'               # port of the MoBro desktop application
@@ -44,11 +43,9 @@ CHECK_INTERVAL_BACKGROUND=10     # in loops
 HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0             # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi credentials
-CURR_PAGE='1'                    # save currently active page
-CURR_MODE='local'                # save currently active mode
 CURR_MOBRO_URL=''                # save current MoBro Url
 CURR_IMAGE=''                    # save currently displayed image
-NUM_CORES=$(nproc --all)         # number of available cores
+NUM_CORES=$(nproc --all)         # number of available
 
 
 # versions
@@ -83,11 +80,7 @@ sleep_cpu() {
 
 stop_process() {
     log "helper" "stopping processes: $@"
-    # clean up previously running apps; gracefully at first then harshly
     sudo killall -TERM $@ 2>/dev/null;
-    sleep_pi 1 2
-    sudo killall -9 $@ 2>/dev/null;
-    sleep_pi 1 2
 }
 
 sleep_pi() {
@@ -99,6 +92,10 @@ sleep_pi() {
 }
 
 show_image() {
+    if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -gt 0 ]]; then
+        stop_process "chromium-browser"
+        sleep_pi 1 2
+    fi
     if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
         if [[ "$CURR_IMAGE" == "$1" ]]; then
             # already showing requested image
@@ -110,13 +107,13 @@ show_image() {
     log "feh" "switching to image $1"
     feh \
         --fullscreen \
-        --scale-down \
-        --auto-zoom \
         --hide-pointer \
         --no-menus \
-        --zoom fill \
+        --scale-down \
+        --auto-zoom \
         --image-bg "white" \
         $1 &>> "$LOG_DIR/log.txt" &
+    sleep_pi 0 1
 }
 
 init_x() {
@@ -127,29 +124,18 @@ init_x() {
         &>> "$LOG_DIR/log.txt" &
 }
 
-start_chrome() {
-    log "chromium" "starting browser"
-    chromium-browser \
-        --allow-insecure-localhost \
-        --no-wifi \
-        --no-default-browser-check \
-        --no-service-autorun \
-        --disable-infobars \
-        --noerrdialogs \
-        --incognito \
-        --kiosk \
-        ${URL_MODBROS} \
-        ${URL_HOTSPOT} \
-        ${URL_CONNECT_WIFI} \
-        ${URL_CONNECT_MOBRO} \
-        ${URL_NOTFOUND} \
-        &>> "$LOG_DIR/log.txt" &
-    sleep_pi 5 15
-    sleep_cpu
-    wait_window "chromium"
-}
-
 show_mobro() {
+    if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -gt 0 ]]; then
+        if [[ "$CURR_MOBRO_URL" == "$1" ]]; then
+            # already showing requested page
+            return
+        fi
+        stop_process "chromium-browser"
+    fi
+    if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
+        stop_process "feh"
+    fi
+    CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
     chromium-browser \
         --no-default-browser-check \
@@ -164,45 +150,6 @@ show_mobro() {
     wait_window "chromium"
 }
 
-show_page() {
-    case "$1" in
-        [1-5])
-            if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -eq 0 ]]; then
-                start_chrome
-            elif [[ "$CURR_MODE" != "local" ]]; then
-                stop_process "chromium-browser"
-                start_chrome
-            fi
-            CURR_MODE='local'
-            if [[ "$CURR_PAGE" != "$1" ]]; then
-                log "chromium" "switching to local page $1"
-                CURR_PAGE="$1"
-                xdotool windowactivate $(xdotool search --onlyvisible --class chromium | head -1) &>> "$LOG_DIR/log.txt"
-                xdotool key "ctrl+$1" &>> "$LOG_DIR/log.txt"
-                if [[ "$1" != "1" ]]; then
-                    # reload if not index page
-                    xdotool key "ctrl+F5"
-                fi
-            fi
-            if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
-                stop_process "feh"
-            fi
-            ;;
-        *)
-            if [[ "$CURR_MODE" != "mobro" || "$CURR_PAGE" != "$1" ]]; then
-                if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -eq 0 ]]; then
-                    show_image ${IMAGE_MODBROS}
-                fi
-                stop_process "chromium-browser"
-                show_mobro "$1"
-                stop_process "feh"
-            fi
-            CURR_MODE='mobro'
-            CURR_PAGE="$1"
-            ;;
-    esac
-}
-
 create_access_point() {
     log "create_access_point" "creating access point"
 
@@ -211,7 +158,7 @@ create_access_point() {
     sleep_pi 2 5
     sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
 
-    show_page 2
+    show_image ${IMAGE_HOTSPOT}
 
     # create access point
     sudo create_ap \
@@ -235,7 +182,7 @@ create_access_point() {
 
 connect_wifi() {
     log "connect_wifi" "connecting to wifi: $1 $2"
-    show_page 3
+    show_image ${IMAGE_CONNECTWIFI}
 
     # stop access point
     sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
@@ -266,11 +213,14 @@ connect_wifi() {
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
-        show_page 4
-        sleep_pi 5 10
+        show_image ${IMAGE_WIFISUCCESS}
+        sleep_pi 10 10
+        show_image ${IMAGE_DISCOVERY}
         service_discovery
     else
         log "connect_wifi" "not connected"
+        show_image ${IMAGE_WIFIFAILED}
+        sleep_pi 15 15
         create_access_point
     fi
 }
@@ -281,7 +231,7 @@ try_ip() {
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
-        show_page "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
+        show_mobro "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
 
         # write found (use file as kind of global variable)
         # -> this function is started in a sub process!
@@ -345,7 +295,7 @@ service_discovery() {
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
         truncate -s 0 "${HOSTS_FILE}"
-        show_page 5
+        show_image ${IMAGE_NOTFOUND}
     fi
 }
 
@@ -386,7 +336,7 @@ background_check() {
         log "background_check" "starting background check"
         BACKGROUND_COUNTER=0
         if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
-            show_page 4
+            show_image ${IMAGE_DISCOVERY}
         fi
         service_discovery
     else
@@ -456,6 +406,7 @@ init_x
 show_image ${IMAGE_MODBROS}
 
 # wait for CPU usage to come down
+sleep_pi 5 10
 sleep_cpu
 
 # check if wifi is configured
@@ -509,7 +460,7 @@ if [[ $(iwgetid wlan0 --raw) ]]; then
     if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
         # no previous present or no longer valid -> start service discovery
         log "Startup" "no previous or invalid - starting search"
-        show_page 4
+        show_image ${IMAGE_DISCOVERY}
         service_discovery
     fi
 else
