@@ -38,9 +38,10 @@ MOBRO_PORT='42100'               # port of the MoBro desktop application
 # Global Vars
 AP_SSID='ModBros_Configuration'  # SSID of the created access point
 AP_PW='modbros123'               # password of the created access point
-LOOP_INTERVAL=5                  # in seconds
-CHECK_INTERVAL_HOTSPOT=60        # in loops (60x5=300s -> every 5 minutes)
-CHECK_INTERVAL_BACKGROUND=10     # in loops
+LOOP_INTERVAL=10                 # in seconds
+CHECK_INTERVAL_HOTSPOT=30        # in loops (30x10=300s -> every 5 minutes)
+CHECK_INTERVAL_BACKGROUND=15     # in loops
+UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
 HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0             # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi credentials
@@ -326,8 +327,6 @@ hotspot_check() {
             log "hotspot_check" "trying again to connect with $SSID and $PW"
             connect_wifi "$SSID" "$PW"
         fi
-    else
-        log "hotspot_check" "skipping hotspot check"
     fi
 }
 
@@ -340,8 +339,6 @@ background_check() {
             show_image ${IMAGE_DISCOVERY}
         fi
         service_discovery
-    else
-        log "background_check" "skipping background check"
     fi
 }
 
@@ -350,8 +347,8 @@ update() {
     LAST_UPDATE_DATE=$(cat "$UPDATED_FILE" | sed -n 1p)
     CURR_DATE=$(date "+%s")
     if ! [[ -z ${LAST_UPDATE_DATE} ]]; then
-        # skip if it was updated in the past 2 weeks
-        if [[ $(expr ${CURR_DATE} - ${LAST_UPDATE_DATE}) -le 1210000 ]]; then
+        # skip if it was updated recently
+        if [[ $(expr ${CURR_DATE} - ${LAST_UPDATE_DATE}) -le ${UPDATE_THRESHOLD} ]]; then
             log "update" "skipping update (updated in the past 2 weeks)"
             return
         fi
@@ -478,24 +475,23 @@ fi
 # ==========================================================
 
 log "Main" "Entering main loop"
+LOOP_COUNTER=0
 while true; do
+    log "Main" "loop $LOOP_COUNTER"
     if [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; then
         # no hotspot running
-        log "Main" "no hotspot"
         if ! [[ $(iwgetid wlan0 --raw) ]]; then
-            log "Main" "no wifi"
             create_access_point
         else
-            log "Main" "wifi connected"
             # we're connected - keep checking in background (page still response / page becomes available)
             background_check
         fi
     else
-        log "Main" "hotspot up"
         # check for new wifi data + if hotspot open too long, try to connect to wifi again
         hotspot_check
     fi
     sleep ${LOOP_INTERVAL}
+    LOOP_COUNTER=$((LOOP_COUNTER+1))
 done
 
 log "Main" "unexpected shutdown"
