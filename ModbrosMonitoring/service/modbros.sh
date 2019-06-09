@@ -21,6 +21,7 @@ NETWORKS_FILE='/home/modbros/ModbrosMonitoring/web/modbros/networks'
 # Resources
 IMAGE_MODBROS='/home/modbros/ModbrosMonitoring/resources/modbros.png'
 IMAGE_UPDATE='/home/modbros/ModbrosMonitoring/resources/update.png'
+IMAGE_FOUND='/home/modbros/ModbrosMonitoring/resources/found.png'
 IMAGE_NOTFOUND='/home/modbros/ModbrosMonitoring/resources/notfound.png'
 IMAGE_CONNECTWIFI='/home/modbros/ModbrosMonitoring/resources/connectwifi.png'
 IMAGE_DISCOVERY='/home/modbros/ModbrosMonitoring/resources/discovery.png'
@@ -132,9 +133,9 @@ show_mobro() {
         fi
         stop_process "chromium-browser"
     fi
-    if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
-        stop_process "feh"
-    fi
+    show_image ${IMAGE_FOUND}
+    sleep_pi 5 10
+    stop_process "feh"
     CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
     chromium-browser \
@@ -361,11 +362,11 @@ update() {
         return
     fi
     log "update" "starting update/upgrade"
-    echo "$CURR_DATE" > "${UPDATED_FILE}"
     show_image ${IMAGE_UPDATE}
     sudo apt-get update &>> "$LOG_DIR/log.txt"
     sudo apt-get upgrade -y &>> "$LOG_DIR/log.txt"
     sudo apt-get autoremove -y &>> "$LOG_DIR/log.txt"
+    echo "$CURR_DATE" > "${UPDATED_FILE}"
     log "update" "upgrade done"
 }
 
@@ -449,6 +450,8 @@ if [[ $(iwgetid wlan0 --raw) ]]; then
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
     if ! [[ -z ${IP} || -z ${KEY} ]]; then
         log "Startup" "found previously used host - checking"
+        show_image ${IMAGE_DISCOVERY}
+        sleep_pi 2 5
         try_ip "$IP" "$KEY"
         if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
             log "Startup" "found previously used host - success"
