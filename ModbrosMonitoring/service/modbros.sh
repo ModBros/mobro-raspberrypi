@@ -14,11 +14,13 @@
 HOSTS_FILE='/home/modbros/ModbrosMonitoring/data/hosts.txt'
 WIFI_FILE='/home/modbros/ModbrosMonitoring/data/wifi.txt'
 VERSION_FILE='/home/modbros/ModbrosMonitoring/data/version.txt'
+UPDATED_FILE='/home/modbros/ModbrosMonitoring/data/updated.txt'
 MOBRO_FOUND_FLAG='/home/modbros/ModbrosMonitoring/data/mobro_found.txt'
 NETWORKS_FILE='/home/modbros/ModbrosMonitoring/web/modbros/networks'
 
 # Resources
-MODBROS_LOGO='/home/modbros/ModbrosMonitoring/resources/modbros.png'
+IMAGE_MODBROS='/home/modbros/ModbrosMonitoring/resources/modbros.png'
+IMAGE_UPDATE='/home/modbros/ModbrosMonitoring/resources/update.png'
 
 # Directories
 LOG_DIR='/home/modbros/ModbrosMonitoring/log'
@@ -45,6 +47,7 @@ LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi crede
 CURR_PAGE='1'                    # save currently active page
 CURR_MODE='local'                # save currently active mode
 CURR_MOBRO_URL=''                # save current MoBro Url
+CURR_IMAGE=''                    # save currently displayed image
 NUM_CORES=$(nproc --all)         # number of available cores
 
 
@@ -95,10 +98,20 @@ sleep_pi() {
     fi
 }
 
-show_logo() {
-    log "feh" "showing logo $1"
+show_image() {
+    if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
+        if [[ "$CURR_IMAGE" == "$1" ]]; then
+            # already showing requested image
+            return
+        fi
+        stop_process "feh"
+    fi
+    CURR_IMAGE="$1"
+    log "feh" "switching to image $1"
     feh \
         --fullscreen \
+        --scale-down \
+        --auto-zoom \
         --hide-pointer \
         --no-menus \
         --zoom fill \
@@ -178,7 +191,7 @@ show_page() {
         *)
             if [[ "$CURR_MODE" != "mobro" || "$CURR_PAGE" != "$1" ]]; then
                 if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -eq 0 ]]; then
-                    show_logo ${MODBROS_LOGO}
+                    show_image ${IMAGE_MODBROS}
                 fi
                 stop_process "chromium-browser"
                 show_mobro "$1"
@@ -381,16 +394,41 @@ background_check() {
     fi
 }
 
+update() {
+    log "update" "performing update check"
+    LAST_UPDATE_DATE=$(cat "$UPDATED_FILE" | sed -n 1p)
+    CURR_DATE=$(date "+%s")
+    if ! [[ -z ${LAST_UPDATE_DATE} ]]; then
+        # skip if it was updated in the past 2 weeks
+        if [[ $(expr ${CURR_DATE} - ${LAST_UPDATE_DATE}) -le 1210000 ]]; then
+            log "update" "skipping update (updated in the past 2 weeks)"
+            return
+        fi
+    fi
+    wget -q --spider http://google.com
+    if [[ $? -ne 0 ]]; then
+        log "update" "skipping update (no internet)"
+        return
+    fi
+    log "update" "starting update/upgrade"
+    echo "$CURR_DATE" > "${UPDATED_FILE}"
+    show_image ${IMAGE_UPDATE}
+    sudo apt-get update &>> "$LOG_DIR/log.txt"
+    sudo apt-get upgrade -y &>> "$LOG_DIR/log.txt"
+    sudo apt-get autoremove -y &>> "$LOG_DIR/log.txt"
+    log "update" "upgrade done"
+}
 
 # ==========================================================
 # Startup Sequence
 # ==========================================================
 
-# copy log files to preserve the previous 5 starts
-mv -f "$LOG_DIR/log_3.txt" "$LOG_DIR/log_4.txt" 2>/dev/null
-mv -f "$LOG_DIR/log_2.txt" "$LOG_DIR/log_3.txt" 2>/dev/null
-mv -f "$LOG_DIR/log_1.txt" "$LOG_DIR/log_2.txt" 2>/dev/null
-mv -f "$LOG_DIR/log_0.txt" "$LOG_DIR/log_1.txt" 2>/dev/null
+# copy log files to preserve the previous 10 starts
+
+for i in {8..0}
+do
+    mv -f "$LOG_DIR/log_$i.txt" "$LOG_DIR/log_$(expr ${i} + 1).txt" 2>/dev/null
+done
 cp -f "$LOG_DIR/log.txt" "$LOG_DIR/log_0.txt" 2>/dev/null
 
 # clear current log
@@ -415,7 +453,7 @@ sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
 init_x
 
 # show background
-show_logo ${MODBROS_LOGO}
+show_image ${IMAGE_MODBROS}
 
 # wait for CPU usage to come down
 sleep_cpu
@@ -451,6 +489,11 @@ fi
 
 if [[ $(iwgetid wlan0 --raw) ]]; then
     log "Startup" "connected to wifi"
+
+    # perform update if necessary
+    update
+    show_image ${IMAGE_MODBROS}
+
     IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
     if ! [[ -z ${IP} || -z ${KEY} ]]; then
