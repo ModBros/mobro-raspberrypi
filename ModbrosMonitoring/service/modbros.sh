@@ -124,14 +124,6 @@ show_image() {
     sleep_pi 0 1
 }
 
-init_x() {
-    log "init_x" "starting x server"
-    sudo xinit \
-        /bin/sh -c "exec /usr/bin/matchbox-window-manager -use_titlebar no -use_cursor no" \
-        -- -nocursor \
-        &>> "$LOG_DIR/log.txt" &
-}
-
 show_mobro() {
     if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -gt 0 ]]; then
         if [[ "$CURR_MOBRO_URL" == "$1" ]]; then
@@ -154,7 +146,6 @@ show_mobro() {
         --kiosk \
         --app=$1 \
         &>> "$LOG_DIR/log.txt" &
-    sleep_cpu
     wait_window "chromium"
 }
 
@@ -404,7 +395,11 @@ sudo systemctl stop hostapd &>> "$LOG_DIR/log.txt"
 sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
 
 # start x
-init_x
+log "Startup" "starting x server"
+sudo xinit \
+    /bin/sh -c "exec /usr/bin/matchbox-window-manager -use_titlebar no -use_cursor no" \
+    -- -nocursor \
+    &>> "$LOG_DIR/log.txt" &
 
 # show background
 show_image ${IMAGE_MODBROS}
@@ -416,8 +411,8 @@ sleep_cpu
 # check if wifi is configured
 # (skip if no network set - e.g. first boot)
 if [[ $(cat "$WIFI_FILE" | wc -l) -ge 4 ]]; then
-
-    # scan for available networks to check if configured one is in range
+    # check if configured network is in range
+    log "Startup" "scanning for wireless networks"
     sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
     WAIT_WIFI=1
     if [[ $(cat "$NETWORKS_FILE" | wc -l) -ge 1 ]]; then # check if scan returned anything first
@@ -440,7 +435,10 @@ if [[ $(cat "$WIFI_FILE" | wc -l) -ge 4 ]]; then
         done
     fi
     unset ${WAIT_WIFI}
+else
+    log "Startup" "no previous network configuration found"
 fi
+
 
 if [[ $(iwgetid wlan0 --raw) ]]; then
     log "Startup" "connected to wifi"
