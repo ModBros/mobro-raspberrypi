@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ==========================================================
+# ====================================================================================================================
 # Modbros Monitoring Service - Raspberry Pi
 #
 # systemd service
@@ -8,7 +8,7 @@
 #
 # Created with <3 in Austria by: (c) ModBros 2019
 # Contact: mod-bros.com
-# ==========================================================
+# ====================================================================================================================
 
 # Files
 HOSTS_FILE='/home/modbros/ModbrosMonitoring/data/hosts.txt'
@@ -55,9 +55,9 @@ PI_VERSION=$(cat /proc/device-tree/model)           # pi version (e.g. Raspberry
 SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
 
 
-# ==========================================================
+# ====================================================================================================================
 # Functions
-# ==========================================================
+# ====================================================================================================================
 
 log() {
     LOG_DATE=$(date "+%d.%m.%y %T");
@@ -242,10 +242,24 @@ try_ip() {
 }
 
 service_discovery() {
-    # search available IPs on the network
     log "service_discovery" "starting service discovery"
 
     echo "0" > "${MOBRO_FOUND_FLAG}"
+
+    # check previous host if configured
+    IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
+    KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
+    if ! [[ -z ${IP} || -z ${KEY} ]]; then
+        log "service_discovery" "checking previous host"
+        try_ip "$IP" "$KEY"
+        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
+            # found MoBro application -> done
+            return
+        fi
+    fi
+
+    # search available IPs on the network
+    log "service_discovery" "performing arp scan"
     sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>> "$LOG_DIR/log.txt" 1>> "${HOSTS_FILE}"
     KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
 
@@ -258,6 +272,7 @@ service_discovery() {
     done < "${HOSTS_FILE}"
 
     # fallback: get current IP of pi to try all host in range
+    log "service_discovery" "fallback"
     PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>> "$LOG_DIR/log.txt")
     if ! [[ -z ${PI_IP} ]]; then
         PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
@@ -346,7 +361,7 @@ update() {
     if ! [[ -z ${LAST_UPDATE_DATE} ]]; then
         # skip if it was updated recently
         if [[ $(expr ${CURR_DATE} - ${LAST_UPDATE_DATE}) -le ${UPDATE_THRESHOLD} ]]; then
-            log "update" "skipping update (updated in the past 2 weeks)"
+            log "update" "skipping update (last update below threshold)"
             return
         fi
     fi
@@ -364,9 +379,72 @@ update() {
     log "update" "upgrade done"
 }
 
-# ==========================================================
+initial_wifi_check() {
+    # check if wifi is configured
+    # (skip if no network set - e.g. first boot)
+    if [[ $(cat "$WIFI_FILE" | wc -l) -lt 4 ]]; then
+        log "Startup" "no previous network configuration found"
+        create_access_point
+        return
+    fi
+
+    show_image ${IMAGE_CONNECTWIFI}
+    # check if configured network is in range
+    log "Startup" "scanning for wireless networks"
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
+    WAIT_WIFI=1
+    if [[ $(cat "$NETWORKS_FILE" | wc -l) -ge 1 ]]; then # check if scan returned anything first
+        SSID=$(cat "$WIFI_FILE" | sed -n 1p) # SSID of configured network
+        if [[ $(cat "$NETWORKS_FILE" | grep "$SSID" | wc -l) -eq 0 ]]; then
+            WAIT_WIFI=0
+        fi
+    fi
+
+    # we need to set the global variable to indicate we tried this network
+    LAST_CHECKED_WIFI=$(cat "$WIFI_FILE" | sed -n 4p) # 4th line contains updated timestamp
+
+    if [[ ${WAIT_WIFI} -ne 1 ]]; then
+        # previous wifi not reachable
+        log "Startup" "configured wifi network not in range"
+        show_image ${IMAGE_WIFIFAILED}
+        create_access_point
+        return
+    fi
+
+    log "Startup" "waiting for wifi connection..."
+    WIFI_CONNECTED=0
+    for i in {1..20}
+    do
+        if [[ $(iwgetid wlan0 --raw) ]]; then
+            WIFI_CONNECTED=1
+            break;
+        fi
+        sleep 2
+    done
+
+    if [[ ${WIFI_CONNECTED} -ne 1 ]]; then
+        log "Startup" "couldn't connect to wifi"
+        show_image ${IMAGE_WIFIFAILED}
+        create_access_point
+        return
+    fi
+
+    log "Startup" "connected to wifi"
+    show_image ${IMAGE_WIFISUCCESS}
+    sleep_pi 2 2
+
+    # perform update if necessary
+    update
+    show_image ${IMAGE_MODBROS}
+
+    # search network for application
+    show_image ${IMAGE_DISCOVERY}
+    service_discovery
+}
+
+# ====================================================================================================================
 # Startup Sequence
-# ==========================================================
+# ====================================================================================================================
 
 # copy log files to preserve the previous 10 starts
 
@@ -408,75 +486,13 @@ show_image ${IMAGE_MODBROS}
 sleep_cpu
 sleep_pi 5 5
 
-# check if wifi is configured
-# (skip if no network set - e.g. first boot)
-if [[ $(cat "$WIFI_FILE" | wc -l) -ge 4 ]]; then
-    # check if configured network is in range
-    log "Startup" "scanning for wireless networks"
-    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
-    WAIT_WIFI=1
-    if [[ $(cat "$NETWORKS_FILE" | wc -l) -ge 1 ]]; then # check if scan returned anything first
-        SSID=$(cat "$WIFI_FILE" | sed -n 1p) # SSID of configured network
-        if [[ $(cat "$NETWORKS_FILE" | grep "$SSID" | wc -l) -eq 0 ]]; then
-            log "Startup" "configured wifi network not in range"
-            WAIT_WIFI=0
-        fi
-        unset ${SSID}
-    fi
+# try to connect to wifi (if previously configured)
+# and try to connect to mobro
+initial_wifi_check
 
-    if [[ ${WAIT_WIFI} -eq 1 ]]; then
-        log "Startup" "waiting for wifi connection..."
-        for i in {1..15}
-        do
-            if [[ $(iwgetid wlan0 --raw) ]]; then
-                break;
-            fi
-            sleep 2
-        done
-    fi
-    unset ${WAIT_WIFI}
-else
-    log "Startup" "no previous network configuration found"
-fi
-
-
-if [[ $(iwgetid wlan0 --raw) ]]; then
-    log "Startup" "connected to wifi"
-
-    # perform update if necessary
-    update
-    show_image ${IMAGE_MODBROS}
-
-    IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
-    KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
-    if ! [[ -z ${IP} || -z ${KEY} ]]; then
-        log "Startup" "found previously used host - checking"
-        show_image ${IMAGE_DISCOVERY}
-        sleep_pi 2 5
-        try_ip "$IP" "$KEY"
-        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
-            log "Startup" "found previously used host - success"
-        else
-            log "Startup" "previous host invalid, continuing"
-        fi
-    fi
-
-    if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
-        # no previous present or no longer valid -> start service discovery
-        log "Startup" "no previous or invalid - starting search"
-        show_image ${IMAGE_DISCOVERY}
-        service_discovery
-    fi
-else
-    log "Startup" "no wifi connection"
-    # not connected to wifi -> start hotspot
-    create_access_point
-fi
-
-
-# ==========================================================
+# ====================================================================================================================
 # Main Loop
-# ==========================================================
+# ====================================================================================================================
 
 log "Main" "Entering main loop"
 LOOP_COUNTER=0

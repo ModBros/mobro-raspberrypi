@@ -27,5 +27,4 @@ cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_
 # reset data files
 : > /home/modbros/ModbrosMonitoring/data/hosts.txt
 : > /home/modbros/ModbrosMonitoring/data/wifi.txt
-: > /home/modbros/ModbrosMonitoring/data/updated.txt
 echo -n "0" > /home/modbros/ModbrosMonitoring/data/mobro_found.txt
