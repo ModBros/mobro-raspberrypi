@@ -60,9 +60,9 @@ SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
 # ==========================================================
 
 log() {
-    LOG_DATE=$(date "+%m%d%Y %T");
+    LOG_DATE=$(date "+%d.%m.%y %T");
     TEMP=$(sudo vcgencmd measure_temp)
-    echo "$LOG_DATE | $TEMP : [$1] $2" >> "$LOG_DIR/log.txt"
+    echo "$LOG_DATE | ${TEMP:5} : [$1] $2" >> "$LOG_DIR/log.txt"
 }
 
 wait_window() {
