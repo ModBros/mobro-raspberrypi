@@ -154,7 +154,7 @@ create_access_point() {
 
     # scan for available wifi networks
     sudo ifconfig wlan0 up
-    sleep_pi 2 5
+    sleep_pi 5 5
     sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
 
     show_image ${IMAGE_HOTSPOT}
@@ -219,7 +219,7 @@ connect_wifi() {
     else
         log "connect_wifi" "not connected"
         show_image ${IMAGE_WIFIFAILED}
-        sleep_pi 15 15
+        sleep_pi 10 10
         create_access_point
     fi
 }
@@ -405,8 +405,8 @@ sudo xinit \
 show_image ${IMAGE_MODBROS}
 
 # wait for CPU usage to come down
-sleep_pi 5 10
 sleep_cpu
+sleep_pi 5 5
 
 # check if wifi is configured
 # (skip if no network set - e.g. first boot)
