@@ -435,7 +435,6 @@ initial_wifi_check() {
 
     # perform update if necessary
     update
-    show_image ${IMAGE_MODBROS}
 
     # search network for application
     show_image ${IMAGE_DISCOVERY}
