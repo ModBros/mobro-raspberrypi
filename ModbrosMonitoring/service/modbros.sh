@@ -73,11 +73,17 @@ wait_window() {
 }
 
 sleep_cpu() {
-    CPU_USAGE=$(top -b -d1 -n1|grep -i "Cpu(s)"|head -c21|cut -d ' ' -f3|cut -d '%' -f1)
-    until [[ $(echo "$CPU_USAGE>20.0" | bc) -eq 0 ]]; do
-        log "helper" "cpu usage currently at $CPU_USAGE. waiting for it to come down..."
+    # taking the 2nd reading (1s after launching)
+    # 1st one is artificially high due to launching top, especially on Pi zero
+    CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
+    CPU_USAGE=$(echo ${CPU_USAGE} | cut -d '%' -f3 | cut -d ' ' -f2)
+    until [[ $(echo "$CPU_USAGE>10.0" | bc) -eq 0 ]]; do
+        log "helper" "waiting for cpu usage to come down ($CPU_USAGE)"
         sleep 2
+        CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
+        CPU_USAGE=$(echo ${CPU_USAGE} | cut -d '%' -f3 | cut -d ' ' -f2)
     done
+    log "helper" "cpu usage: $CPU_USAGE"
 }
 
 stop_process() {
