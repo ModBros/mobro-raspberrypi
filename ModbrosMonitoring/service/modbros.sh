@@ -226,11 +226,15 @@ connect_wifi() {
     done
 
     # configure wifi
+    log "connect_wifi" "setting wpa_supplicant.conf"
     sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
     sudo sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf
     sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
 
+    sudo cat /etc/wpa_supplicant/wpa_supplicant.conf &>> "$LOG_DIR/log.txt"
+
+    log "connect_wifi" "restarting dhcpcd and networking"
     sudo systemctl restart dhcpcd.service
     sudo systemctl restart networking.service
 
@@ -240,6 +244,7 @@ connect_wifi() {
         if [[ $(iwgetid wlan0 --raw) ]]; then
             break;
         fi
+        log "connect_wifi" "waiting for wifi..."
         sleep 2
         WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+2))
     done
