@@ -314,11 +314,11 @@ service_discovery() {
 }
 
 hotspot_check() {
-    UPDATED=$(cat "$WIFI_FILE" | sed -n 4p)        # 4th line contains updated timestamp
+    UPDATED=$(cat "$WIFI_FILE" | sed -n 4p)     # 4th line contains updated timestamp
+    SSID=$(cat "$WIFI_FILE" | sed -n 1p)        # 1st line contains SSID
+    PW=$(cat "$WIFI_FILE" | sed -n 2p)          # 2nd line contains PW
     if ! [[ -z ${UPDATED} ]]; then
         if [[ ${UPDATED} != ${LAST_CHECKED_WIFI} ]]; then
-            SSID=$(cat "$WIFI_FILE" | sed -n 1p)   # 1st line contains SSID
-            PW=$(cat "$WIFI_FILE" | sed -n 2p)     # 2nd line contains PW
             if ! [[ -z ${SSID} || -z ${PW} ]]; then
                 # if there is new access data -> instantly try connecting
                 LAST_CHECKED_WIFI=${UPDATED}
