@@ -38,9 +38,9 @@ MOBRO_PORT='42100'               # port of the MoBro desktop application
 # Global Vars
 AP_SSID='ModBros_Configuration'  # SSID of the created access point
 AP_PW='modbros123'               # password of the created access point
-LOOP_INTERVAL=10                 # in seconds
-CHECK_INTERVAL_HOTSPOT=30        # in loops (30x10=300s -> every 5 minutes)
-CHECK_INTERVAL_BACKGROUND=15     # in loops
+LOOP_INTERVAL=5                 # in seconds
+CHECK_INTERVAL_HOTSPOT=60        # in loops (60*5=300s -> every 5 minutes)
+CHECK_INTERVAL_BACKGROUND=20     # in loops
 UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
 AP_RETRY_WAIT=20                 # how long to wait for AP to start/stop before issuing command again (in s)
 AP_FAIL_WAIT=120                 # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
