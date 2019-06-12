@@ -16,3 +16,4 @@ dnsmasq
 git make
 feh
 bc
+rng-tools
