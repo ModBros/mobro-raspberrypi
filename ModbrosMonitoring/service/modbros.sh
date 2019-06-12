@@ -42,6 +42,10 @@ LOOP_INTERVAL=10                 # in seconds
 CHECK_INTERVAL_HOTSPOT=30        # in loops (30x10=300s -> every 5 minutes)
 CHECK_INTERVAL_BACKGROUND=15     # in loops
 UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
+AP_RETRY_WAIT=20                 # how long to wait for AP to start/stop before issuing command again (in s)
+AP_FAIL_WAIT=120                 # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
+STARTUP_WIFI_WAIT=45             # seconds to wait for wifi connection on startup (if wifi configured)
+WIFI_WAIT=20                     # seconds to wait for wifi connection
 HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0             # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi credentials
@@ -160,6 +164,29 @@ create_access_point() {
     show_image ${IMAGE_HOTSPOT}
 
     # create access point
+    create_access_point_call
+    sleep_pi 2 5
+
+    AP_CREATE_COUNTER=1
+    AP_RETRY=$((AP_RETRY_WAIT/2))
+    AP_FAIL=$((AP_FAIL_WAIT/2))
+    until [[ $(create_ap --list-running | grep wlan0 | wc -l) -gt 0 ]]; do
+        AP_CREATE_COUNTER=$((AP_CREATE_COUNTER+1))
+        if [[ ${AP_CREATE_COUNTER} -gt ${AP_FAIL} ]]; then
+            log "create_access_point" "failed to create access point multiple times - rebooting.."
+            sudo shutdown -r now
+        fi
+        if [[ $(($AP_CREATE_COUNTER%$AP_RETRY)) -eq 0 ]]; then
+            log "create_access_point" "failed to create access point - trying again"
+            create_access_point_call
+        fi
+        log "create_access_point" "waiting for access point.."
+        sleep 2
+    done
+    log "create_access_point" "access point up"
+}
+
+create_access_point_call() {
     sudo create_ap \
         -w 2 \
         -m none \
@@ -171,12 +198,6 @@ create_access_point() {
         -g 192.168.4.1 \
         wlan0 $AP_SSID $AP_PW \
         &>> "$LOG_DIR/log.txt"
-
-    until [[ $(create_ap --list-running | grep wlan0 | wc -l) -gt 0 ]]; do
-        log "create_access_point" "waiting for access point.."
-        sleep 2
-    done
-    log "create_access_point" "access point up"
 }
 
 connect_wifi() {
@@ -185,9 +206,21 @@ connect_wifi() {
 
     # stop access point
     sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
-    sleep 2
+    sleep_pi 2 5
 
+    AP_STOP_COUNTER=1
+    AP_RETRY=$((AP_RETRY_WAIT/2))
+    AP_FAIL=$((AP_FAIL_WAIT/2))
     until [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; do
+        AP_STOP_COUNTER=$((AP_STOP_COUNTER+1))
+        if [[ ${AP_STOP_COUNTER} -gt ${AP_FAIL} ]]; then
+            log "connect_wifi" "failed to stop AP multiple times - rebooting.."
+            sudo shutdown -r now
+        fi
+        if [[ $((AP_STOP_COUNTER%$AP_RETRY)) -eq 0 ]]; then
+            log "connect_wifi" "failed to stop AP - trying again"
+            sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
+        fi
         log "connect_wifi" "waiting for access point to stop.."
         sleep 2
     done
@@ -202,7 +235,7 @@ connect_wifi() {
     sudo systemctl restart networking.service
 
     # wait for connection
-    for i in {1..15}
+    for i in {1..$((WIFI_WAIT/2))}
     do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             break;
@@ -413,7 +446,7 @@ initial_wifi_check() {
 
     log "Startup" "waiting for wifi connection..."
     WIFI_CONNECTED=0
-    for i in {1..20}
+    for i in {1..$(($STARTUP_WIFI_WAIT/2))}
     do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             WIFI_CONNECTED=1
