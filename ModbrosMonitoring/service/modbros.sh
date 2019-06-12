@@ -235,12 +235,13 @@ connect_wifi() {
     sudo systemctl restart networking.service
 
     # wait for connection
-    for i in {1..$((WIFI_WAIT/2))}
-    do
+    WIFI_CONNECT_COUNT=0
+    until [[ ${WIFI_CONNECT_COUNT} -ge ${WIFI_WAIT} ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             break;
         fi
         sleep 2
+        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+2))
     done
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
@@ -446,13 +447,14 @@ initial_wifi_check() {
 
     log "Startup" "waiting for wifi connection..."
     WIFI_CONNECTED=0
-    for i in {1..$(($STARTUP_WIFI_WAIT/2))}
-    do
+    WIFI_CONNECT_COUNT=0
+    until [[ ${WIFI_CONNECT_COUNT} -ge ${STARTUP_WIFI_WAIT} ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             WIFI_CONNECTED=1
             break;
         fi
         sleep 2
+        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+2))
     done
 
     if [[ ${WIFI_CONNECTED} -ne 1 ]]; then
@@ -471,6 +473,7 @@ initial_wifi_check() {
 
     # search network for application
     show_image ${IMAGE_DISCOVERY}
+    sleep_pi 2 2
     service_discovery
 }
 
