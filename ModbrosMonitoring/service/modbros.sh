@@ -537,7 +537,9 @@ initial_wifi_check
 log "Main" "Entering main loop"
 LOOP_COUNTER=0
 while true; do
-    log "Main" "loop $LOOP_COUNTER"
+    if [[ $((LOOP_COUNTER%10)) -eq 0 ]]; then
+        log "Main" "loop $LOOP_COUNTER"
+    fi
     if [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; then
         # no hotspot running
         if ! [[ $(iwgetid wlan0 --raw) ]]; then
