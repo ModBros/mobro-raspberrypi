@@ -17,3 +17,4 @@ git make
 feh
 bc
 rng-tools
+lsb-release
