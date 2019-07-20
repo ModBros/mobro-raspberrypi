@@ -4,7 +4,6 @@
 # Modbros Monitoring Service - Raspberry Pi
 #
 # systemd service
-# (intended for and tested only on clean Raspbian Stretch)
 #
 # Created with <3 in Austria by: (c) ModBros 2019
 # Contact: mod-bros.com

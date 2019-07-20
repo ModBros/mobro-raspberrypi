@@ -1,5 +1,5 @@
 lighttpd
-php7.0-fpm php7.0
+php7.3-fpm php7.3
 libterm-readline-gnu-perl
 xserver-xorg xinit xcompmgr xterm dbus-x11 xfonts-base x11-xserver-utils x11-utils libgl1-mesa-dri mesa-utils mesa-utils-extra
 xserver-xorg-video-fbturbo

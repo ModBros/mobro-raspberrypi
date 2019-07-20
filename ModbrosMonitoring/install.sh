@@ -67,7 +67,7 @@ rm -rf /var/www/*
 chmod +rx ./web/modbros/favicon.ico
 ln -s /home/modbros/ModbrosMonitoring/web /var/www/html
 
-sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.0/fpm/php.ini
+sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.3/fpm/php.ini
 cat ./config/15-fastcgi-php.conf > /etc/lighttpd/conf-available/15-fastcgi-php.conf
 
 lighttpd-enable-mod fastcgi > /dev/null
