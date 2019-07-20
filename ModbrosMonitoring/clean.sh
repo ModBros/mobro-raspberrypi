@@ -28,3 +28,6 @@ cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_
 : > /home/modbros/ModbrosMonitoring/data/hosts.txt
 : > /home/modbros/ModbrosMonitoring/data/wifi.txt
 echo -n "0" > /home/modbros/ModbrosMonitoring/data/mobro_found.txt
+
+# overwrite free space of partition
+sfill -f -z -l -l -v /
