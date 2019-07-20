@@ -5,6 +5,12 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+# remove development files
+rm -f /home/modbros/ModbrosMonitoring/dependencies.txt
+rm -f /home/modbros/ModbrosMonitoring/ModbrosMonitoring.iml
+rm -f /home/modbros/ModbrosMonitoring/deploy.txt
+rm -f /home/modbros/ModbrosMonitoring/install.sh
+
 # remove documentation from already installed packages
 find /usr/share/doc -depth -type f ! -name copyright | xargs rm || true
 find /usr/share/doc -empty | xargs rmdir || true

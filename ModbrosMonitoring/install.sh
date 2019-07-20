@@ -4,7 +4,7 @@
 # Modbros Monitoring Service - Raspberry Pi
 #
 # installation script
-# (intended for and tested only on clean Raspbian Stretch lite)
+# (intended for and tested only on clean Raspbian Buster lite)
 #
 # Created with <3 in Austria by: (c) ModBros 2019
 # Contact: mod-bros.com
@@ -21,6 +21,25 @@ if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' http://www.google.
     echo "Please make sure the Pi is connected to a network"
     exit 1
 fi
+
+
+# ==========================================================
+# Add user and setting permissions
+# ==========================================================
+
+echo -n "Adding user and setting necessary permissions..."
+
+if ! id "modbros" >/dev/null 2>&1; then
+    adduser modbros --gecos "ModBros,,," --disabled-password
+    echo "modbros:modbros" | chpasswd
+    usermod -aG sudo modbros
+    userdel -r -f pi
+fi
+
+cp -f ./config/010_modbros-nopasswd /etc/sudoers.d
+chmod 440 /etc/sudoers.d/010_modbros-nopasswd
+
+echo " done"
 
 
 # ==========================================================
@@ -88,8 +107,8 @@ echo " done"
 
 echo -n "Setting script and file permissions..."
 
-chmod 777 ./scripts/*.sh
-chmod 777 ./service/modbros.sh
+chmod 755 ./scripts/*.sh
+chmod 755 ./service/modbros.sh
 
 chmod 644 ./service/modbros.service
 chmod 666 ./data/*
@@ -101,27 +120,14 @@ echo " done"
 
 
 # ==========================================================
-# Setting user permissions
-# ==========================================================
-
-echo -n "Setting necessary user permissions..."
-
-cp -f ./config/010_modbros-nopasswd /etc/sudoers.d
-
-chmod 440 /etc/sudoers.d/010_modbros-nopasswd
-
-echo " done"
-
-
-# ==========================================================
 # Scan for available networks
 # ==========================================================
 
-echo -n "Scanning for available wireless networks..."
-
-iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > ./web/modbros/networks
-
-echo " done"
+#echo -n "Scanning for available wireless networks..."
+#
+#iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > ./web/modbros/networks
+#
+#echo " done"
 
 
 # ==========================================================
@@ -131,8 +137,10 @@ echo " done"
 echo -n "Pulling display drivers..."
 
 rm -rf LCD-show
-git clone https://github.com/goodtft/LCD-show.git
-chmod -R 755 LCD-show
+git clone https://github.com/goodtft/LCD-show.git Display-Drivers
+chmod 755 ./Display-Drivers/*.sh
+cp -f ./config/config.txt ./Display-Drivers/boot/config-nomal.txt
+cp -f ./config/config.txt ./Display-Drivers/boot/config-noobs-nomal.txt
 
 echo " done"
 
