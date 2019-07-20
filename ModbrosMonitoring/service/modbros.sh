@@ -27,6 +27,7 @@ IMAGE_DISCOVERY='/home/modbros/ModbrosMonitoring/resources/discovery.png'
 IMAGE_HOTSPOT='/home/modbros/ModbrosMonitoring/resources/hotspot.png'
 IMAGE_WIFIFAILED='/home/modbros/ModbrosMonitoring/resources/wififailed.png'
 IMAGE_WIFISUCCESS='/home/modbros/ModbrosMonitoring/resources/wifisuccess.png'
+IMAGE_NOWIFIINTERFACE='/home/modbros/ModbrosMonitoring/resources/nowifiinterface.png'
 
 # Directories
 LOG_DIR='/home/modbros/ModbrosMonitoring/log'
@@ -37,7 +38,7 @@ MOBRO_PORT='42100'               # port of the MoBro desktop application
 # Global Vars
 AP_SSID='ModBros_Configuration'  # SSID of the created access point
 AP_PW='modbros123'               # password of the created access point
-LOOP_INTERVAL=5                 # in seconds
+LOOP_INTERVAL=5                  # in seconds
 CHECK_INTERVAL_HOTSPOT=60        # in loops (60*5=300s -> every 5 minutes)
 CHECK_INTERVAL_BACKGROUND=20     # in loops
 UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
@@ -524,6 +525,15 @@ show_image ${IMAGE_MODBROS}
 # wait for CPU usage to come down
 sleep_cpu
 sleep_pi 5 5
+
+# check for wifi interface
+if [[ $(ifconfig | grep wlan | wc -l) -lt 1 ]]; then
+    log "Startup" "no wifi interface detected, aborting"
+    show_image ${IMAGE_NOWIFIINTERFACE}
+    while true; do
+        sleep 60
+    done
+fi
 
 # try to connect to wifi (if previously configured)
 # and try to connect to mobro
