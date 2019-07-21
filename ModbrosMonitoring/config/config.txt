@@ -31,4 +31,3 @@ temp_limit=70
 
 start_x=0
 enable_uart=0
-avoid_warnings=1
