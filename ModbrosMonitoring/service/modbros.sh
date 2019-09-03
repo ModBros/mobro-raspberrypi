@@ -412,7 +412,7 @@ update() {
     log "update" "starting update/upgrade"
     show_image ${IMAGE_UPDATE}
     sudo apt-get update &>> "$LOG_DIR/log.txt"
-    sudo apt-get upgrade -y &>> "$LOG_DIR/log.txt"
+    sudo apt-get upgrade -q -y &>> "$LOG_DIR/log.txt"
     sudo apt-get autoremove -y &>> "$LOG_DIR/log.txt"
     echo "$CURR_DATE" > "${UPDATED_FILE}"
     log "update" "upgrade done"
