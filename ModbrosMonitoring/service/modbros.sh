@@ -142,15 +142,18 @@ show_mobro() {
     stop_process "feh"
     CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
-    chromium-browser \
+    chromium-browser $1 \
         --no-default-browser-check \
         --no-service-autorun \
+        --no-first-run \
         --disable-infobars \
         --disable-translate \
         --noerrdialogs \
         --incognito \
         --kiosk \
-        --app=$1 \
+        --fast-start \
+        --fast \
+        --app \
         &>> "$LOG_DIR/log.txt" &
     wait_window "chromium"
 }
