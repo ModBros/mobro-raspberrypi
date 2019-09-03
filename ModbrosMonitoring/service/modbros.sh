@@ -25,6 +25,7 @@ IMAGE_NOTFOUND='/home/modbros/ModbrosMonitoring/resources/notfound.png'
 IMAGE_CONNECTWIFI='/home/modbros/ModbrosMonitoring/resources/connectwifi.png'
 IMAGE_DISCOVERY='/home/modbros/ModbrosMonitoring/resources/discovery.png'
 IMAGE_HOTSPOT='/home/modbros/ModbrosMonitoring/resources/hotspot.png'
+IMAGE_HOTSPOTCREATION='/home/modbros/ModbrosMonitoring/resources/creatinghotspot.png'
 IMAGE_WIFIFAILED='/home/modbros/ModbrosMonitoring/resources/wififailed.png'
 IMAGE_WIFISUCCESS='/home/modbros/ModbrosMonitoring/resources/wifisuccess.png'
 IMAGE_NOWIFIINTERFACE='/home/modbros/ModbrosMonitoring/resources/nowifiinterface.png'
@@ -156,6 +157,8 @@ show_mobro() {
 create_access_point() {
     log "create_access_point" "creating access point"
 
+    show_image ${IMAGE_HOTSPOTCREATION}
+
     # scan for available wifi networks
     sudo ifconfig wlan0 up
     sleep_pi 5 5
@@ -183,7 +186,9 @@ create_access_point() {
         log "create_access_point" "waiting for access point.."
         sleep 2
     done
+
     log "create_access_point" "access point up"
+    show_image ${IMAGE_HOTSPOT}
 }
 
 create_access_point_call() {
