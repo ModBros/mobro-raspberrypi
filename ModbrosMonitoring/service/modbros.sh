@@ -46,7 +46,7 @@ UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
 AP_RETRY_WAIT=20                 # how long to wait for AP to start/stop before issuing command again (in s)
 AP_FAIL_WAIT=120                 # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
 STARTUP_WIFI_WAIT=45             # seconds to wait for wifi connection on startup (if wifi configured)
-WIFI_WAIT=20                     # seconds to wait for wifi connection
+WIFI_WAIT=30                     # seconds to wait for wifi connection
 HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0             # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi credentials
@@ -84,7 +84,7 @@ sleep_cpu() {
     CPU_USAGE=$(echo ${CPU_USAGE} | cut -d '%' -f3 | cut -d ' ' -f2)
     until [[ $(echo "$CPU_USAGE>10.0" | bc) -eq 0 ]]; do
         log "helper" "waiting for cpu usage to come down ($CPU_USAGE)"
-        sleep 2
+        sleep 5
         CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
         CPU_USAGE=$(echo ${CPU_USAGE} | cut -d '%' -f3 | cut -d ' ' -f2)
     done
@@ -146,6 +146,7 @@ show_mobro() {
         --no-default-browser-check \
         --no-service-autorun \
         --disable-infobars \
+        --disable-translate \
         --noerrdialogs \
         --incognito \
         --kiosk \
@@ -175,8 +176,8 @@ create_access_point() {
     sleep_pi 2 5
 
     AP_CREATE_COUNTER=1
-    AP_RETRY=$((AP_RETRY_WAIT/2))
-    AP_FAIL=$((AP_FAIL_WAIT/2))
+    AP_RETRY=$((AP_RETRY_WAIT/5))
+    AP_FAIL=$((AP_FAIL_WAIT/5))
     until [[ $(create_ap --list-running | grep wlan0 | wc -l) -gt 0 ]]; do
         AP_CREATE_COUNTER=$((AP_CREATE_COUNTER+1))
         if [[ ${AP_CREATE_COUNTER} -gt ${AP_FAIL} ]]; then
@@ -188,7 +189,7 @@ create_access_point() {
             create_access_point_call
         fi
         log "create_access_point" "waiting for access point.."
-        sleep 2
+        sleep 5
     done
 
     log "create_access_point" "access point up"
@@ -218,8 +219,8 @@ connect_wifi() {
     sleep_pi 2 5
 
     AP_STOP_COUNTER=1
-    AP_RETRY=$((AP_RETRY_WAIT/2))
-    AP_FAIL=$((AP_FAIL_WAIT/2))
+    AP_RETRY=$((AP_RETRY_WAIT/5))
+    AP_FAIL=$((AP_FAIL_WAIT/5))
     until [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; do
         AP_STOP_COUNTER=$((AP_STOP_COUNTER+1))
         if [[ ${AP_STOP_COUNTER} -gt ${AP_FAIL} ]]; then
@@ -231,7 +232,7 @@ connect_wifi() {
             sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
         fi
         log "connect_wifi" "waiting for access point to stop.."
-        sleep 2
+        sleep 5
     done
 
     # configure wifi
@@ -254,8 +255,8 @@ connect_wifi() {
             break;
         fi
         log "connect_wifi" "waiting for wifi..."
-        sleep 2
-        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+2))
+        sleep 5
+        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+5))
     done
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
@@ -467,8 +468,8 @@ initial_wifi_check() {
             WIFI_CONNECTED=1
             break;
         fi
-        sleep 2
-        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+2))
+        sleep 5
+        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+5))
     done
 
     if [[ ${WIFI_CONNECTED} -ne 1 ]]; then
