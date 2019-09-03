@@ -227,7 +227,10 @@ connect_wifi() {
     until [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; do
         AP_STOP_COUNTER=$((AP_STOP_COUNTER+1))
         if [[ ${AP_STOP_COUNTER} -gt ${AP_FAIL} ]]; then
-            log "connect_wifi" "failed to stop AP multiple times - rebooting.."
+            log "connect_wifi" "failed to stop AP multiple times"
+            log "connect_wifi" "resetting wpa_supplicant.conf"
+            sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
+            log "connect_wifi" "rebooting..."
             sudo shutdown -r now
         fi
         if [[ $((AP_STOP_COUNTER%$AP_RETRY)) -eq 0 ]]; then
