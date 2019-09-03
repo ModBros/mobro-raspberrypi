@@ -114,8 +114,8 @@ chmod 755 ./service/modbros.sh
 chmod 644 ./service/modbros.service
 chmod 666 ./data/*
 chmod 666 ./log/*
-chmod 444 ./resources/*
-chmod 444 ./config/*
+chmod 666 ./resources/*
+chmod 666 ./config/*
 
 echo " done"
 
