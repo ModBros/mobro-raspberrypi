@@ -214,7 +214,7 @@ create_access_point_call() {
 }
 
 connect_wifi() {
-    log "connect_wifi" "connecting to wifi: $1 $2"
+    log "connect_wifi" "connecting to SSID: $1"
     show_image ${IMAGE_CONNECTWIFI}
 
     # stop access point
@@ -242,13 +242,11 @@ connect_wifi() {
     done
 
     # configure wifi
-    log "connect_wifi" "setting wpa_supplicant.conf"
+    log "connect_wifi" "setting new wpa_supplicant.conf"
     sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
-
     sudo sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf
-    sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
-
     sudo cat /etc/wpa_supplicant/wpa_supplicant.conf &>> "$LOG_DIR/log.txt"
+    sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
 
     log "connect_wifi" "restarting dhcpcd and networking"
     sudo systemctl restart dhcpcd.service
@@ -378,7 +376,7 @@ hotspot_check() {
                 # if there is new access data -> instantly try connecting
                 LAST_CHECKED_WIFI=${UPDATED}
                 HOTSPOT_COUNTER=0
-                log "hotspot_check" "new credentials found. trying to connect with $SSID and $PW"
+                log "hotspot_check" "new credentials found. trying to connect to SSID $SSID"
                 connect_wifi "$SSID" "$PW"
                 return
             fi
