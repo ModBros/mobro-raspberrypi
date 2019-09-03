@@ -44,7 +44,7 @@ CHECK_INTERVAL_HOTSPOT=60        # in loops (60*5=300s -> every 5 minutes)
 CHECK_INTERVAL_BACKGROUND=20     # in loops
 UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
 AP_RETRY_WAIT=20                 # how long to wait for AP to start/stop before issuing command again (in s)
-AP_FAIL_WAIT=120                 # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
+AP_FAIL_WAIT=90                  # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
 STARTUP_WIFI_WAIT=45             # seconds to wait for wifi connection on startup (if wifi configured)
 WIFI_WAIT=30                     # seconds to wait for wifi connection
 HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
