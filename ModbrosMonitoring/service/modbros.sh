@@ -15,7 +15,7 @@ WIFI_FILE='/home/modbros/ModbrosMonitoring/data/wifi.txt'
 VERSION_FILE='/home/modbros/ModbrosMonitoring/data/version.txt'
 UPDATED_FILE='/home/modbros/ModbrosMonitoring/data/updated.txt'
 MOBRO_FOUND_FLAG='/home/modbros/ModbrosMonitoring/data/mobro_found.txt'
-NETWORKS_FILE='/home/modbros/ModbrosMonitoring/web/modbros/networks'
+NETWORKS_FILE='/home/modbros/ModbrosMonitoring/data/ssids.txt'
 
 # Resources
 IMAGE_MODBROS='/home/modbros/ModbrosMonitoring/resources/modbros.png'
