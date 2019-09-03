@@ -154,17 +154,21 @@ show_mobro() {
     wait_window "chromium"
 }
 
+search_ssids() {
+    log "search_ssids" "scanning for wireless networks"
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>> "$LOG_DIR/log.txt" 1> "$NETWORKS_FILE"
+    log "search_ssids" "detected wifi networks in range:"
+    cat "$NETWORKS_FILE" &>> "$LOG_DIR/log.txt"
+}
+
 create_access_point() {
     log "create_access_point" "creating access point"
 
     show_image ${IMAGE_HOTSPOTCREATION}
 
     # scan for available wifi networks
-    sudo ifconfig wlan0 up
-    sleep_pi 5 5
-    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
-
-    show_image ${IMAGE_HOTSPOT}
+    # (we can't do that once we the access point is up)
+    search_ssids
 
     # create access point
     create_access_point_call
@@ -435,7 +439,7 @@ initial_wifi_check() {
     show_image ${IMAGE_CONNECTWIFI}
     # check if configured network is in range
     log "Startup" "scanning for wireless networks"
-    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' > "$NETWORKS_FILE"
+    search_ssids
     WAIT_WIFI=1
     if [[ $(cat "$NETWORKS_FILE" | wc -l) -ge 1 ]]; then # check if scan returned anything first
         SSID=$(cat "$WIFI_FILE" | sed -n 1p) # SSID of configured network
