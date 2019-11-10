@@ -18,7 +18,7 @@ MOBRO_FOUND_FLAG='/home/modbros/ModbrosMonitoring/data/mobro_found.txt'
 NETWORKS_FILE='/home/modbros/ModbrosMonitoring/data/ssids.txt'
 
 # Resources
-IMAGE_MODBROS='/home/modbros/ModbrosMonitoring/resources/modbros.png'
+IMAGE_MOBRO='/home/modbros/ModbrosMonitoring/resources/mobro.png'
 IMAGE_UPDATE='/home/modbros/ModbrosMonitoring/resources/update.png'
 IMAGE_FOUND='/home/modbros/ModbrosMonitoring/resources/found.png'
 IMAGE_NOTFOUND='/home/modbros/ModbrosMonitoring/resources/notfound.png'
@@ -534,7 +534,7 @@ sudo xinit \
     &>> "$LOG_DIR/log.txt" &
 
 # show background
-show_image ${IMAGE_MODBROS}
+show_image ${IMAGE_MOBRO}
 
 # wait for CPU usage to come down
 sleep_cpu
