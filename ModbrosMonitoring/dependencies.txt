@@ -1,8 +1,7 @@
 lighttpd
 php7.3-fpm php7.3
 libterm-readline-gnu-perl
-xserver-xorg xinit xcompmgr xterm dbus-x11 xfonts-base x11-xserver-utils x11-utils libgl1-mesa-dri mesa-utils mesa-utils-extra
-xserver-xorg-video-fbturbo
+xserver-xorg-video-fbturbo xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils libgles2-mesa
 matchbox-window-manager
 chromium-browser
 xwit xdotool
