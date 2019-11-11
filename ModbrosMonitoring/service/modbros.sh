@@ -487,9 +487,6 @@ initial_wifi_check() {
     show_image ${IMAGE_WIFISUCCESS}
     sleep_pi 2 2
 
-    # perform update if necessary
-    update
-
     # search network for application
     show_image ${IMAGE_DISCOVERY}
     sleep_pi 2 2
