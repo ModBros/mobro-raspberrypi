@@ -12,8 +12,6 @@ arm_freq=1000
 arm_freq_min=100
 initial_turbo=10
 over_voltage=0
-dtoverlay=vc4-fkms-v3d
-max_framebuffers=2
 
 [pi0w]
 arm_freq_min=500
@@ -21,11 +19,9 @@ initial_turbo=30
 over_voltage=0
 
 [all]
-disable_overscan=1
-dtparam=audio=off
-gpu_mem=128
-disable_splash=1
+gpu_mem=64
 temp_limit=70
-
 start_x=0
 enable_uart=0
+dtoverlay=disable-bt
+disable_overscan=1
