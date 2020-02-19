@@ -56,9 +56,9 @@ NUM_CORES=$(nproc --all)         # number of available
 
 
 # versions
-PI_VERSION=$(cat /proc/device-tree/model)           # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)  # service version number
-
+PI_VERSION=$(cat /proc/device-tree/model)                     # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)            # service version number
+PI_UUID=$(cat /sys/class/net/wlan0/address | sed 's/://g')    # unique ID of this pi
 
 # ====================================================================================================================
 # Functions
@@ -283,7 +283,7 @@ try_ip() {
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
-        show_mobro "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION"
+        show_mobro "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION&uuid=$PI_UUID"
 
         # write found (use file as kind of global variable)
         # -> this function is started in a sub process!
@@ -532,6 +532,10 @@ sudo xinit \
 
 # show background
 show_image ${IMAGE_MOBRO}
+
+# start webserver
+log "Startup" "starting lighttpd"
+sudo systemctl start lighttpd &>> "$LOG_DIR/log.txt"
 
 # wait for CPU usage to come down
 sleep_cpu

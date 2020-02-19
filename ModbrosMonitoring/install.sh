@@ -48,7 +48,7 @@ echo " done"
 
 echo -n "Updating Raspberry..."
 apt-get update > /dev/null
-apt-get dist-upgrade -y > /dev/null
+apt-get upgrade -y > /dev/null
 echo " done"
 
 
@@ -65,7 +65,7 @@ done < "./dependencies.txt"
 
 
 # ==========================================================
-# Stop and disable access point services
+# Stop and disable access point services + bluetooth
 # ==========================================================
 
 systemctl stop dnsmasq > /dev/null
@@ -73,6 +73,8 @@ systemctl stop hostapd > /dev/null
 
 systemctl disable dnsmasq.service > /dev/null
 systemctl disable hostapd.service > /dev/null
+
+systemctl disable hciuart > /dev/null
 
 
 # ==========================================================
@@ -95,10 +97,10 @@ lighttpd-enable-mod fastcgi-php > /dev/null
 
 echo " done"
 
-echo -n "Restarting web server..."
+echo -n "Stopping and disabling web server..."
 service lighttpd force-reload > /dev/null
-service lighttpd restart > /dev/null
-systemctl enable lighttpd.service > /dev/null
+service lighttpd stop > /dev/null
+systemctl disable lighttpd.service > /dev/null
 echo " done"
 
 
