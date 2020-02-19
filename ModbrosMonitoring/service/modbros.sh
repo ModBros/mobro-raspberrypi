@@ -531,7 +531,15 @@ sudo xinit \
     &>> "$LOG_DIR/log.txt" &
 
 # show background
-show_image ${IMAGE_MOBRO}
+show_image $IMAGE_MOBRO
+
+# disabling screen blanking
+log "Startup" "disable blank screen"
+{
+  sudo xset s off
+  sudo xset -dpms
+  sudo xset s noblank
+} &>> "$LOG_DIR/log.txt"
 
 # start webserver
 log "Startup" "starting lighttpd"
