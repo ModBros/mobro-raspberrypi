@@ -9,35 +9,38 @@
 # Contact: mod-bros.com
 # ====================================================================================================================
 
-# Files
-HOSTS_FILE='/home/modbros/ModbrosMonitoring/data/hosts.txt'
-WIFI_FILE='/home/modbros/ModbrosMonitoring/data/wifi.txt'
-VERSION_FILE='/home/modbros/ModbrosMonitoring/data/version.txt'
-UPDATED_FILE='/home/modbros/ModbrosMonitoring/data/updated.txt'
-MOBRO_FOUND_FLAG='/home/modbros/ModbrosMonitoring/data/mobro_found.txt'
-NETWORKS_FILE='/home/modbros/ModbrosMonitoring/data/ssids.txt'
-
-# Resources
-IMAGE_MOBRO='/home/modbros/ModbrosMonitoring/resources/mobro.png'
-IMAGE_UPDATE='/home/modbros/ModbrosMonitoring/resources/update.png'
-IMAGE_FOUND='/home/modbros/ModbrosMonitoring/resources/found.png'
-IMAGE_NOTFOUND='/home/modbros/ModbrosMonitoring/resources/notfound.png'
-IMAGE_CONNECTWIFI='/home/modbros/ModbrosMonitoring/resources/connectwifi.png'
-IMAGE_DISCOVERY='/home/modbros/ModbrosMonitoring/resources/discovery.png'
-IMAGE_HOTSPOT='/home/modbros/ModbrosMonitoring/resources/hotspot.png'
-IMAGE_HOTSPOTCREATION='/home/modbros/ModbrosMonitoring/resources/creatinghotspot.png'
-IMAGE_WIFIFAILED='/home/modbros/ModbrosMonitoring/resources/wififailed.png'
-IMAGE_WIFISUCCESS='/home/modbros/ModbrosMonitoring/resources/wifisuccess.png'
-IMAGE_NOWIFIINTERFACE='/home/modbros/ModbrosMonitoring/resources/nowifiinterface.png'
-
 # Directories
 LOG_DIR='/home/modbros/ModbrosMonitoring/log'
+RESOURCES_DIR='/home/modbros/ModbrosMonitoring/resources'
+FILE_DIR='/home/modbros/ModbrosMonitoring/data'
+
+# Files
+HOSTS_FILE="$FILE_DIR/hosts.txt"
+WIFI_FILE="$FILE_DIR/wifi.txt"
+VERSION_FILE="$FILE_DIR/version.txt"
+UPDATED_FILE="$FILE_DIR/updated.txt"
+MOBRO_FOUND_FLAG="$FILE_DIR/mobro_found.txt"
+NETWORKS_FILE="$FILE_DIR/ssids.txt"
+LOG_FILE="$LOG_DIR/log.txt"
+
+# Resources
+IMAGE_MOBRO="$RESOURCES_DIR/mobro.png"
+IMAGE_UPDATE="$RESOURCES_DIR/update.png"
+IMAGE_FOUND="$RESOURCES_DIR/found.png"
+IMAGE_NOTFOUND="$RESOURCES_DIR/notfound.png"
+IMAGE_CONNECTWIFI="$RESOURCES_DIR/connectwifi.png"
+IMAGE_DISCOVERY="$RESOURCES_DIR/discovery.png"
+IMAGE_HOTSPOT="$RESOURCES_DIR/hotspot.png"
+IMAGE_HOTSPOTCREATION="$RESOURCES_DIR/creatinghotspot.png"
+IMAGE_WIFIFAILED="$RESOURCES_DIR/wififailed.png"
+IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
+IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
 
 # Ports
 MOBRO_PORT='42100'               # port of the MoBro desktop application
 
-# Global Vars
-AP_SSID='ModBros_Configuration'  # SSID of the created access point
+# Global Constants
+AP_SSID='ModBros_Configuration'  # ssid of the created access point
 AP_PW='modbros123'               # password of the created access point
 LOOP_INTERVAL=5                  # in seconds
 CHECK_INTERVAL_HOTSPOT=60        # in loops (60*5=300s -> every 5 minutes)
@@ -47,48 +50,32 @@ AP_RETRY_WAIT=20                 # how long to wait for AP to start/stop before 
 AP_FAIL_WAIT=90                  # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
 STARTUP_WIFI_WAIT=45             # seconds to wait for wifi connection on startup (if wifi configured)
 WIFI_WAIT=30                     # seconds to wait for wifi connection
+
+# Global Vars
+LOOP_COUNTER=0                   # counter variable for main loop iterations
 HOTSPOT_COUNTER=0                # counter variable for connection retry in hotspot mode
 BACKGROUND_COUNTER=0             # counter variable for background alive check in wifi mode
 LAST_CHECKED_WIFI=''             # remember timestamp of last checked wifi credentials
 CURR_MOBRO_URL=''                # save current MoBro Url
 CURR_IMAGE=''                    # save currently displayed image
-NUM_CORES=$(nproc --all)         # number of available
 
-
-# versions
-PI_VERSION=$(cat /proc/device-tree/model)                # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-SERVICE_VERSION=$(sed -n 1p < $VERSION_FILE)           # service version number
-PI_UUID=$(sed 's/://g' < /sys/class/net/wlan0/address)   # unique ID of this pi
 
 # ====================================================================================================================
 # Functions
 # ====================================================================================================================
 
 log() {
-    LOG_DATE=$(date "+%d.%m.%y %T");
-    TEMP=$(sudo vcgencmd measure_temp)
-    echo "$LOG_DATE | ${TEMP:5} : [$1] $2" >> "$LOG_DIR/log.txt"
+    local temp date
+    temp=$(sudo vcgencmd measure_temp)
+    date=$(date "+%d.%m.%y %T")
+    echo "$date | ${temp:5} : [$1] $2" >> $LOG_FILE
 }
 
 wait_window() {
     until [[ $(xdotool search --onlyvisible --class "$1" | wc -l) -gt 0 ]]; do
         log "helper" "waiting for $1 to become available.."
-        sleep 2
+        sleep 3
     done
-}
-
-sleep_cpu() {
-    # taking the 2nd reading (1s after launching)
-    # 1st one is artificially high due to launching top, especially on Pi zero
-    CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
-    CPU_USAGE=$(echo "$CPU_USAGE" | cut -d '%' -f3 | cut -d ' ' -f2)
-    until [[ $(echo "$CPU_USAGE>10.0" | bc) -eq 0 ]]; do
-        log "helper" "waiting for cpu usage to come down ($CPU_USAGE)"
-        sleep 5
-        CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
-        CPU_USAGE=$(echo "$CPU_USAGE" | cut -d '%' -f3 | cut -d ' ' -f2)
-    done
-    log "helper" "cpu usage: $CPU_USAGE"
 }
 
 stop_process() {
@@ -97,7 +84,7 @@ stop_process() {
 }
 
 sleep_pi() {
-    if [[ $NUM_CORES -gt 1 ]]; then
+    if [[ $(nproc --all) -gt 1 ]]; then
         sleep "$1"
     else
         sleep "$2"
@@ -125,8 +112,9 @@ show_image() {
         --scale-down \
         --auto-zoom \
         --image-bg "white" \
-        "$1" &>> "$LOG_DIR/log.txt" &
-    sleep_pi 0 1
+        "$1" &>> $LOG_FILE &
+
+    sleep "${2:-1}"
 }
 
 show_mobro() {
@@ -137,8 +125,7 @@ show_mobro() {
         fi
         stop_process "chromium-browser"
     fi
-    show_image $IMAGE_FOUND
-    sleep_pi 5 10
+    show_image $IMAGE_FOUND 5
     stop_process "feh"
     CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
@@ -154,15 +141,15 @@ show_mobro() {
         --fast-start \
         --fast \
         --app \
-        &>> "$LOG_DIR/log.txt" &
+        &>> $LOG_FILE &
     wait_window "chromium"
 }
 
 search_ssids() {
     log "search_ssids" "scanning for wireless networks"
-    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>> "$LOG_DIR/log.txt" 1> $NETWORKS_FILE
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>> $LOG_FILE 1> $NETWORKS_FILE
     log "search_ssids" "detected wifi networks in range:"
-    cat $NETWORKS_FILE &>> "$LOG_DIR/log.txt"
+    cat $NETWORKS_FILE &>> $LOG_FILE
 }
 
 create_access_point() {
@@ -178,16 +165,17 @@ create_access_point() {
     create_access_point_call
     sleep_pi 2 5
 
-    AP_CREATE_COUNTER=1
-    AP_RETRY=$((AP_RETRY_WAIT/5))
-    AP_FAIL=$((AP_FAIL_WAIT/5))
+    local ap_create_counter ap_retry ap_fail
+    ap_create_counter=1
+    ap_retry=$((AP_RETRY_WAIT/5))
+    ap_fail=$((AP_FAIL_WAIT/5))
     until [[ $(create_ap --list-running | grep -c wlan0) -gt 0 ]]; do
-        AP_CREATE_COUNTER=$((AP_CREATE_COUNTER+1))
-        if [[ $AP_CREATE_COUNTER -gt $AP_FAIL ]]; then
+        ap_create_counter=$((ap_create_counter+1))
+        if [[ $ap_create_counter -gt $ap_fail ]]; then
             log "create_access_point" "failed to create access point multiple times - rebooting.."
             sudo shutdown -r now
         fi
-        if [[ $((AP_CREATE_COUNTER%AP_RETRY)) -eq 0 ]]; then
+        if [[ $((ap_create_counter%ap_retry)) -eq 0 ]]; then
             log "create_access_point" "failed to create access point - trying again"
             create_access_point_call
         fi
@@ -210,32 +198,33 @@ create_access_point_call() {
         --daemon \
         -g 192.168.4.1 \
         wlan0 $AP_SSID $AP_PW \
-        &>> "$LOG_DIR/log.txt"
+        &>> $LOG_FILE
 }
 
 connect_wifi() {
-    log "connect_wifi" "connecting to SSID: $1"
+    log "connect_wifi" "connecting to ssid: $1"
     show_image $IMAGE_CONNECTWIFI
 
     # stop access point
-    sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
+    sudo create_ap --stop wlan0 &>> $LOG_FILE
     sleep_pi 2 5
 
-    AP_STOP_COUNTER=1
-    AP_RETRY=$((AP_RETRY_WAIT/5))
-    AP_FAIL=$((AP_FAIL_WAIT/5))
+    local ap_stop_counter ap_retry ap_fail
+    ap_stop_counter=1
+    ap_retry=$((AP_RETRY_WAIT/5))
+    ap_fail=$((AP_FAIL_WAIT/5))
     until [[ $(create_ap --list-running | grep wlan0 -c) -eq 0 ]]; do
-        AP_STOP_COUNTER=$((AP_STOP_COUNTER+1))
-        if [[ $AP_STOP_COUNTER -gt $AP_FAIL ]]; then
+        ap_stop_counter=$((ap_stop_counter+1))
+        if [[ $ap_stop_counter -gt $ap_fail ]]; then
             log "connect_wifi" "failed to stop AP multiple times"
             log "connect_wifi" "resetting wpa_supplicant.conf"
             sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
             log "connect_wifi" "rebooting..."
             sudo shutdown -r now
         fi
-        if [[ $((AP_STOP_COUNTER%AP_RETRY)) -eq 0 ]]; then
+        if [[ $((ap_stop_counter%ap_retry)) -eq 0 ]]; then
             log "connect_wifi" "failed to stop AP - trying again"
-            sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
+            sudo create_ap --stop wlan0 &>> $LOG_FILE
         fi
         log "connect_wifi" "waiting for access point to stop.."
         sleep 5
@@ -245,7 +234,7 @@ connect_wifi() {
     log "connect_wifi" "setting new wpa_supplicant.conf"
     sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
     sudo sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf
-    sudo cat /etc/wpa_supplicant/wpa_supplicant.conf &>> "$LOG_DIR/log.txt"
+    sudo cat /etc/wpa_supplicant/wpa_supplicant.conf &>> $LOG_FILE
     sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
 
     log "connect_wifi" "restarting dhcpcd and networking"
@@ -253,26 +242,25 @@ connect_wifi() {
     sudo systemctl restart networking.service
 
     # wait for connection
-    WIFI_CONNECT_COUNT=0
-    until [[ $WIFI_CONNECT_COUNT -ge $WIFI_WAIT ]]; do
+    local wifi_connect_count
+    wifi_connect_count=0
+    until [[ $wifi_connect_count -ge $WIFI_WAIT ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             break;
         fi
         log "connect_wifi" "waiting for wifi..."
         sleep 5
-        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+5))
+        wifi_connect_count=$((wifi_connect_count+5))
     done
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
-        show_image $IMAGE_WIFISUCCESS
-        sleep_pi 10 10
+        show_image $IMAGE_WIFISUCCESS 10
         show_image $IMAGE_DISCOVERY
         service_discovery
     else
         log "connect_wifi" "not connected"
-        show_image $IMAGE_WIFIFAILED
-        sleep_pi 10 10
+        show_image $IMAGE_WIFIFAILED 10
         create_access_point
     fi
 }
@@ -283,7 +271,11 @@ try_ip() {
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
-        show_mobro "http://$1:$MOBRO_PORT?version=$SERVICE_VERSION&name=$PI_VERSION&uuid=$PI_UUID"
+        local name version uuid
+        name=$(cat /proc/device-tree/model) # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+        version=$(sed -n 1p < $VERSION_FILE) # service version number
+        uuid=$(sed 's/://g' < /sys/class/net/wlan0/address) # unique ID of this pi
+        show_mobro "http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&name=$name"
 
         # write found (use file as kind of global variable)
         # -> this function is started in a sub process!
@@ -300,11 +292,12 @@ service_discovery() {
     echo "0" > $MOBRO_FOUND_FLAG
 
     # check previous host if configured
-    IP=$(sed -n 1p < $HOSTS_FILE)   # get 1st host if present (from last successful connection)
-    KEY=$(sed -n 3p < $WIFI_FILE)   # 3rd line contains MoBro connection key
-    if ! [[ -z $IP || -z $KEY ]]; then
+    local ip key
+    ip=$(sed -n 1p < $HOSTS_FILE)   # get 1st host if present (from last successful connection)
+    key=$(sed -n 3p < $WIFI_FILE)   # 3rd line contains MoBro connection key
+    if ! [[ -z $ip || -z $key ]]; then
         log "service_discovery" "checking previous host"
-        try_ip "$IP" "$KEY"
+        try_ip "$ip" "$key"
         if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
             return
@@ -313,36 +306,40 @@ service_discovery() {
 
     # search available IPs on the network
     log "service_discovery" "performing arp scan"
-    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>> "$LOG_DIR/log.txt" 1>> "$HOSTS_FILE"
-    KEY=$(sed -n 3p < $WIFI_FILE)         # 3rd line contains MoBro connection key
+    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>> $LOG_FILE 1>> "$HOSTS_FILE"
+    key=$(sed -n 3p < $WIFI_FILE)         # 3rd line contains MoBro connection key
 
-    while read -r IP; do
-        try_ip "$IP" "$KEY"
-        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
+    while read -r ip; do
+        try_ip "$ip" "$key"
+        if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
             return
         fi
-    done < "$HOSTS_FILE"
+    done < $HOSTS_FILE
 
-    # fallback: get current IP of pi to try all host in range
+    # fallback: get current ip of pi to try all host in range
     log "service_discovery" "fallback"
-    PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>> "$LOG_DIR/log.txt")
-    if [[ -n $PI_IP ]]; then
-        PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
-        PI_IP_2=$(echo "$PI_IP" | cut -d . -f 2)
-        PI_IP_3=$(echo "$PI_IP" | cut -d . -f 3)
-        log "service_discovery" "trying all IPs in range $PI_IP_1.$PI_IP_2.$PI_IP_3.X"
+    local pi_ip
+    pi_ip=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>> $LOG_FILE)
+    if [[ -n $pi_ip ]]; then
+        local pi_ip_1 pi_ip_2 pi_ip_3 pi_ip_4
+        pi_ip_1=$(echo "$pi_ip" | cut -d . -f 1)
+        pi_ip_2=$(echo "$pi_ip" | cut -d . -f 2)
+        pi_ip_3=$(echo "$pi_ip" | cut -d . -f 3)
+        pi_ip_4=0
+        log "service_discovery" "trying all IPs in range $pi_ip_1.$pi_ip_2.$pi_ip_3.X"
 
-        PI_IP_4=0
-        while [[ $PI_IP_4 -lt 255 ]]; do
-            for j in $(seq $((4*NUM_CORES)))
+        local num_cores
+        num_cores=$(nproc --all)
+        while [[ $pi_ip_4 -lt 255 ]]; do
+            for j in $(seq $((4*num_cores)))
             do
-                try_ip "$PI_IP_1.$PI_IP_2.$PI_IP_3.$PI_IP_4" "$KEY" &
+                try_ip "$pi_ip_1.$pi_ip_2.$pi_ip_3.$pi_ip_4" "$key" &
                 pids[$j]=$! # remember pids of started sub processes
-                if [[ PI_IP_4 -ge 255 ]]; then
+                if [[ pi_ip_4 -ge 255 ]]; then
                     break;
                 fi
-                PI_IP_4=$((PI_IP_4 + 1))
+                pi_ip_4=$((pi_ip_4 + 1))
             done
 
             # wait for all started checks to finish
@@ -367,17 +364,18 @@ service_discovery() {
 }
 
 hotspot_check() {
-    UPDATED=$(sed -n 4p < $WIFI_FILE)     # 4th line contains updated timestamp
-    SSID=$(sed -n 1p < $WIFI_FILE)        # 1st line contains SSID
-    PW=$(sed -n 2p < $WIFI_FILE)          # 2nd line contains PW
-    if [[ -n $UPDATED ]]; then
-        if [[ $UPDATED != "$LAST_CHECKED_WIFI" ]]; then
-            if ! [[ -z $SSID || -z $PW ]]; then
+    local updated ssid pw
+    updated=$(sed -n 4p < $WIFI_FILE)     # 4th line contains updated timestamp
+    ssid=$(sed -n 1p < $WIFI_FILE)        # 1st line contains SSID
+    pw=$(sed -n 2p < $WIFI_FILE)          # 2nd line contains PW
+    if [[ -n $updated ]]; then
+        if [[ $updated != "$LAST_CHECKED_WIFI" ]]; then
+            if ! [[ -z $ssid || -z $pw ]]; then
                 # if there is new access data -> instantly try connecting
-                LAST_CHECKED_WIFI=$UPDATED
+                LAST_CHECKED_WIFI=$updated
                 HOTSPOT_COUNTER=0
-                log "hotspot_check" "new credentials found. trying to connect to SSID $SSID"
-                connect_wifi "$SSID" "$PW"
+                log "hotspot_check" "new credentials found. trying to connect to SSID $ssid"
+                connect_wifi "$ssid" "$pw"
                 return
             fi
         fi
@@ -387,10 +385,10 @@ hotspot_check() {
     if [[ $HOTSPOT_COUNTER -ge $CHECK_INTERVAL_HOTSPOT ]]; then
         log "hotspot_check" "start hotspot check"
         HOTSPOT_COUNTER=0
-        if ! [[ -z $SSID || -z $PW ]]; then
+        if ! [[ -z $ssid || -z $pw ]]; then
             # wifi configured -> try again
-            log "hotspot_check" "trying again to connect with $SSID and $PW"
-            connect_wifi "$SSID" "$PW"
+            log "hotspot_check" "trying again to connect to $ssid"
+            connect_wifi "$ssid" "$pw"
         fi
     fi
 }
@@ -409,11 +407,12 @@ background_check() {
 
 update() {
     log "update" "performing update check"
-    LAST_UPDATE_DATE=$(sed -n 1p < $UPDATED_FILE)
-    CURR_DATE=$(date "+%s")
-    if [[ -n $LAST_UPDATE_DATE ]]; then
+    local last_update curr_date
+    last_update=$(sed -n 1p < $UPDATED_FILE)
+    curr_date=$(date "+%s")
+    if [[ -n $last_update ]]; then
         # skip if it was updated recently
-        if [[ $((CURR_DATE - LAST_UPDATE_DATE)) -le $UPDATE_THRESHOLD ]]; then
+        if [[ $((curr_date - last_update)) -le $UPDATE_THRESHOLD ]]; then
             log "update" "skipping update (last update below threshold)"
             return
         fi
@@ -429,9 +428,9 @@ update() {
       sudo apt-get update
       sudo apt-get upgrade -q -y
       sudo apt-get autoremove -y
-    } &>> "$LOG_DIR/log.txt"
+    } &>> $LOG_FILE
 
-    echo "$CURR_DATE" > $UPDATED_FILE
+    echo "$curr_date" > $UPDATED_FILE
     log "update" "upgrade done"
 }
 
@@ -448,18 +447,19 @@ initial_wifi_check() {
     # check if configured network is in range
     log "Startup" "scanning for wireless networks"
     search_ssids
-    WAIT_WIFI=1
+    local wait_wifi ssid
+    wait_wifi=1
     if [[ $(wc -l < $NETWORKS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        SSID=$(sed -n 1p < $WIFI_FILE) # SSID of configured network
-        if [[ $(grep "$SSID" -c < $NETWORKS_FILE) -eq 0 ]]; then
-            WAIT_WIFI=0
+        ssid=$(sed -n 1p < $WIFI_FILE) # ssid of configured network
+        if [[ $(grep "$ssid" -c < $NETWORKS_FILE) -eq 0 ]]; then
+            wait_wifi=0
         fi
     fi
 
     # we need to set the global variable to indicate we tried this network
     LAST_CHECKED_WIFI=$(sed -n 4p < $WIFI_FILE) # 4th line contains updated timestamp
 
-    if [[ $WAIT_WIFI -ne 1 ]]; then
+    if [[ $wait_wifi -ne 1 ]]; then
         # previous wifi not reachable
         log "Startup" "configured wifi network not in range"
         show_image $IMAGE_WIFIFAILED
@@ -468,18 +468,19 @@ initial_wifi_check() {
     fi
 
     log "Startup" "waiting for wifi connection..."
-    WIFI_CONNECTED=0
-    WIFI_CONNECT_COUNT=0
-    until [[ $WIFI_CONNECT_COUNT -ge $STARTUP_WIFI_WAIT ]]; do
+    local wifi_connected wifi_connect_count
+    wifi_connected=0
+    wifi_connect_count=0
+    until [[ $wifi_connect_count -ge $STARTUP_WIFI_WAIT ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
-            WIFI_CONNECTED=1
+            wifi_connected=1
             break;
         fi
         sleep 5
-        WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+5))
+        wifi_connect_count=$((wifi_connect_count+5))
     done
 
-    if [[ $WIFI_CONNECTED -ne 1 ]]; then
+    if [[ $wifi_connected -ne 1 ]]; then
         log "Startup" "couldn't connect to wifi"
         show_image $IMAGE_WIFIFAILED
         create_access_point
@@ -487,12 +488,10 @@ initial_wifi_check() {
     fi
 
     log "Startup" "connected to wifi"
-    show_image $IMAGE_WIFISUCCESS
-    sleep_pi 2 2
+    show_image $IMAGE_WIFISUCCESS 3
 
     # search network for application
-    show_image $IMAGE_DISCOVERY
-    sleep_pi 2 2
+    show_image $IMAGE_DISCOVERY 2
     service_discovery
 }
 
@@ -506,10 +505,10 @@ for i in {8..0}
 do
     mv -f "$LOG_DIR/log_$i.txt" "$LOG_DIR/log_$((i+1)).txt" 2>/dev/null
 done
-cp -f "$LOG_DIR/log.txt" "$LOG_DIR/log_0.txt" 2>/dev/null
+cp -f $LOG_FILE "$LOG_DIR/log_0.txt" 2>/dev/null
 
 # clear current log
-echo '' > "$LOG_DIR/log.txt"
+echo '' > $LOG_FILE
 
 log "Startup" "starting service"
 
@@ -526,17 +525,23 @@ log "Startup" "disabling services: dnsmasq, hostapd"
   sudo systemctl disable dnsmasq.service
   sudo systemctl stop hostapd
   sudo systemctl disable hostapd.service
-} &>> "$LOG_DIR/log.txt"
+} &>> $LOG_FILE
 
 # start x
 log "Startup" "starting x server"
 sudo xinit \
     /bin/sh -c "exec /usr/bin/matchbox-window-manager -use_titlebar no -use_cursor no" \
     -- -nocursor \
-    &>> "$LOG_DIR/log.txt" &
+    &>> $LOG_FILE &
 
 # show background
 show_image $IMAGE_MOBRO
+
+# start webserver
+log "Startup" "starting lighttpd"
+sudo systemctl start lighttpd &>> $LOG_FILE
+
+sleep_pi 10 20
 
 # disabling screen blanking
 log "Startup" "disable blank screen"
@@ -544,15 +549,7 @@ log "Startup" "disable blank screen"
   sudo xset s off
   sudo xset -dpms
   sudo xset s noblank
-} &>> "$LOG_DIR/log.txt"
-
-# start webserver
-log "Startup" "starting lighttpd"
-sudo systemctl start lighttpd &>> "$LOG_DIR/log.txt"
-
-# wait for CPU usage to come down
-sleep_cpu
-sleep_pi 5 5
+} &>> $LOG_FILE
 
 # check for wifi interface
 if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
@@ -572,7 +569,6 @@ initial_wifi_check
 # ====================================================================================================================
 
 log "Main" "Entering main loop"
-LOOP_COUNTER=0
 while true; do
     if [[ $((LOOP_COUNTER%10)) -eq 0 ]]; then
         log "Main" "loop $LOOP_COUNTER"
