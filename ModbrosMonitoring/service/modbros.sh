@@ -5,7 +5,7 @@
 #
 # systemd service
 #
-# Created with <3 in Austria by: (c) ModBros 2019
+# Created with <3 in Austria by: (c) ModBros 2020
 # Contact: mod-bros.com
 # ====================================================================================================================
 
@@ -56,9 +56,9 @@ NUM_CORES=$(nproc --all)         # number of available
 
 
 # versions
-PI_VERSION=$(cat /proc/device-tree/model)                     # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-SERVICE_VERSION=$(cat "$VERSION_FILE" | sed -n 1p)            # service version number
-PI_UUID=$(cat /sys/class/net/wlan0/address | sed 's/://g')    # unique ID of this pi
+PI_VERSION=$(cat /proc/device-tree/model)                # pi version (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+SERVICE_VERSION=$(sed -n 1p < $VERSION_FILE)           # service version number
+PI_UUID=$(sed 's/://g' < /sys/class/net/wlan0/address)   # unique ID of this pi
 
 # ====================================================================================================================
 # Functions
@@ -81,36 +81,36 @@ sleep_cpu() {
     # taking the 2nd reading (1s after launching)
     # 1st one is artificially high due to launching top, especially on Pi zero
     CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
-    CPU_USAGE=$(echo ${CPU_USAGE} | cut -d '%' -f3 | cut -d ' ' -f2)
+    CPU_USAGE=$(echo "$CPU_USAGE" | cut -d '%' -f3 | cut -d ' ' -f2)
     until [[ $(echo "$CPU_USAGE>10.0" | bc) -eq 0 ]]; do
         log "helper" "waiting for cpu usage to come down ($CPU_USAGE)"
         sleep 5
         CPU_USAGE=$(top -b -d1 -n2 | grep -i "%Cpu(s)")
-        CPU_USAGE=$(echo ${CPU_USAGE} | cut -d '%' -f3 | cut -d ' ' -f2)
+        CPU_USAGE=$(echo "$CPU_USAGE" | cut -d '%' -f3 | cut -d ' ' -f2)
     done
     log "helper" "cpu usage: $CPU_USAGE"
 }
 
 stop_process() {
-    log "helper" "stopping processes: $@"
-    sudo killall -TERM $@ 2>/dev/null;
+    log "helper" "stopping processes: $*"
+    sudo killall -TERM "$@" 2>/dev/null;
 }
 
 sleep_pi() {
-    if [[ ${NUM_CORES} -gt 1 ]]; then
-        sleep $1
+    if [[ $NUM_CORES -gt 1 ]]; then
+        sleep "$1"
     else
-        sleep $2
+        sleep "$2"
     fi
 }
 
 show_image() {
-    if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -gt 0 ]]; then
+    if [[ $(pgrep -fc chromium) -gt 0 ]]; then
         stop_process "chromium-browser"
         sleep_pi 1 2
     fi
-    if [[ $(ps ax | grep feh | grep -v "grep" | wc -l) -gt 0 ]]; then
-        if [[ "$CURR_IMAGE" == "$1" ]]; then
+    if [[ $(pgrep -fc feh) -gt 0 ]]; then
+        if [[ $CURR_IMAGE == "$1" ]]; then
             # already showing requested image
             return
         fi
@@ -125,24 +125,24 @@ show_image() {
         --scale-down \
         --auto-zoom \
         --image-bg "white" \
-        $1 &>> "$LOG_DIR/log.txt" &
+        "$1" &>> "$LOG_DIR/log.txt" &
     sleep_pi 0 1
 }
 
 show_mobro() {
-    if [[ $(ps ax | grep chromium | grep -v "grep" | wc -l) -gt 0 ]]; then
-        if [[ "$CURR_MOBRO_URL" == "$1" ]]; then
+    if [[ $(pgrep -fc chromium) -gt 0 ]]; then
+        if [[ $CURR_MOBRO_URL == "$1" ]]; then
             # already showing requested page
             return
         fi
         stop_process "chromium-browser"
     fi
-    show_image ${IMAGE_FOUND}
+    show_image $IMAGE_FOUND
     sleep_pi 5 10
     stop_process "feh"
     CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
-    chromium-browser $1 \
+    chromium-browser "$1" \
         --no-default-browser-check \
         --no-service-autorun \
         --no-first-run \
@@ -160,15 +160,15 @@ show_mobro() {
 
 search_ssids() {
     log "search_ssids" "scanning for wireless networks"
-    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>> "$LOG_DIR/log.txt" 1> "$NETWORKS_FILE"
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>> "$LOG_DIR/log.txt" 1> $NETWORKS_FILE
     log "search_ssids" "detected wifi networks in range:"
-    cat "$NETWORKS_FILE" &>> "$LOG_DIR/log.txt"
+    cat $NETWORKS_FILE &>> "$LOG_DIR/log.txt"
 }
 
 create_access_point() {
     log "create_access_point" "creating access point"
 
-    show_image ${IMAGE_HOTSPOTCREATION}
+    show_image $IMAGE_HOTSPOTCREATION
 
     # scan for available wifi networks
     # (we can't do that once we the access point is up)
@@ -181,13 +181,13 @@ create_access_point() {
     AP_CREATE_COUNTER=1
     AP_RETRY=$((AP_RETRY_WAIT/5))
     AP_FAIL=$((AP_FAIL_WAIT/5))
-    until [[ $(create_ap --list-running | grep wlan0 | wc -l) -gt 0 ]]; do
+    until [[ $(create_ap --list-running | grep -c wlan0) -gt 0 ]]; do
         AP_CREATE_COUNTER=$((AP_CREATE_COUNTER+1))
-        if [[ ${AP_CREATE_COUNTER} -gt ${AP_FAIL} ]]; then
+        if [[ $AP_CREATE_COUNTER -gt $AP_FAIL ]]; then
             log "create_access_point" "failed to create access point multiple times - rebooting.."
             sudo shutdown -r now
         fi
-        if [[ $(($AP_CREATE_COUNTER%$AP_RETRY)) -eq 0 ]]; then
+        if [[ $((AP_CREATE_COUNTER%AP_RETRY)) -eq 0 ]]; then
             log "create_access_point" "failed to create access point - trying again"
             create_access_point_call
         fi
@@ -196,7 +196,7 @@ create_access_point() {
     done
 
     log "create_access_point" "access point up"
-    show_image ${IMAGE_HOTSPOT}
+    show_image $IMAGE_HOTSPOT
 }
 
 create_access_point_call() {
@@ -215,7 +215,7 @@ create_access_point_call() {
 
 connect_wifi() {
     log "connect_wifi" "connecting to SSID: $1"
-    show_image ${IMAGE_CONNECTWIFI}
+    show_image $IMAGE_CONNECTWIFI
 
     # stop access point
     sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
@@ -224,16 +224,16 @@ connect_wifi() {
     AP_STOP_COUNTER=1
     AP_RETRY=$((AP_RETRY_WAIT/5))
     AP_FAIL=$((AP_FAIL_WAIT/5))
-    until [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; do
+    until [[ $(create_ap --list-running | grep wlan0 -c) -eq 0 ]]; do
         AP_STOP_COUNTER=$((AP_STOP_COUNTER+1))
-        if [[ ${AP_STOP_COUNTER} -gt ${AP_FAIL} ]]; then
+        if [[ $AP_STOP_COUNTER -gt $AP_FAIL ]]; then
             log "connect_wifi" "failed to stop AP multiple times"
             log "connect_wifi" "resetting wpa_supplicant.conf"
             sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
             log "connect_wifi" "rebooting..."
             sudo shutdown -r now
         fi
-        if [[ $((AP_STOP_COUNTER%$AP_RETRY)) -eq 0 ]]; then
+        if [[ $((AP_STOP_COUNTER%AP_RETRY)) -eq 0 ]]; then
             log "connect_wifi" "failed to stop AP - trying again"
             sudo create_ap --stop wlan0 &>> "$LOG_DIR/log.txt"
         fi
@@ -254,7 +254,7 @@ connect_wifi() {
 
     # wait for connection
     WIFI_CONNECT_COUNT=0
-    until [[ ${WIFI_CONNECT_COUNT} -ge ${WIFI_WAIT} ]]; do
+    until [[ $WIFI_CONNECT_COUNT -ge $WIFI_WAIT ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             break;
         fi
@@ -265,13 +265,13 @@ connect_wifi() {
 
     if [[ $(iwgetid wlan0 --raw) ]]; then
         log "connect_wifi" "connected"
-        show_image ${IMAGE_WIFISUCCESS}
+        show_image $IMAGE_WIFISUCCESS
         sleep_pi 10 10
-        show_image ${IMAGE_DISCOVERY}
+        show_image $IMAGE_DISCOVERY
         service_discovery
     else
         log "connect_wifi" "not connected"
-        show_image ${IMAGE_WIFIFAILED}
+        show_image $IMAGE_WIFIFAILED
         sleep_pi 10 10
         create_access_point
     fi
@@ -287,25 +287,25 @@ try_ip() {
 
         # write found (use file as kind of global variable)
         # -> this function is started in a sub process!
-        echo "1" > "${MOBRO_FOUND_FLAG}"
+        echo "1" > $MOBRO_FOUND_FLAG
 
         # write to file to find it faster on next boot
-        echo "$1" > "${HOSTS_FILE}"
+        echo "$1" > $HOSTS_FILE
     fi
 }
 
 service_discovery() {
     log "service_discovery" "starting service discovery"
 
-    echo "0" > "${MOBRO_FOUND_FLAG}"
+    echo "0" > $MOBRO_FOUND_FLAG
 
     # check previous host if configured
-    IP=$(cat "$HOSTS_FILE" | sed -n 1p)   # get 1st host if present (from last successful connection)
-    KEY=$(cat "$WIFI_FILE" | sed -n 3p)   # 3rd line contains MoBro connection key
-    if ! [[ -z ${IP} || -z ${KEY} ]]; then
+    IP=$(sed -n 1p < $HOSTS_FILE)   # get 1st host if present (from last successful connection)
+    KEY=$(sed -n 3p < $WIFI_FILE)   # 3rd line contains MoBro connection key
+    if ! [[ -z $IP || -z $KEY ]]; then
         log "service_discovery" "checking previous host"
         try_ip "$IP" "$KEY"
-        if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
+        if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
             return
         fi
@@ -313,32 +313,32 @@ service_discovery() {
 
     # search available IPs on the network
     log "service_discovery" "performing arp scan"
-    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>> "$LOG_DIR/log.txt" 1>> "${HOSTS_FILE}"
-    KEY=$(cat "$WIFI_FILE" | sed -n 3p)         # 3rd line contains MoBro connection key
+    sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>> "$LOG_DIR/log.txt" 1>> "$HOSTS_FILE"
+    KEY=$(sed -n 3p < $WIFI_FILE)         # 3rd line contains MoBro connection key
 
-    while read IP; do
+    while read -r IP; do
         try_ip "$IP" "$KEY"
         if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
             # found MoBro application -> done
             return
         fi
-    done < "${HOSTS_FILE}"
+    done < "$HOSTS_FILE"
 
     # fallback: get current IP of pi to try all host in range
     log "service_discovery" "fallback"
     PI_IP=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>> "$LOG_DIR/log.txt")
-    if ! [[ -z ${PI_IP} ]]; then
+    if [[ -n $PI_IP ]]; then
         PI_IP_1=$(echo "$PI_IP" | cut -d . -f 1)
         PI_IP_2=$(echo "$PI_IP" | cut -d . -f 2)
         PI_IP_3=$(echo "$PI_IP" | cut -d . -f 3)
         log "service_discovery" "trying all IPs in range $PI_IP_1.$PI_IP_2.$PI_IP_3.X"
 
         PI_IP_4=0
-        while [[ ${PI_IP_4} -lt 255 ]]; do
-            for j in $(seq $((4*$NUM_CORES)))
+        while [[ $PI_IP_4 -lt 255 ]]; do
+            for j in $(seq $((4*NUM_CORES)))
             do
                 try_ip "$PI_IP_1.$PI_IP_2.$PI_IP_3.$PI_IP_4" "$KEY" &
-                pids[${j}]=$! # remember pids of started sub processes
+                pids[$j]=$! # remember pids of started sub processes
                 if [[ PI_IP_4 -ge 255 ]]; then
                     break;
                 fi
@@ -349,32 +349,32 @@ service_discovery() {
             for pid in ${pids[*]}; do
                 wait $pid
             done
-            unset $pids
+            unset pids
 
             # no need to continue if found
-            if [[ $(cat "$MOBRO_FOUND_FLAG") -eq 1 ]]; then
+            if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
                 return
             fi
         done
     fi
 
-    if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
+    if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
-        truncate -s 0 "${HOSTS_FILE}"
-        show_image ${IMAGE_NOTFOUND}
+        truncate -s 0 $HOSTS_FILE
+        show_image $IMAGE_NOTFOUND
     fi
 }
 
 hotspot_check() {
-    UPDATED=$(cat "$WIFI_FILE" | sed -n 4p)     # 4th line contains updated timestamp
-    SSID=$(cat "$WIFI_FILE" | sed -n 1p)        # 1st line contains SSID
-    PW=$(cat "$WIFI_FILE" | sed -n 2p)          # 2nd line contains PW
-    if ! [[ -z ${UPDATED} ]]; then
-        if [[ ${UPDATED} != ${LAST_CHECKED_WIFI} ]]; then
-            if ! [[ -z ${SSID} || -z ${PW} ]]; then
+    UPDATED=$(sed -n 4p < $WIFI_FILE)     # 4th line contains updated timestamp
+    SSID=$(sed -n 1p < $WIFI_FILE)        # 1st line contains SSID
+    PW=$(sed -n 2p < $WIFI_FILE)          # 2nd line contains PW
+    if [[ -n $UPDATED ]]; then
+        if [[ $UPDATED != "$LAST_CHECKED_WIFI" ]]; then
+            if ! [[ -z $SSID || -z $PW ]]; then
                 # if there is new access data -> instantly try connecting
-                LAST_CHECKED_WIFI=${UPDATED}
+                LAST_CHECKED_WIFI=$UPDATED
                 HOTSPOT_COUNTER=0
                 log "hotspot_check" "new credentials found. trying to connect to SSID $SSID"
                 connect_wifi "$SSID" "$PW"
@@ -384,10 +384,10 @@ hotspot_check() {
     fi
 
     HOTSPOT_COUNTER=$((HOTSPOT_COUNTER+1))
-    if [[ ${HOTSPOT_COUNTER} -ge ${CHECK_INTERVAL_HOTSPOT} ]]; then
+    if [[ $HOTSPOT_COUNTER -ge $CHECK_INTERVAL_HOTSPOT ]]; then
         log "hotspot_check" "start hotspot check"
         HOTSPOT_COUNTER=0
-        if ! [[ -z ${SSID} || -z ${PW} ]]; then
+        if ! [[ -z $SSID || -z $PW ]]; then
             # wifi configured -> try again
             log "hotspot_check" "trying again to connect with $SSID and $PW"
             connect_wifi "$SSID" "$PW"
@@ -397,11 +397,11 @@ hotspot_check() {
 
 background_check() {
     BACKGROUND_COUNTER=$((BACKGROUND_COUNTER+1))
-    if [[ ${BACKGROUND_COUNTER} -ge ${CHECK_INTERVAL_BACKGROUND} ]]; then
+    if [[ $BACKGROUND_COUNTER -ge $CHECK_INTERVAL_BACKGROUND ]]; then
         log "background_check" "starting background check"
         BACKGROUND_COUNTER=0
-        if [[ $(cat "$MOBRO_FOUND_FLAG") -ne 1 ]]; then
-            show_image ${IMAGE_DISCOVERY}
+        if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
+            show_image $IMAGE_DISCOVERY
         fi
         service_discovery
     fi
@@ -409,57 +409,60 @@ background_check() {
 
 update() {
     log "update" "performing update check"
-    LAST_UPDATE_DATE=$(cat "$UPDATED_FILE" | sed -n 1p)
+    LAST_UPDATE_DATE=$(sed -n 1p < $UPDATED_FILE)
     CURR_DATE=$(date "+%s")
-    if ! [[ -z ${LAST_UPDATE_DATE} ]]; then
+    if [[ -n $LAST_UPDATE_DATE ]]; then
         # skip if it was updated recently
-        if [[ $(expr ${CURR_DATE} - ${LAST_UPDATE_DATE}) -le ${UPDATE_THRESHOLD} ]]; then
+        if [[ $((CURR_DATE - LAST_UPDATE_DATE)) -le $UPDATE_THRESHOLD ]]; then
             log "update" "skipping update (last update below threshold)"
             return
         fi
     fi
-    wget -q --spider http://google.com
-    if [[ $? -ne 0 ]]; then
+    if ! wget -q --spider http://google.com; then
         log "update" "skipping update (no internet)"
         return
     fi
     log "update" "starting update/upgrade"
-    show_image ${IMAGE_UPDATE}
-    sudo apt-get update &>> "$LOG_DIR/log.txt"
-    sudo apt-get upgrade -q -y &>> "$LOG_DIR/log.txt"
-    sudo apt-get autoremove -y &>> "$LOG_DIR/log.txt"
-    echo "$CURR_DATE" > "${UPDATED_FILE}"
+    show_image $IMAGE_UPDATE
+
+    {
+      sudo apt-get update
+      sudo apt-get upgrade -q -y
+      sudo apt-get autoremove -y
+    } &>> "$LOG_DIR/log.txt"
+
+    echo "$CURR_DATE" > $UPDATED_FILE
     log "update" "upgrade done"
 }
 
 initial_wifi_check() {
     # check if wifi is configured
     # (skip if no network set - e.g. first boot)
-    if [[ $(cat "$WIFI_FILE" | wc -l) -lt 4 ]]; then
+    if [[ $(wc -l < $WIFI_FILE) -lt 4 ]]; then
         log "Startup" "no previous network configuration found"
         create_access_point
         return
     fi
 
-    show_image ${IMAGE_CONNECTWIFI}
+    show_image $IMAGE_CONNECTWIFI
     # check if configured network is in range
     log "Startup" "scanning for wireless networks"
     search_ssids
     WAIT_WIFI=1
-    if [[ $(cat "$NETWORKS_FILE" | wc -l) -ge 1 ]]; then # check if scan returned anything first
-        SSID=$(cat "$WIFI_FILE" | sed -n 1p) # SSID of configured network
-        if [[ $(cat "$NETWORKS_FILE" | grep "$SSID" | wc -l) -eq 0 ]]; then
+    if [[ $(wc -l < $NETWORKS_FILE) -ge 1 ]]; then # check if scan returned anything first
+        SSID=$(sed -n 1p < $WIFI_FILE) # SSID of configured network
+        if [[ $(grep "$SSID" -c < $NETWORKS_FILE) -eq 0 ]]; then
             WAIT_WIFI=0
         fi
     fi
 
     # we need to set the global variable to indicate we tried this network
-    LAST_CHECKED_WIFI=$(cat "$WIFI_FILE" | sed -n 4p) # 4th line contains updated timestamp
+    LAST_CHECKED_WIFI=$(sed -n 4p < $WIFI_FILE) # 4th line contains updated timestamp
 
-    if [[ ${WAIT_WIFI} -ne 1 ]]; then
+    if [[ $WAIT_WIFI -ne 1 ]]; then
         # previous wifi not reachable
         log "Startup" "configured wifi network not in range"
-        show_image ${IMAGE_WIFIFAILED}
+        show_image $IMAGE_WIFIFAILED
         create_access_point
         return
     fi
@@ -467,7 +470,7 @@ initial_wifi_check() {
     log "Startup" "waiting for wifi connection..."
     WIFI_CONNECTED=0
     WIFI_CONNECT_COUNT=0
-    until [[ ${WIFI_CONNECT_COUNT} -ge ${STARTUP_WIFI_WAIT} ]]; do
+    until [[ $WIFI_CONNECT_COUNT -ge $STARTUP_WIFI_WAIT ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
             WIFI_CONNECTED=1
             break;
@@ -476,19 +479,19 @@ initial_wifi_check() {
         WIFI_CONNECT_COUNT=$((WIFI_CONNECT_COUNT+5))
     done
 
-    if [[ ${WIFI_CONNECTED} -ne 1 ]]; then
+    if [[ $WIFI_CONNECTED -ne 1 ]]; then
         log "Startup" "couldn't connect to wifi"
-        show_image ${IMAGE_WIFIFAILED}
+        show_image $IMAGE_WIFIFAILED
         create_access_point
         return
     fi
 
     log "Startup" "connected to wifi"
-    show_image ${IMAGE_WIFISUCCESS}
+    show_image $IMAGE_WIFISUCCESS
     sleep_pi 2 2
 
     # search network for application
-    show_image ${IMAGE_DISCOVERY}
+    show_image $IMAGE_DISCOVERY
     sleep_pi 2 2
     service_discovery
 }
@@ -501,7 +504,7 @@ initial_wifi_check() {
 
 for i in {8..0}
 do
-    mv -f "$LOG_DIR/log_$i.txt" "$LOG_DIR/log_$(expr ${i} + 1).txt" 2>/dev/null
+    mv -f "$LOG_DIR/log_$i.txt" "$LOG_DIR/log_$((i+1)).txt" 2>/dev/null
 done
 cp -f "$LOG_DIR/log.txt" "$LOG_DIR/log_0.txt" 2>/dev/null
 
@@ -514,14 +517,16 @@ log "Startup" "starting service"
 export DISPLAY=:0
 
 # reset flag
-echo "0" > "${MOBRO_FOUND_FLAG}"
+echo "0" > $MOBRO_FOUND_FLAG
 
 # disable dnsmasq and hostapd
 log "Startup" "disabling services: dnsmasq, hostapd"
-sudo systemctl stop dnsmasq &>> "$LOG_DIR/log.txt"
-sudo systemctl disable dnsmasq.service &>> "$LOG_DIR/log.txt"
-sudo systemctl stop hostapd &>> "$LOG_DIR/log.txt"
-sudo systemctl disable hostapd.service &>> "$LOG_DIR/log.txt"
+{
+  sudo systemctl stop
+  sudo systemctl disable dnsmasq.service
+  sudo systemctl stop hostapd
+  sudo systemctl disable hostapd.service
+} &>> "$LOG_DIR/log.txt"
 
 # start x
 log "Startup" "starting x server"
@@ -550,9 +555,9 @@ sleep_cpu
 sleep_pi 5 5
 
 # check for wifi interface
-if [[ $(ifconfig | grep wlan | wc -l) -lt 1 ]]; then
+if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
     log "Startup" "no wifi interface detected, aborting"
-    show_image ${IMAGE_NOWIFIINTERFACE}
+    show_image $IMAGE_NOWIFIINTERFACE
     while true; do
         sleep 60
     done
@@ -572,7 +577,7 @@ while true; do
     if [[ $((LOOP_COUNTER%10)) -eq 0 ]]; then
         log "Main" "loop $LOOP_COUNTER"
     fi
-    if [[ $(create_ap --list-running | grep wlan0 | wc -l) -eq 0 ]]; then
+    if [[ $(create_ap --list-running | grep wlan0 -c) -eq 0 ]]; then
         # no hotspot running
         if ! [[ $(iwgetid wlan0 --raw) ]]; then
             create_access_point
@@ -584,7 +589,7 @@ while true; do
         # check for new wifi data + if hotspot open too long, try to connect to wifi again
         hotspot_check
     fi
-    sleep ${LOOP_INTERVAL}
+    sleep $LOOP_INTERVAL
     LOOP_COUNTER=$((LOOP_COUNTER+1))
 done
 
