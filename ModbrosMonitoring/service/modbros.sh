@@ -18,14 +18,12 @@ FILE_DIR='/home/modbros/ModbrosMonitoring/data'
 HOSTS_FILE="$FILE_DIR/hosts.txt"
 WIFI_FILE="$FILE_DIR/wifi.txt"
 VERSION_FILE="$FILE_DIR/version.txt"
-UPDATED_FILE="$FILE_DIR/updated.txt"
 MOBRO_FOUND_FLAG="$FILE_DIR/mobro_found.txt"
 NETWORKS_FILE="$FILE_DIR/ssids.txt"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # Resources
 IMAGE_MOBRO="$RESOURCES_DIR/mobro.png"
-IMAGE_UPDATE="$RESOURCES_DIR/update.png"
 IMAGE_FOUND="$RESOURCES_DIR/found.png"
 IMAGE_NOTFOUND="$RESOURCES_DIR/notfound.png"
 IMAGE_CONNECTWIFI="$RESOURCES_DIR/connectwifi.png"
@@ -45,7 +43,6 @@ AP_PW='modbros123'               # password of the created access point
 LOOP_INTERVAL=5                  # in seconds
 CHECK_INTERVAL_HOTSPOT=60        # in loops (60*5=300s -> every 5 minutes)
 CHECK_INTERVAL_BACKGROUND=20     # in loops
-UPDATE_THRESHOLD=1209600         # update/upgrade pi at least every X seconds
 AP_RETRY_WAIT=20                 # how long to wait for AP to start/stop before issuing command again (in s)
 AP_FAIL_WAIT=90                  # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
 STARTUP_WIFI_WAIT=45             # seconds to wait for wifi connection on startup (if wifi configured)
@@ -403,35 +400,6 @@ background_check() {
         fi
         service_discovery
     fi
-}
-
-update() {
-    log "update" "performing update check"
-    local last_update curr_date
-    last_update=$(sed -n 1p < $UPDATED_FILE)
-    curr_date=$(date "+%s")
-    if [[ -n $last_update ]]; then
-        # skip if it was updated recently
-        if [[ $((curr_date - last_update)) -le $UPDATE_THRESHOLD ]]; then
-            log "update" "skipping update (last update below threshold)"
-            return
-        fi
-    fi
-    if ! wget -q --spider http://google.com; then
-        log "update" "skipping update (no internet)"
-        return
-    fi
-    log "update" "starting update/upgrade"
-    show_image $IMAGE_UPDATE
-
-    {
-      sudo apt-get update
-      sudo apt-get upgrade -q -y
-      sudo apt-get autoremove -y
-    } &>> $LOG_FILE
-
-    echo "$curr_date" > $UPDATED_FILE
-    log "update" "upgrade done"
 }
 
 initial_wifi_check() {
