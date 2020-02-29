@@ -2,143 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ModBros Monitoring Setup</title>
+  <title>MoBro Setup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
   <link href="../bootstrap.min.css" rel="stylesheet"/>
+  <link href="../bootstrap.min.js" rel="script">
 </head>
-<style>
-  body {
-    font-size: 16px;
-  }
-</style>
+
 <body>
 
+<?php
+$eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
+$ethConnected = isset($eth) && trim($eth) == '';
+
+$ssid = shell_exec('iwgetid wlan0 -r');
+$wlanConnected = isset($ssid) && trim($ssid) !== '';
+
+$connected = $ethConnected || $wlanConnected;
+
+if ($file = fopen("key", "r")) {
+    if (!feof($file)) {
+        $key = fgets($file);
+    }
+    fclose($file);
+}
+if ($file = fopen("version", "r")) {
+    if (!feof($file)) {
+        $version = fgets($file);
+    }
+    fclose($file);
+}
+?>
+
 <div id="container" class="container">
-  <div class="card mt-3">
-    <div class="card-header">
-      <h3 class="m-0">ModBros Monitoring Setup</h3>
-    </div>
 
+    <?php include 'header.php' ?>
+
+  <div class="card mt-3">
     <div class="card-body">
-      <p>
-        Hi there!
-      </p>
-      <p>
-        You are seeing this configuration page, which means your setup of the ModBros Monitoring Tool is almost
-        complete.
-      </p>
-      <p>
-        Soon you will have your very own MoBro. (<b>Mo</b>nitoring<b>Bro</b> - get it &#128521;)
-      </p>
-      <p class="m-0">
-        Thanks again for giving our software a shot!<br/>
-        As this is our first adventure into the PC stats monitoring territory, both your honest feedback as well as
-        suggestions for future improvements would be very welcome.
-      </p>
+      <h5 class="card-title">Hi there! &#x1F600;</h5>
+      <div class="card-text">
+        <p>
+          You are seeing this configuration page, which means your setup of the ModBros Monitor Bro (MoBro) is almost
+          complete.
+        </p>
+        <p class="m-0">
+          Thanks for giving our software a shot!<br/>
+          We try to steadily improve the MoBro to get it more stable and add new features.<br/>
+          As this is our first adventure into the PC stats monitoring territory, both your honest feedback as well as
+          suggestions for future improvements would be very welcome.
+        </p>
+      </div>
     </div>
   </div>
 
-
   <div class="card mt-3">
-    <div class="card-header">
-      <h3 class="m-0">Current connection</h3>
-    </div>
-
+    <h4 class="card-header">Current status</h4>
     <div class="card-body">
-      <p class="m-0">
-          <?php
-          $ssid = shell_exec('iwgetid wlan0 -r');
-          if (isset($ssid) && trim($ssid) !== '') {
-              echo 'You are currently connected to: ' . $ssid;
-          } else {
-              echo 'Currently not connected!';
-          }
-          ?>
+      <p>
+        Image version: <b>v<?php echo $version?></b><br>
+        Network mode: <b><?php echo $ethConnected ? 'Ethernet' : 'WiFi' ?></b><br>
+        Network status: <b><?php echo $wlanConnected ?
+                  ('Connected (' . trim($ssid) . ')')
+                  : ($ethConnected ? 'Connected' : 'Not connected') ?></b> <br>
+        PC network name: <b><?php echo isset($key) && trim($key) !== '' ? $key : 'mobro' ?></b>
       </p>
     </div>
   </div>
 
   <div class="card mt-3">
     <div class="card-header">
-      <h3 class="m-0">Setup new connection</h3>
+      <h4>Edit PC network name</h4>
     </div>
-
     <div class="card-body">
-      <p>
-        In order to connect your Raspberry Pi to a (new) wireless network just do the follow:
-      </p>
-      <ol>
-        <li>
-          Select the desired network from the drop down list.<br/>
-          (Or provide the SSID of the network in case the Raspberry was unable to identify the available networks or your
-          network is not listed)
-        </li>
-        <li>
-          Provide the password for the selected wireless network.
-        </li>
-        <li>
-          Provide the individual connection key as given to you by the desktop application.
-        </li>
-        <li>
-          Click on 'Connect'
-        </li>
-      </ol>
-      <p>
-        Your Raspberry Pi will now try to connect to the given network using your provided credentials.<br/>
-        If you were connected via the Raspberry's own hotspot, this network will be closed first and you will be
-        disconnected.
-      </p>
-
-      <form action="save.php" method="POST">
-        <fieldset>
-          <legend>Wireless Lan Information:</legend>
-            <?php
-            if ($file = fopen("networks", "r")) {
-                echo '<label>Network:</label><br>';
-                echo '<select name="ssid" class="form-control">';
-                while (!feof($file)) {
-                    $item = fgets($file);
-                    if (trim($item) !== '') {
-                        echo '<option>' . $item . '</option>';
-                    }
-                }
-                echo '</select>';
-                echo '<label class="mt-2">Manuel SSID: (overrides network selection)</label><br>';
-                echo '<input type="text" name="ssid_manual" value="" placeholder="SSID (Optional)" class="form-control">';
-                fclose($file);
-            } else {
-                echo '<label class="mt-2">SSID:</label><br>';
-                echo '<input type="text" name="ssid_manual" value="" placeholder="WiFi SSID" class="form-control">';
-            }
-            ?>
-
-          <label class="mt-2">Password:</label><br>
-          <input type="password" name="pw" value="" placeholder="Password" class="form-control">
-
-          <label class="mt-2">Key:</label><br>
-          <input type="text" name="key" value="mobro" placeholder="Connection Key" class="form-control">
-
-          <input type="submit" value="Connect" class="btn btn-primary w-100 mt-3"
-                 onclick="return confirm('Connect to the given network?')">
-
-        </fieldset>
+      <form action="saveKey.php" method="POST">
+        <p>
+          The 'PC network name' as configured in the settings of the MoBro PC application
+        </p>
+        <div class="form-group row mt-1">
+          <div class="col-sm">
+            <input id="idkey" type="text" name="key"
+                   value="<?php echo isset($key) && trim($key) !== '' ? $key : 'mobro' ?>"
+                   placeholder="Connection Key"
+            class="form-control" required
+            title="The 'PC network name' as configured in the MoBro PC application">
+          </div>
+          <div class="col-sm">
+            <button class="btn btn-primary" type="submit">Apply</button>
+          </div>
+        </div>
       </form>
     </div>
   </div>
 
-  <div class="alert alert-info mt-3">
-    Note that closing the hotspot and connecting to the new network might take some time, so be patient.<br/>
-    In case of invalid credentials or any other connection error, the configuration hotspot will be recreated.
+
+  <div class="card mt-3">
+    <div class="card-header">
+      <h4>Setup new WiFi connection</h4>
+    </div>
+    <div class="card-body">
+      <div class="card-text">
+        <p>
+          In order to connect your Raspberry Pi to a (new) wireless network just follow these steps:
+        </p>
+        <ol>
+          <li>
+            Select the desired network from the drop down list<br/>
+            (Or manually provide the SSID of the network in case your network is missing from the list)
+          </li>
+          <li>
+            Provide the password for the selected wireless network
+          </li>
+          <li>
+            Click on 'Connect'
+          </li>
+        </ol>
+        <p>
+          The Raspberry Pi will now try to connect to the given network using your provided credentials.<br/>
+          If you were connected via the Raspberry's own hotspot, this network will be closed first and you will be
+          disconnected.
+        </p>
+      </div>
+      <form action="save.php" method="POST">
+        <legend>Configuration:</legend>
+
+        <div class="form-group row mt-1">
+          <div class="col-sm">
+            <label for="idssid">Network:</label>
+            <select id="idssid" name="ssid" class="form-control" title="The wifi network to connect to">
+                <?php
+                if ($file = fopen("networks", "r")) {
+                    while (!feof($file)) {
+                        $item = fgets($file);
+                        if (trim($item) !== '') {
+                            echo '<option>' . $item . '</option>';
+                        }
+                    }
+                    fclose($file);
+                }
+                ?>
+            </select>
+          </div>
+          <div class="col-sm">
+            <label for="idmanualssid">Manuel network SSID: (overrides network selection)</label>
+            <input id="idmanualssid" type="text" name="ssid_manual" placeholder="SSID (optional)" class="form-control"
+                   title="Manual SSID override for the network selection">
+          </div>
+        </div>
+
+        <div class="form-group row mt-1">
+          <div class="col-sm">
+            <label for="idpw">Password:</label>
+            <input id="idpw" type="password" name="pw" placeholder="Password" class="form-control" required
+                   title="The password for the selected wifi network">
+          </div>
+          <div class="col-sm">
+          </div>
+        </div>
+
+        <p class="alert alert-info">
+          Closing the hotspot and connecting to the new network might take some time, so be patient and give it a
+          minute.<br/>
+          In case of invalid credentials or any other connection error, the configuration hotspot will be recreated.
+        </p>
+
+        <button class="btn w-100 btn-primary" type="submit">Connect</button>
+      </form>
+    </div>
   </div>
 
-  <hr/>
 
-  <footer>
-    <p>
-      Created with &#9829; in Austria by: &#169; ModBros 2019<br/>
-      Contact: <a href="https://mod-bros.com">mod-bros.com</a><br/>
-    </p>
-  </footer>
+    <?php include 'footer.php' ?>
 </div>
 
 </body>

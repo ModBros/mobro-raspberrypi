@@ -88,6 +88,8 @@ rm -rf /var/www/*
 chmod +rx ./web/modbros/favicon.ico
 ln -s /home/modbros/ModbrosMonitoring/web /var/www/html
 ln -s /home/modbros/ModbrosMonitoring/data/ssids.txt /home/modbros/ModbrosMonitoring/web/modbros/networks
+ln -s /home/modbros/ModbrosMonitoring/data/discovery_key.txt /home/modbros/ModbrosMonitoring/web/modbros/key
+ln -s /home/modbros/ModbrosMonitoring/data/version.txt /home/modbros/ModbrosMonitoring/web/modbros/version
 
 sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.3/fpm/php.ini
 cat ./config/15-fastcgi-php.conf > /etc/lighttpd/conf-available/15-fastcgi-php.conf
