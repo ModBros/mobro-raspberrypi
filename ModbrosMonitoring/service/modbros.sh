@@ -80,8 +80,18 @@ wait_window() {
 }
 
 stop_process() {
-    log "helper" "stopping processes: $*"
-    sudo killall -TERM "$@" 2>/dev/null;
+    log "helper" "stopping process: $1"
+    sudo pkill "$1" 2>> $LOG_FILE;
+    for i in {4..0}
+    do
+        if [[ $(pgrep -fc "$1") -eq 0 ]]; then
+            return
+        fi
+        sleep 2
+    done
+    log "helper" "killing process: $1"
+    sudo pkill -9 "$1" 2>> $LOG_FILE;
+    sleep_pi 1 2
 }
 
 sleep_pi() {
