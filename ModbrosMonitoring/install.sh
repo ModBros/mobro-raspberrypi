@@ -6,7 +6,7 @@
 # installation script
 # (intended for and tested only on clean Raspbian Buster lite)
 #
-# Created with <3 in Austria by: (c) ModBros 2019
+# Created with <3 in Austria by: (c) ModBros 2020
 # Contact: mod-bros.com
 # ==========================================================
 
@@ -87,9 +87,8 @@ rm -rf /var/www/*
 
 chmod +rx ./web/modbros/favicon.ico
 ln -s /home/modbros/ModbrosMonitoring/web /var/www/html
-ln -s /home/modbros/ModbrosMonitoring/data/ssids.txt /home/modbros/ModbrosMonitoring/web/modbros/networks
-ln -s /home/modbros/ModbrosMonitoring/data/discovery_key.txt /home/modbros/ModbrosMonitoring/web/modbros/key
-ln -s /home/modbros/ModbrosMonitoring/data/version.txt /home/modbros/ModbrosMonitoring/web/modbros/version
+ln -s /home/modbros/ModbrosMonitoring/data /home/modbros/ModbrosMonitoring/web/data
+ln -s /home/modbros/ModbrosMonitoring/log /home/modbros/ModbrosMonitoring/web/log
 
 sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.3/fpm/php.ini
 cat ./config/15-fastcgi-php.conf > /etc/lighttpd/conf-available/15-fastcgi-php.conf

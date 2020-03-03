@@ -11,7 +11,10 @@
 
 <body>
 <?php
-if ($file = fopen("key", "r")) {
+
+include '../constants.php';
+
+if ($file = fopen(Constants::KEY_FILE, "r")) {
     if (!feof($file)) {
         $key = fgets($file);
     }
@@ -21,7 +24,7 @@ if ($file = fopen("key", "r")) {
 
 <div id="container" class="container">
 
-  <?php include 'header.php' ?>
+    <?php include 'header.php' ?>
 
   <div class="card mt-3">
     <div class="card-header">
@@ -34,7 +37,7 @@ if ($file = fopen("key", "r")) {
         </p>
         <p>
           Network SSID: <?php echo '<b>' . $_POST['ssid'] . '</b>'; ?> <br>
-          Password: <?php echo '<b>' . str_repeat("*", strlen($_POST['pw'])) .'</b>' ?>
+          Password: <?php echo '<b>' . str_repeat("*", strlen($_POST['pw'])) . '</b>' ?>
         </p>
         <p>
           PC network name: <?php echo '<b>' . $key . '</b>'; ?> <br>
@@ -97,13 +100,14 @@ if ($file = fopen("key", "r")) {
     <div class="card-body">
       <pre>
           <?php
-          if (isset($_POST['pw']) && isset($_POST['key']) && (isset($_POST['ssid']) || isset($_POST['ssid_manual']))) {
+          if (isset($_POST['pw']) && (isset($_POST['ssid']) || isset($_POST['ssid_manual']))) {
               $ssid = (empty($_POST['ssid_manual']) ? $_POST['ssid'] : $_POST['ssid_manual']);
               $pw = $_POST['pw'];
-              $key = $_POST['key'];
               $updated = time();
-              $data = $ssid . "\n" . $pw . "\n" . $key . "\n" . $updated . "\n";
-              $ret = file_put_contents('/home/modbros/ModbrosMonitoring/data/wifi.txt', $data, LOCK_EX);
+              $data = $ssid . "\n" . $pw . "\n" . $updated . "\n";
+              $ret = false;
+              $ret = file_put_contents(Constants::WIFI_FILE, $data, LOCK_EX);
+
               if ($ret === false) {
                   echo('There was an error saving the access data!');
               } else {
@@ -124,6 +128,7 @@ if ($file = fopen("key", "r")) {
   <hr>
 
     <?php include 'footer.php' ?>
+
 </div>
 
 </body>

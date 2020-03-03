@@ -12,7 +12,9 @@
 <body>
 
 <?php
-if ($file = fopen("key", "r")) {
+include '../constants.php';
+
+if ($file = fopen(Constants::KEY_FILE, "r")) {
     if (!feof($file)) {
         $key = fgets($file);
     }
@@ -58,7 +60,7 @@ if ($file = fopen("key", "r")) {
           if (isset($_POST['key'])) {
               $data = $_POST['key'] . "\n" . time() . "\n";
               $ret = false;
-              $ret = file_put_contents('key', $data, LOCK_EX);
+              $ret = file_put_contents(Constants::KEY_FILE, $data, LOCK_EX);
               if ($ret === false) {
                   echo('There was an error saving the PC network name!');
               } else {

@@ -12,21 +12,24 @@
 <body>
 
 <?php
+
+include '../constants.php';
+
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
-$ethConnected = isset($eth) && trim($eth) == '';
+$ethConnected = isset($eth) && trim($eth) !== '';
 
 $ssid = shell_exec('iwgetid wlan0 -r');
 $wlanConnected = isset($ssid) && trim($ssid) !== '';
 
 $connected = $ethConnected || $wlanConnected;
 
-if ($file = fopen("key", "r")) {
+if ($file = fopen(Constants::KEY_FILE, "r")) {
     if (!feof($file)) {
         $key = fgets($file);
     }
     fclose($file);
 }
-if ($file = fopen("version", "r")) {
+if ($file = fopen(Constants::VERSION_FILE, "r")) {
     if (!feof($file)) {
         $version = fgets($file);
     }
@@ -36,7 +39,7 @@ if ($file = fopen("version", "r")) {
 
 <div id="container" class="container">
 
-    <?php include 'header.php' ?>
+  <?php include 'header.php' ?>
 
   <div class="card mt-3">
     <div class="card-body">
@@ -131,7 +134,7 @@ if ($file = fopen("version", "r")) {
             <label for="idssid">Network:</label>
             <select id="idssid" name="ssid" class="form-control" title="The wifi network to connect to">
                 <?php
-                if ($file = fopen("networks", "r")) {
+                if ($file = fopen(Constants::SSID_FILE, "r")) {
                     while (!feof($file)) {
                         $item = fgets($file);
                         if (trim($item) !== '') {
@@ -171,8 +174,8 @@ if ($file = fopen("version", "r")) {
     </div>
   </div>
 
+  <?php include 'footer.php' ?>
 
-    <?php include 'footer.php' ?>
 </div>
 
 </body>

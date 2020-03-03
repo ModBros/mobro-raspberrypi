@@ -3,6 +3,7 @@ php7.3-fpm php7.3
 libterm-readline-gnu-perl
 xserver-xorg x11-xserver-utils xinit
 matchbox-window-manager
+libgles2-mesa
 chromium-browser
 xwit xdotool
 curl
@@ -17,3 +18,4 @@ feh
 bc
 rng-tools
 lsb-release
+git

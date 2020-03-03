@@ -31,10 +31,15 @@ apt-get clean
 cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 # reset data files
-: > /home/modbros/ModbrosMonitoring/data/hosts.txt
-: > /home/modbros/ModbrosMonitoring/data/wifi.txt
-: > /home/modbros/ModbrosMonitoring/data/ssids.txt
-echo -n "0" > /home/modbros/ModbrosMonitoring/data/mobro_found.txt
+: > /home/modbros/ModbrosMonitoring/data/hosts
+: > /home/modbros/ModbrosMonitoring/data/wifi
+: > /home/modbros/ModbrosMonitoring/data/ssids
+echo -n "0" > /home/modbros/ModbrosMonitoring/data/mobro_found
+echo -n "mobro" > /home/modbros/ModbrosMonitoring/data/discovery_key
+
+# delete cache + bash history
+rm -rf /home/modbros/.cache/*
+: > /home/modbros/.bash_history
 
 # overwrite free space of partition
-sfill -f -z -l -l -v /
+#sfill -f -z -l -l -v /

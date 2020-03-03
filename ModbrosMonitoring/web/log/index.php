@@ -7,7 +7,9 @@
 <body>
 <div id="container">
     <?php
-    $base = '/home/modbros/ModbrosMonitoring/log/log';
+    include '../constants.php';
+
+    $base = Constants::LOG_DIR . '/log';
     $log = nl2br(file_get_contents($base . '.txt'));
     if (isset($_GET['all'])) {
         for ($i = 0; $i < 10; $i++) {

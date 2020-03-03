@@ -24,4 +24,3 @@ temp_limit=70
 start_x=0
 enable_uart=0
 dtoverlay=disable-bt
-disable_overscan=1
