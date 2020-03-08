@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>MoBro Setup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+  <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
   <link href="../bootstrap.min.css" rel="stylesheet"/>
   <link href="../bootstrap.min.js" rel="script">
 </head>
@@ -24,7 +24,7 @@ if ($file = fopen(Constants::KEY_FILE, "r")) {
 
 <div id="container" class="container">
 
-    <?php include 'header.php' ?>
+    <?php include '../includes/header.php' ?>
 
   <div class="card mt-3">
     <div class="card-header">
@@ -127,7 +127,7 @@ if ($file = fopen(Constants::KEY_FILE, "r")) {
 
   <hr>
 
-    <?php include 'footer.php' ?>
+    <?php include '../includes/footer.php' ?>
 
 </div>
 

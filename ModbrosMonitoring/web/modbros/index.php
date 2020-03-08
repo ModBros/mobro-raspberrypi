@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>MoBro Setup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+  <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
   <link href="../bootstrap.min.css" rel="stylesheet"/>
   <link href="../bootstrap.min.js" rel="script">
 </head>
@@ -39,7 +39,7 @@ if ($file = fopen(Constants::VERSION_FILE, "r")) {
 
 <div id="container" class="container">
 
-  <?php include 'header.php' ?>
+  <?php include '../includes/header.php' ?>
 
   <div class="card mt-3">
     <div class="card-body">
@@ -63,7 +63,7 @@ if ($file = fopen(Constants::VERSION_FILE, "r")) {
     <h4 class="card-header">Current status</h4>
     <div class="card-body">
       <p>
-        Image version: <b>v<?php echo $version?></b><br>
+        Image version: <b><?php echo $version?></b><br>
         Network mode: <b><?php echo $ethConnected ? 'Ethernet' : 'WiFi' ?></b><br>
         Network status: <b><?php echo $wlanConnected ?
                   ('Connected (' . trim($ssid) . ')')
@@ -174,7 +174,7 @@ if ($file = fopen(Constants::VERSION_FILE, "r")) {
     </div>
   </div>
 
-  <?php include 'footer.php' ?>
+  <?php include '../includes/footer.php' ?>
 
 </div>
 
