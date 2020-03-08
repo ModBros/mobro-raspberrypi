@@ -1,30 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Log</title>
-</head>
-<body>
-<div id="container">
-    <?php
-    include '../constants.php';
+<?php
+include '../constants.php';
 
-    $base = Constants::LOG_DIR . '/log';
-    $log = nl2br(file_get_contents($base . '.txt'));
-    if (isset($_GET['all'])) {
-        for ($i = 0; $i < 10; $i++) {
-            $path = $base . '_' . $i . '.txt';
-            if (file_exists($path)) {
-                $log .= "<br/><br/>";
-                $log .= "===========================================================================================<br />";
-                $log .= "========================================= LOG " . $i . " ============================================<br />";
-                $log .= "===========================================================================================<br />";
-                $log .= nl2br(file_get_contents($path));
-            }
+$lines = $_GET['lines'];
+$all = isset($_GET['all']);
+
+function getFile($lines, $file)
+{
+    if (isset($lines)) {
+        return shell_exec("tail -n{$lines} {$file}");
+    }
+    return file_get_contents($file);
+}
+
+$base = Constants::LOG_DIR . '/log';
+$log = getFile($lines, $base . '.txt');
+
+if ($all) {
+    for ($i = 0; $i < 10; $i++) {
+        $path = $base . '_' . $i . '.txt';
+        if (file_exists($path)) {
+            $log .= "\n\n";
+            $log .= "===========================================================================================\n";
+            $log .= "========================================= LOG " . $i . " ============================================\n";
+            $log .= "===========================================================================================\n";
+            $log .= getFile($lines, $path);
         }
     }
-    echo $log;
-    ?>
-</div>
-</body>
-</html>
+}
+
+
+header("Content-Type: text/plain");
+
+echo $log;
