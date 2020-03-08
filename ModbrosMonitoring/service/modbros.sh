@@ -138,12 +138,15 @@ show_mobro() {
     stop_process "feh"
     CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
+    # check-for-update-interval flag can be removed once chromium is fixed
+    # temporary workaround for: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=264399
     chromium-browser "$1" \
         --no-default-browser-check \
         --no-first-run \
         --noerrdialogs \
         --incognito \
         --use-gl=swiftshader \
+        --check-for-update-interval=2592000 \
         --kiosk \
         &>>$LOG_FILE &
     wait_window "chromium"
