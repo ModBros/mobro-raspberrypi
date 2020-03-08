@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ====================================================================================================================
-# Modbros Monitoring Service - Raspberry Pi
+# Modbros Monitoring Service (MoBro) - Raspberry Pi
 #
 # systemd service
 #
@@ -40,7 +40,7 @@ IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 MOBRO_PORT='42100'              # port of the MoBro desktop application
 
 # Global Constants
-AP_SSID='ModBros_Configuration' # ssid of the created access point
+AP_SSID='MoBro_Configuration'   # ssid of the created access point
 AP_PW='modbros123'              # password of the created access point
 LOOP_INTERVAL=5                 # in seconds
 CHECK_INTERVAL_HOTSPOT=60       # in loops (60*5=300s -> every 5 minutes)

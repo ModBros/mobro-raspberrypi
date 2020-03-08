@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=/modbros/"/>
+  <meta http-equiv="refresh" content="0; url=/mobro/"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>ModBros Monitoring Setup</title>
   <link rel="shortcut icon" href="./resources/favicon.ico" type="image/x-icon"/>
@@ -21,7 +21,7 @@ include 'constants.php';
 
 <body>
 <div id="container" class="container">
-  <p class="mt-3 alert alert-info font-weight-bold">If not automatically redirected please <a href="./modbros/index.php">click here</a>.</p>
+  <p class="mt-3 alert alert-info font-weight-bold">If not automatically redirected please <a href="mobro/index.php">click here</a>.</p>
   <?php include './includes/footer.php' ?>
 </div>
 </body>
