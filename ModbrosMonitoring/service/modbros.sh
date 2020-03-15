@@ -92,6 +92,16 @@ stop_process() {
     sleep_pi 1 2
 }
 
+stop_chrome() {
+    stop_process "chromium-browser"
+    CURR_MOBRO_URL=''
+}
+
+stop_feh() {
+    stop_process "feh"
+    CURR_IMAGE=''
+}
+
 sleep_pi() {
     if [[ $(nproc --all) -gt 1 ]]; then
         sleep "$1"
@@ -102,7 +112,7 @@ sleep_pi() {
 
 show_image() {
     if [[ $(pgrep -fc chromium) -gt 0 ]]; then
-        stop_process "chromium-browser"
+        stop_chrome
         sleep_pi 1 2
     fi
     if [[ $(pgrep -fc feh) -gt 0 ]]; then
@@ -110,7 +120,7 @@ show_image() {
             # already showing requested image
             return
         fi
-        stop_process "feh"
+        stop_feh
     fi
     CURR_IMAGE="$1"
     log "feh" "switching to image $1"
@@ -132,10 +142,10 @@ show_mobro() {
             # already showing requested page
             return
         fi
-        stop_process "chromium-browser"
+        stop_chrome
     fi
     show_image $IMAGE_FOUND 5
-    stop_process "feh"
+    stop_feh
     CURR_MOBRO_URL="$1"
     log "chromium" "switching to MoBro application on '$1'"
     # check-for-update-interval flag can be removed once chromium is fixed
