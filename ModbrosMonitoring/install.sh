@@ -140,11 +140,8 @@ echo " done"
 
 echo -n "Pulling display drivers..."
 
-rm -rf LCD-show
-git clone https://github.com/goodtft/LCD-show.git /home/modbros/Display-Drivers
-chmod 755 /home/modbros/Display-Drivers/*.sh
-cp -f ./config/config.txt /home/modbros/Display-Drivers/boot/config-nomal.txt
-cp -f ./config/config.txt /home/modbros/Display-Drivers/boot/config-noobs-nomal.txt
+git clone https://github.com/goodtft/LCD-show.git /home/modbros/GoodTFT-Drivers
+git clone https://github.com/waveshare/LCD-show.git /home/modbros/Waveshare-Drivers
 
 echo " done"
 
