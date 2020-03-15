@@ -22,5 +22,10 @@ over_voltage=0
 gpu_mem=64
 temp_limit=70
 start_x=0
-enable_uart=0
+enable_uart=1
+dtparam=spi=on
 dtoverlay=disable-bt
+disable_overscan=1
+hdmi_group=2
+hdmi_drive=1
+hdmi_mode=4
