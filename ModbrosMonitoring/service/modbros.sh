@@ -37,18 +37,18 @@ IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
 IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 
 # Ports
-MOBRO_PORT='42100'              # port of the MoBro desktop application
+MOBRO_PORT='42100'            # port of the MoBro desktop application
 
 # Global Constants
-AP_SSID='MoBro_Configuration'   # ssid of the created access point
-AP_PW='modbros123'              # password of the created access point
-LOOP_INTERVAL=5                 # in seconds
-CHECK_INTERVAL_HOTSPOT=60       # in loops (60*5=300s -> every 5 minutes)
-CHECK_INTERVAL_BACKGROUND=20    # in loops
-AP_RETRY_WAIT=20                # how long to wait for AP to start/stop before issuing command again (in s)
-AP_FAIL_WAIT=90                 # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
-STARTUP_WIFI_WAIT=45            # seconds to wait for wifi connection on startup (if wifi configured)
-WIFI_WAIT=30                    # seconds to wait for wifi connection
+AP_SSID='MoBro_Configuration' # ssid of the created access point
+AP_PW='modbros123'            # password of the created access point
+LOOP_INTERVAL=5               # in seconds
+CHECK_INTERVAL_HOTSPOT=60     # in loops (60*5=300s -> every 5 minutes)
+CHECK_INTERVAL_BACKGROUND=20  # in loops
+AP_RETRY_WAIT=20              # how long to wait for AP to start/stop before issuing command again (in s)
+AP_FAIL_WAIT=90               # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
+STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (if wifi configured)
+WIFI_WAIT=30                  # seconds to wait for wifi connection
 
 # Global Vars
 LOOP_COUNTER=0       # counter variable for main loop iterations
@@ -254,9 +254,13 @@ connect_wifi() {
     sudo cat /etc/wpa_supplicant/wpa_supplicant.conf &>>$LOG_FILE
     sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
 
-    log "connect_wifi" "restarting dhcpcd and networking"
-    sudo systemctl restart dhcpcd.service
-    sudo systemctl restart networking.service
+    log "connect_wifi" "reconfiguring wifi network"
+    {
+        sudo ifconfig wlan0 down
+        sudo wpa_cli -i wlan0 reconfigure
+        sleep 2
+        sudo ifconfig wlan0 up
+    } &>>$LOG_FILE
 
     # wait for connection
     local wifi_connect_count
@@ -452,7 +456,7 @@ background_check() {
 initial_wifi_check() {
     # check if wifi is configured
     # (skip if no network set - e.g. first boot)
-    if [[ $(wc -l <$WIFI_FILE) -lt 4 ]]; then
+    if [[ $(wc -l <$WIFI_FILE) -lt 3 ]]; then
         log "Startup" "no previous network configuration found"
         create_access_point
         return
