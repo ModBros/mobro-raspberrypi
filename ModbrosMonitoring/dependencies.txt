@@ -20,3 +20,4 @@ bc
 rng-tools
 lsb-release
 git
+secure-delete
