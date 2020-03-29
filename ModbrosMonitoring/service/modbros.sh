@@ -155,7 +155,6 @@ show_mobro() {
         --no-first-run \
         --noerrdialogs \
         --incognito \
-        --use-gl=swiftshader \
         --check-for-update-interval=2592000 \
         --kiosk \
         &>>$LOG_FILE &
