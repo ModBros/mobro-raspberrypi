@@ -559,10 +559,6 @@ sleep_pi 2 5
 # show background
 show_image $IMAGE_MOBRO 7
 
-# start webserver
-log "Startup" "starting lighttpd"
-sudo systemctl start lighttpd &>>$LOG_FILE
-
 # disabling screen blanking
 log "Startup" "disable blank screen"
 {

@@ -98,10 +98,10 @@ lighttpd-enable-mod fastcgi-php > /dev/null
 
 echo " done"
 
-echo -n "Stopping and disabling web server..."
+echo -n "Restarting web server..."
 service lighttpd force-reload > /dev/null
-service lighttpd stop > /dev/null
-systemctl disable lighttpd.service > /dev/null
+service lighttpd restart > /dev/null
+systemctl enable lighttpd.service > /dev/null
 echo " done"
 
 
