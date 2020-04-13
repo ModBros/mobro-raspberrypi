@@ -41,7 +41,6 @@ MOBRO_PORT='42100'            # port of the MoBro desktop application
 
 # Global Constants
 AP_SSID='MoBro_Configuration' # ssid of the created access point
-AP_PW='modbros123'            # password of the created access point
 LOOP_INTERVAL=5               # in seconds
 CHECK_INTERVAL_HOTSPOT=60     # in loops (60*5=300s -> every 5 minutes)
 CHECK_INTERVAL_BACKGROUND=20  # in loops
@@ -213,7 +212,7 @@ create_access_point_call() {
         --no-virt \
         --daemon \
         -g 192.168.4.1 \
-        wlan0 $AP_SSID $AP_PW \
+        wlan0 $AP_SSID \
         &>>$LOG_FILE
 }
 
@@ -515,7 +514,6 @@ initial_wifi_check() {
 # ====================================================================================================================
 
 # copy log files to preserve the previous 10 starts
-
 for i in {8..0}; do
     mv -f "$LOG_DIR/log_$i.txt" "$LOG_DIR/log_$((i + 1)).txt" 2>/dev/null
 done
