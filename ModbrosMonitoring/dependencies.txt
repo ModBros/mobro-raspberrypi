@@ -1,23 +1,28 @@
 lighttpd
-php7.3-fpm php7.3
+php7.3-fpm
 libterm-readline-gnu-perl
-xserver-xorg x11-xserver-utils xinit
+xserver-xorg
 xserver-xorg-video-fbturbo
+x11-xserver-utils
+xinit
 matchbox-window-manager
 libgles2-mesa
 chromium-browser
-xwit xdotool
+xwit
+xdotool
 curl
 arp-scan
 util-linux
 procps
-iproute2 iw iptables net-tools
+iproute2
+iw
+iptables
+net-tools
 hostapd
 dnsmasq
-git make
+git
+make
 feh
 bc
 rng-tools
-lsb-release
-git
 secure-delete
