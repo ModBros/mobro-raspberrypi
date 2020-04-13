@@ -588,6 +588,9 @@ LAST_CHECKED_KEY=$(sed -n 2p <$DISCOVERY_KEY) # 2nd line contains updated timest
 
 case $NETWORK_MODE in
 "wifi")
+    # unblock the wifi interface
+    log "Startup" "unblocking wifi interface"
+    sudo rfkill unblock 0 &>>$LOG_FILE
     # try to connect to wifi (if previously configured)
     # and try to connect to mobro
     initial_wifi_check
