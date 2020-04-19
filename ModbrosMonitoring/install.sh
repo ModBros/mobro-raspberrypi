@@ -36,8 +36,8 @@ if ! id "modbros" >/dev/null 2>&1; then
     userdel -r -f pi
 fi
 
+chmod 440 ./config/010_modbros-nopasswd
 cp -f ./config/010_modbros-nopasswd /etc/sudoers.d
-chmod 440 /etc/sudoers.d/010_modbros-nopasswd
 
 echo " done"
 
@@ -76,6 +76,14 @@ systemctl disable hostapd.service > /dev/null
 
 systemctl disable hciuart > /dev/null
 
+# Prevent the automatic eeprom update service from running
+systemctl mask rpi-eeprom-update > /dev/null
+
+# turn off swap
+dphys-swapfile swapoff
+dphys-swapfile uninstall
+update-rc.d dphys-swapfile remove
+apt purge dphys-swapfile
 
 # ==========================================================
 # configuring web server and resources
@@ -110,6 +118,9 @@ echo " done"
 # ==========================================================
 
 echo -n "Setting script and file permissions..."
+
+cp -f ./config/010_wwwdata-shutdown /etc/sudoers.d
+chmod 440 /etc/sudoers.d/010_wwwdata-shutdown
 
 chmod 755 ./scripts/*.sh
 chmod 755 ./service/modbros.sh
@@ -167,7 +178,6 @@ echo " done"
 # ==========================================================
 
 echo -n "Removing no longer relevant packages..."
-apt-get purge git make -y > /dev/null
 apt-get autoremove --purge -y > /dev/null
 apt-get autoclean -y > /dev/null
 apt-get clean -y > /dev/null
@@ -186,6 +196,13 @@ systemctl enable modbros.service
 systemctl stop modbros.service
 
 echo " done"
+
+
+cp -f ./config/config.txt /boot/config.txt
+
+# TODO comdline.txt
+# TODO config hostname
+# TODO tmpfs entry to /etc/fstab
 
 # ==========================================================
 # Reboot
