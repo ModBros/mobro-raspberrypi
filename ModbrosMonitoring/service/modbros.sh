@@ -475,13 +475,13 @@ initial_wifi_check() {
 
     if [[ $wait_wifi -ne 1 ]]; then
         # previous wifi not reachable
-        log "Startup" "configured wifi network not in range"
+        log "Startup" "configured wifi network '$ssid' not in range"
         show_image $IMAGE_WIFIFAILED
         create_access_point
         return
     fi
 
-    log "Startup" "waiting for wifi connection..."
+    log "Startup" "waiting for wifi connection to network '$ssid'..."
     local wifi_connected wifi_connect_count
     wifi_connected=0
     wifi_connect_count=0
@@ -495,13 +495,13 @@ initial_wifi_check() {
     done
 
     if [[ $wifi_connected -ne 1 ]]; then
-        log "Startup" "couldn't connect to wifi"
+        log "Startup" "couldn't connect to wifi network '$ssid'"
         show_image $IMAGE_WIFIFAILED
         create_access_point
         return
     fi
 
-    log "Startup" "connected to wifi"
+    log "Startup" "connected to wifi network '$ssid'"
     show_image $IMAGE_WIFISUCCESS 3
 
     # search network for application
