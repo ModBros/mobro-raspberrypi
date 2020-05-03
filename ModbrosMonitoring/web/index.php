@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>ModBros Monitoring Setup</title>
   <link rel="shortcut icon" href="./resources/favicon.ico" type="image/x-icon"/>
-  <link href="bootstrap.min.css" rel="stylesheet"/>
+  <link href="vendor/bootstrap.min.css" rel="stylesheet"/>
 </head>
 
 <?php
