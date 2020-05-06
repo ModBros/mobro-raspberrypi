@@ -40,7 +40,7 @@ $time = time();
 
 // write network file if in wifi mode
 if ($netMode == 'wifi') {
-    $wifiData = $ssid . "\n" . $pw . "\n" . $country . "\n" . $hidden . "\n" . $wpa . "\n" . $time . "\n";
+    $wifiData = $netMode . "\n" . $ssid . "\n" . $pw . "\n" . $country . "\n" . $hidden . "\n" . $wpa . "\n" . $time . "\n";
     file_put_contents(Constants::WIFI_FILE, $wifiData, LOCK_EX);
 }
 

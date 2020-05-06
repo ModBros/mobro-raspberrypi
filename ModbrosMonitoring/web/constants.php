@@ -6,7 +6,7 @@ class Constants
     private const BASE_PATH = '/home/modbros/ModbrosMonitoring/web';
 
     public const VERSION_FILE = self::BASE_PATH . '/data/version';
-    public const DISCOVERY_FILE = self::BASE_PATH . '/data/discovery_key';
+    public const DISCOVERY_FILE = self::BASE_PATH . '/data/discovery';
     public const SSID_FILE = self::BASE_PATH . '/data/ssids';
     public const WIFI_FILE = self::BASE_PATH . '/data/wifi';
     public const DRIVER_FILE = self::BASE_PATH . '/data/driver';

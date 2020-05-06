@@ -145,13 +145,14 @@ function closeFile($file)
     }
 }
 
-function getDriverScripts($dir)
+function getDriverScripts($dir, $prefix)
 {
     $result = array();
     foreach (scandir($dir) as $key => $value) {
-        if (!is_dir(Constants::DRIVER_GOODTFT_DIR . DIRECTORY_SEPARATOR . $value)) {
+        $full_path = Constants::DRIVER_GOODTFT_DIR . DIRECTORY_SEPARATOR . $value;
+        if (!is_dir($full_path)) {
             if (fnmatch('*show', $value)) {
-                $result[] = $value;
+                $result[$prefix . " - " . $value] = $full_path;
             }
         }
     }
@@ -196,8 +197,8 @@ while ($file && !feof($file)) {
 closeFile($file);
 
 $drivers = array_merge(
-    getDriverScripts(Constants::DRIVER_GOODTFT_DIR),
-    getDriverScripts(Constants::DRIVER_WAVESHARE_DIR)
+    getDriverScripts(Constants::DRIVER_GOODTFT_DIR, 'GoodTFT'),
+    getDriverScripts(Constants::DRIVER_WAVESHARE_DIR, 'WaveShare')
 );
 
 
@@ -515,8 +516,8 @@ $drivers = array_merge(
                             disabled>
                       <option value="" selected>No driver selected</option>
                         <?php
-                        foreach ($drivers as $driver) {
-                            echo '<option value="' . $driver . '">' . $driver . '</option>';
+                        foreach ($drivers as $key => $value) {
+                            echo '<option value="' . $value . '">' . $key . '</option>';
                         }
                         ?>
                     </select>
