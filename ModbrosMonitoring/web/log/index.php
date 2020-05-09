@@ -12,7 +12,7 @@ function getFile($lines, $file)
     return file_get_contents($file);
 }
 
-$base = Constants::LOG_DIR . '/log';
+$base = Constants::DIR_LOG . '/log';
 $log = getFile($lines, $base . '.txt');
 
 if ($all) {

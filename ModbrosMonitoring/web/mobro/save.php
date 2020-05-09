@@ -12,7 +12,7 @@ foreach ($_POST as $key => $value) {
 }
 echo '</table>';
 
-exit();
+//exit();
 
 function getOrDefault($key, $default)
 {
@@ -41,17 +41,17 @@ $time = time();
 // write network file if in wifi mode
 if ($netMode == 'wifi') {
     $wifiData = $netMode . "\n" . $ssid . "\n" . $pw . "\n" . $country . "\n" . $hidden . "\n" . $wpa . "\n" . $time . "\n";
-    file_put_contents(Constants::WIFI_FILE, $wifiData, LOCK_EX);
+    file_put_contents(Constants::FILE_WIFI, $wifiData, LOCK_EX);
 }
 
 // write discovery file
 $discoveryData = $pcMode . "\n" . $connKey . "\n" . $ip . "\n" . $time . "\n";
-file_put_contents(Constants::DISCOVERY_FILE, $discoveryData, LOCK_EX);
+file_put_contents(Constants::FILE_DISCOVERY, $discoveryData, LOCK_EX);
 
 // write driver file if selected
 if ($screenMode == 'install' && !empty($driver)) {
-    file_put_contents(Constants::DRIVER_FILE, $driver, LOCK_EX);
+    file_put_contents(Constants::FILE_DRIVER, $driver, LOCK_EX);
 }
 
-// reboot the Pi
-shell_exec('sudo /sbin/shutdown -r now');
+// apply config and reboot the Pi
+shell_exec('sudo .' . Constants::SCRIPT_APPLY_CONFIG);

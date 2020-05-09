@@ -9,12 +9,6 @@
   <link href="../vendor/bootstrap.min.css" rel="stylesheet"/>
   <link href="../vendor/fontawesome-free-5.13.0-web/css/all.min.css" rel="stylesheet"/>
 
-  <link
-      rel="stylesheet"
-      type="text/css"
-      href="//github.com/downloads/lafeber/world-flags-sprite/flags32.css"
-  />
-
   <style>
     .confirmation-header {
       font-weight: bold;
@@ -25,13 +19,24 @@
       color: dimgrey;
     }
 
-    .wizard-btn {
+    .btn-wizard,
+    .btn-wizard:active,
+    .btn-wizard:visited {
       color: white;
-      background: #f30;
+      background-color: #f30;
+      border-color: #f30;
+      box-shadow: 0px 0px 5px black;
     }
 
-    .wizard-btn:hover {
-      color: lightgrey;
+    .btn-wizard:hover {
+      background-color: #e13300;
+      border-color: #e13300;
+      color: white;
+      transition: all 1s ease;
+      -webkit-transition: all 1s ease;
+      -moz-transition: all 1s ease;
+      -o-transition: all 1s ease;
+      -ms-transition: all 1s ease;
     }
   </style>
 
@@ -82,7 +87,7 @@ function getSecurityMode($mode)
     }
 }
 
-$file = fopen(Constants::WIFI_FILE, "r");
+$file = fopen(Constants::FILE_WIFI, "r");
 $storedSsid = getIfNotEof($file, '');
 $storedPw = getIfNotEof($file, '');
 $storedCountry = getIfNotEof($file, 'AT');
@@ -90,11 +95,11 @@ $storedHidden = getIfNotEof($file, '0');
 $storedWpa = getIfNotEof($file, '');
 closeFile($file);
 
-$file = fopen(Constants::VERSION_FILE, "r");
+$file = fopen(Constants::FILE_VERSION, "r");
 $storedVersion = getIfNotEof($file, 'Unknown');
 closeFile($file);
 
-$file = fopen(Constants::DISCOVERY_FILE, "r");
+$file = fopen(Constants::FILE_DISCOVERY, "r");
 $storedDiscoveryMode = getIfNotEof($file, 'auto');
 $storedKey = getIfNotEof($file, 'mobro');
 $storedIp = getIfNotEof($file, '');
@@ -103,24 +108,32 @@ closeFile($file);
 
 <div id="container" class="container">
 
-    <?php include '../includes/header.php' ?>
-
   <div class="card mt-3">
+    <div class="card-header">
+      <div class="row">
+        <div class="col">
+          <img src="../resources/mobro-logo.svg" width="300">
+          <h4 class="text-uppercase my-3">The custom monitoring solution without stupid cables</h4>
+        </div>
+        <div class="col-auto">
+          <img src="../resources/MoBroSoftware.png" width="275">
+        </div>
+      </div>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">Hi there!</h5>
+      <h5 class="card-title">Hi there Bro! &#x1F60E;</h5>
       <div class="card-text">
         <p>
-          You are seeing this configuration page, which means your setup of the ModBros Monitor Bro (MoBro) is almost
-          complete.
+          Your setup of the ModBros Monitor Bro (MoBro) is almost complete.
         </p>
         <p>
-          Thanks again for giving our software a shot!<br/>
-          We try to steadily improve the MoBro to get it more stable and add new features.<br/>
-          Your honest feedback as well as suggestions for additional features and improvements would be very welcome.
+          Thanks for giving our software a shot!<br/>
+          We're trying hard to constantly improve the MoBro.<br/>
+          Your feedback as well as suggestions for additional features and improvements are very welcome.
         </p>
         <p>
-          Just visit our new forum on <a href="https://www.mod-bros.com" target="_blank">mod-bros.com</a> or join our
-          Discord server.
+          Just visit our <a href="https://www.mod-bros.com/en/forum" target="_blank">Forum</a> or check out our new
+          <a href="https://www.mod-bros.com/en/faq/mobro" target="_blank">FAQ</a> if you run into any issues.
         </p>
       </div>
     </div>
@@ -179,7 +192,7 @@ closeFile($file);
         <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
         <div class="col-4 confirmation-title">Hidden network</div>
         <div class="col" id="summaryHiddenNet">
-            <?php echo $ethConnected ? '&#x1f5d9;' : $storedHidden == '0' ? "No" : "Yes" ?>
+            <?php echo $ethConnected ? '&#x1f5d9;' : ($storedHidden == '0' ? "No" : "Yes") ?>
         </div>
       </div>
       <hr>
@@ -210,12 +223,22 @@ closeFile($file);
       </div>
     </div>
   </div>
-
-  <a href="wizard.php" class="btn btn-lg btn-block mt-4 wizard-btn" role="button">
+  <a href="wizard.php" class="btn btn-lg btn-wizard btn-block mt-4 text-uppercase text-spaced"
+     role="button">
     Configuration Wizard <span><i class="fas fa-hat-wizard"></i></span>
   </a>
 
-    <?php include '../includes/footer.php' ?>
+  <footer class="main-footer mt-5">
+    <hr>
+    <div class="row">
+      <img src="../resources/modbros-logo.svg" height="70" class="mr-3 ml-3">
+      <p>
+        Created with &#9829; in Austria<br>
+        &#169; ModBros <?php echo date("Y"); ?><br/>
+        Contact: <a href="https://www.mod-bros.com" target="_blank">mod-bros.com</a><br/>
+      </p>
+    </div>
+  </footer>
 </div>
 
 </body>

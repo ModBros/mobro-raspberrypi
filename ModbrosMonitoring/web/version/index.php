@@ -3,4 +3,4 @@ include '../constants.php';
 
 header("Content-Type: text/plain");
 
-echo file_get_contents(Constants::VERSION_FILE);
+echo file_get_contents(Constants::FILE_VERSION);

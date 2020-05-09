@@ -120,6 +120,25 @@
       opacity: 1;
       visibility: visible;
     }
+
+    .btn-primary,
+    .btn-primary:active,
+    .btn-primary:visited {
+      color: white;
+      background-color: #f30;
+      border-color: #f30;
+    }
+
+    .btn-primary:hover {
+      background-color: #e13300;
+      border-color: #e13300;
+      color: white;
+      transition: all 1s ease;
+      -webkit-transition: all 1s ease;
+      -moz-transition: all 1s ease;
+      -o-transition: all 1s ease;
+      -ms-transition: all 1s ease;
+    }
   </style>
 
   <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
@@ -149,7 +168,7 @@ function getDriverScripts($dir, $prefix)
 {
     $result = array();
     foreach (scandir($dir) as $key => $value) {
-        $full_path = Constants::DRIVER_GOODTFT_DIR . DIRECTORY_SEPARATOR . $value;
+        $full_path = Constants::DIR_DRIVER_GOODTFT . DIRECTORY_SEPARATOR . $value;
         if (!is_dir($full_path)) {
             if (fnmatch('*show', $value)) {
                 $result[$prefix . " - " . $value] = $full_path;
@@ -168,17 +187,17 @@ $wlanConnected = isset($ssid) && trim($ssid) !== '';
 $connected = $ethConnected || $wlanConnected;
 $connectionMode = $ethConnected ? 'eth' : 'wifi';
 
-$file = fopen(Constants::DISCOVERY_FILE, "r");
+$file = fopen(Constants::FILE_DISCOVERY, "r");
 $storedDiscoveryMode = getIfNotEof($file, 'auto');
 $storedKey = getIfNotEof($file, 'mobro');
 $storedIp = getIfNotEof($file, '');
 closeFile($file);
 
-$file = fopen(Constants::VERSION_FILE, "r");
+$file = fopen(Constants::FILE_VERSION, "r");
 $storedVersion = getIfNotEof($file, 'Unknown');
 closeFile($file);
 
-$file = fopen(Constants::WIFI_FILE, "r");
+$file = fopen(Constants::FILE_WIFI, "r");
 $storedSsid = getIfNotEof($file, '');
 $storedPw = getIfNotEof($file, '');
 $storedCountry = getIfNotEof($file, 'AT');
@@ -187,7 +206,7 @@ $storedWpa = getIfNotEof($file, '');
 closeFile($file);
 
 $storedSsIds = array();
-$file = fopen(Constants::SSID_FILE, "r");
+$file = fopen(Constants::FILE_SSID, "r");
 while ($file && !feof($file)) {
     $item = fgets($file);
     if (!empty(trim($item))) {
@@ -197,8 +216,8 @@ while ($file && !feof($file)) {
 closeFile($file);
 
 $drivers = array_merge(
-    getDriverScripts(Constants::DRIVER_GOODTFT_DIR, 'GoodTFT'),
-    getDriverScripts(Constants::DRIVER_WAVESHARE_DIR, 'WaveShare')
+    getDriverScripts(Constants::DIR_DRIVER_GOODTFT, 'GoodTFT'),
+    getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
 );
 
 
@@ -614,7 +633,7 @@ $drivers = array_merge(
               </div>
 
               <div class="row mt-4 alert alert-info">
-                Note: Upon applying the new configuration the Raspberry Pi will reboot.
+                Note: After applying the new configuration the Raspberry Pi will perform a reboot.
               </div>
               <div class="button-row d-flex mt-4">
                 <button class="btn btn-primary js-btn-prev" type="button" title="Prev">&#x1f844; Prev</button>
