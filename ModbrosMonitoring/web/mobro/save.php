@@ -54,4 +54,4 @@ if ($screenMode == 'install' && !empty($driver)) {
 }
 
 // apply config and reboot the Pi
-shell_exec('sudo .' . Constants::SCRIPT_APPLY_CONFIG);
+shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG);

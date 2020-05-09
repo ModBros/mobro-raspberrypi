@@ -154,7 +154,7 @@ include '../constants.php';
 
 function getIfNotEof($file, $default)
 {
-    return $file && !feof($file) ? fgets($file) : $default;
+    return $file && !feof($file) ? trim(fgets($file)) : $default;
 }
 
 function closeFile($file)
@@ -198,6 +198,7 @@ $storedVersion = getIfNotEof($file, 'Unknown');
 closeFile($file);
 
 $file = fopen(Constants::FILE_WIFI, "r");
+$storedNetworkMode = getIfNotEof($file, 'wifi');
 $storedSsid = getIfNotEof($file, '');
 $storedPw = getIfNotEof($file, '');
 $storedCountry = getIfNotEof($file, 'AT');
