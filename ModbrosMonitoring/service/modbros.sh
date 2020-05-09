@@ -136,8 +136,15 @@ show_image() {
 }
 
 show_mobro() {
+    local name version uuid resolution url
+    name=$(cat /proc/device-tree/model)                                  # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+    version=$(sed -n 1p <$VERSION_FILE)                                  # service version number
+    uuid=$(sed 's/://g' </sys/class/net/wlan0/address)                   # unique ID of this pi
+    resolution=$(sudo fbset | grep -m 1 mode | sed 's/^.*"\(.*\)"$/\1/') # current display resolution
+    url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&name=$name"
+
     if [[ $(pgrep -fc chromium) -gt 0 ]]; then
-        if [[ $CURR_MOBRO_URL == "$1" ]]; then
+        if [[ $CURR_MOBRO_URL == "$url" ]]; then
             # already showing requested page
             return
         fi
@@ -145,11 +152,11 @@ show_mobro() {
     fi
     show_image $IMAGE_FOUND 5
     stop_feh
-    CURR_MOBRO_URL="$1"
-    log "chromium" "switching to MoBro application on '$1'"
+    CURR_MOBRO_URL="$url"
+    log "chromium" "switching to MoBro application on '$url'"
     # check-for-update-interval flag can be removed once chromium is fixed
     # temporary workaround for: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=264399
-    chromium-browser "$1" \
+    chromium-browser "$url" \
         --no-default-browser-check \
         --no-first-run \
         --noerrdialogs \
@@ -290,11 +297,7 @@ try_ip() {
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
-        local name version uuid
-        name=$(cat /proc/device-tree/model)                # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-        version=$(sed -n 1p <$VERSION_FILE)                # service version number
-        uuid=$(sed 's/://g' </sys/class/net/wlan0/address) # unique ID of this pi
-        show_mobro "http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&name=$name"
+        show_mobro "$1"
 
         # write found (use file as kind of global variable)
         # -> this function is started in a sub process!
