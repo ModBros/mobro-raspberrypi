@@ -87,6 +87,10 @@ function getSecurityMode($mode)
     }
 }
 
+$file = fopen(Constants::FILE_VERSION, "r");
+$version = getIfNotEof($file, '');
+closeFile($file);
+
 $file = fopen(Constants::FILE_WIFI, "r");
 $netMode = getIfNotEof($file, '');
 $storedSsid = getIfNotEof($file, '');
@@ -238,6 +242,7 @@ closeFile($file);
         &#169; ModBros <?php echo date("Y"); ?><br/>
         Contact: <a href="https://www.mod-bros.com" target="_blank">mod-bros.com</a><br/>
       </p>
+      <p class="ml-auto mr-3 font-weight-normal">v<?php echo $version ?></p>
     </div>
   </footer>
 </div>
