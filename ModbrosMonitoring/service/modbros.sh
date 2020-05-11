@@ -342,7 +342,7 @@ background_check() {
     service_discovery
 }
 
-initial_wifi_check() {
+wifi_check() {
     # check if wifi is configured
     # (skip if no network set - e.g. first boot)
     if [[ $(wc -l <$WIFI_FILE) -lt 6 ]]; then
@@ -367,7 +367,7 @@ initial_wifi_check() {
     if [[ $wait_wifi -ne 1 ]]; then
         # previous wifi not reachable
         log "startup" "configured wifi network '$ssid' not in range"
-        show_image $IMAGE_WIFIFAILED
+        show_image $IMAGE_WIFIFAILED 10
         create_access_point
         return
     fi
@@ -387,7 +387,7 @@ initial_wifi_check() {
 
     if [[ $wifi_connected -ne 1 ]]; then
         log "startup" "couldn't connect to wifi network '$ssid'"
-        show_image $IMAGE_WIFIFAILED
+        show_image $IMAGE_WIFIFAILED 10
         create_access_point
         return
     fi
@@ -480,7 +480,7 @@ case $NETWORK_MODE in
     sudo rfkill unblock 0 &>>$LOG_FILE
     # try to connect to wifi (if previously configured)
     # and try to connect to mobro
-    initial_wifi_check
+    wifi_check
     ;;
 "eth")
     show_image $IMAGE_ETHSUCCESS 3

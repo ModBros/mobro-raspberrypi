@@ -79,16 +79,16 @@ wifi_config() {
 
     # set ssid
     log "configuration" "setting SSID to: $ssid"
-    add_wpa_setting 'ssid' "$ssid"
+    add_wpa_setting 'ssid' "\"$ssid\""
 
     # set scan_ssid if we're using a hidden network
     log "configuration" "setting hidden SSID to: $hidden"
     if [[ $hidden == "1" ]]; then
-        add_wpa_setting "scan_ssid" "$hidden"
+        add_wpa_setting 'scan_ssid' "$hidden"
     fi
 
     # set password
-    add_wpa_setting 'psk' "$pw"
+    add_wpa_setting 'psk' "\"$pw\""
 
     # wpa version and encryption config
     log "configuration" "setting WPA mode to: $wpa"
