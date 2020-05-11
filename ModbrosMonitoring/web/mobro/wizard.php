@@ -221,7 +221,6 @@ $drivers = array_merge(
     getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
 );
 
-
 ?>
 
 <div class="container">

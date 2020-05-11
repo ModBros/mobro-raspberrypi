@@ -1,19 +1,19 @@
 <?php
 include '../constants.php';
 
-$lines = $_GET['lines'];
 $all = isset($_GET['all']);
 
-function getFile($lines, $file)
+function getFile($file)
 {
-    if (isset($lines)) {
+    if (isset($_GET['lines'])) {
+        $lines = $_GET['lines'];
         return shell_exec("tail -n{$lines} {$file}");
     }
     return file_get_contents($file);
 }
 
 $base = Constants::DIR_LOG . '/log';
-$log = getFile($lines, $base . '.txt');
+$log = getFile($base . '.txt');
 
 if ($all) {
     for ($i = 0; $i < 10; $i++) {
@@ -23,7 +23,7 @@ if ($all) {
             $log .= "===========================================================================================\n";
             $log .= "========================================= LOG " . $i . " ============================================\n";
             $log .= "===========================================================================================\n";
-            $log .= getFile($lines, $path);
+            $log .= getFile($path);
         }
     }
 }

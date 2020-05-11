@@ -36,16 +36,14 @@ $ip = getOrDefault('ip', '');
 $screenMode = getOrDefault('screen', 'hdmi');
 $driver = getOrDefault('driver', '');
 
-$time = time();
-
 // write network file if in wifi mode
 if ($netMode == 'wifi') {
-    $wifiData = $netMode . "\n" . $ssid . "\n" . $pw . "\n" . $country . "\n" . $hidden . "\n" . $wpa . "\n" . $time . "\n";
+    $wifiData = $netMode . "\n" . $ssid . "\n" . $pw . "\n" . $country . "\n" . $hidden . "\n" . $wpa . "\n";
     file_put_contents(Constants::FILE_WIFI, $wifiData, LOCK_EX);
 }
 
 // write discovery file
-$discoveryData = $pcMode . "\n" . $connKey . "\n" . $ip . "\n" . $time . "\n";
+$discoveryData = $pcMode . "\n" . $connKey . "\n" . $ip . "\n";
 file_put_contents(Constants::FILE_DISCOVERY, $discoveryData, LOCK_EX);
 
 // write driver file if selected
