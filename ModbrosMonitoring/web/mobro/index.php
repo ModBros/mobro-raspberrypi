@@ -60,7 +60,7 @@ $connected = $ethConnected || $wlanConnected;
 
 function getIfNotEof($file, $default)
 {
-    return $file && !feof($file) ? fgets($file) : $default;
+    return $file && !feof($file) ? trim(fgets($file)) : $default;
 }
 
 function closeFile($file)
@@ -88,6 +88,7 @@ function getSecurityMode($mode)
 }
 
 $file = fopen(Constants::FILE_WIFI, "r");
+$netMode = getIfNotEof($file, '');
 $storedSsid = getIfNotEof($file, '');
 $storedPw = getIfNotEof($file, '');
 $storedCountry = getIfNotEof($file, 'AT');

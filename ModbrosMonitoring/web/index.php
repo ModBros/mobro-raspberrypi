@@ -22,7 +22,6 @@ include 'constants.php';
 <body>
 <div id="container" class="container">
   <p class="mt-3 alert alert-info font-weight-bold">If not automatically redirected please <a href="mobro/index.php">click here</a>.</p>
-  <?php include './includes/footer.php' ?>
 </div>
 </body>
 </html>
