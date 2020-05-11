@@ -20,7 +20,7 @@ WIFI_FILE="$DATA_DIR/wifi"
 VERSION_FILE="$DATA_DIR/version"
 MOBRO_FOUND_FLAG="$DATA_DIR/mobro_found"
 NETWORKS_FILE="$DATA_DIR/ssids"
-DISCOVERY_KEY="$DATA_DIR/discovery_key"
+DISCOVERY_FILE="$DATA_DIR/discovery"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # Resources
@@ -41,23 +41,16 @@ MOBRO_PORT='42100'            # port of the MoBro desktop application
 
 # Global Constants
 AP_SSID='MoBro_Configuration' # ssid of the created access point
-LOOP_INTERVAL=5               # in seconds
-CHECK_INTERVAL_HOTSPOT=60     # in loops (60*5=300s -> every 5 minutes)
-CHECK_INTERVAL_BACKGROUND=20  # in loops
+LOOP_INTERVAL=60              # in seconds
 AP_RETRY_WAIT=20              # how long to wait for AP to start/stop before issuing command again (in s)
 AP_FAIL_WAIT=90               # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
 STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (if wifi configured)
-WIFI_WAIT=30                  # seconds to wait for wifi connection
 
 # Global Vars
-LOOP_COUNTER=0       # counter variable for main loop iterations
-HOTSPOT_COUNTER=0    # counter variable for connection retry in hotspot mode
-BACKGROUND_COUNTER=0 # counter variable for background alive check in wifi mode
-LAST_CHECKED_WIFI='' # remember timestamp of last checked wifi credentials
-LAST_CHECKED_KEY=''  # remember timestamp of last checked discovery key
-CURR_MOBRO_URL=''    # save current MoBro Url
-CURR_IMAGE=''        # save currently displayed image
-NETWORK_MODE=''      # save current netowrk mode (eth|wifi)
+LOOP_COUNTER=0    # counter variable for main loop iterations
+CURR_MOBRO_URL='' # save current MoBro Url
+CURR_IMAGE=''     # save currently displayed image
+NETWORK_MODE=''   # save current netowrk mode (eth|wifi)
 
 # ====================================================================================================================
 # Functions
@@ -157,8 +150,6 @@ show_mobro() {
     # check-for-update-interval flag can be removed once chromium is fixed
     # temporary workaround for: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=264399
     chromium-browser "$url" \
-        --no-default-browser-check \
-        --no-first-run \
         --noerrdialogs \
         --incognito \
         --check-for-update-interval=2592000 \
@@ -223,77 +214,8 @@ create_access_point_call() {
         &>>$LOG_FILE
 }
 
-connect_wifi() {
-    log "connect_wifi" "connecting to ssid: $1"
-    show_image $IMAGE_CONNECTWIFI
-
-    # stop access point
-    sudo create_ap --stop wlan0 &>>$LOG_FILE
-    sleep_pi 2 5
-
-    local ap_stop_counter ap_retry ap_fail
-    ap_stop_counter=1
-    ap_retry=$((AP_RETRY_WAIT / 5))
-    ap_fail=$((AP_FAIL_WAIT / 5))
-    until [[ $(create_ap --list-running | grep wlan0 -c) -eq 0 ]]; do
-        ap_stop_counter=$((ap_stop_counter + 1))
-        if [[ $ap_stop_counter -gt $ap_fail ]]; then
-            log "connect_wifi" "failed to stop AP multiple times"
-            log "connect_wifi" "resetting wpa_supplicant.conf"
-            sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
-            log "connect_wifi" "rebooting..."
-            sudo shutdown -r now
-        fi
-        if [[ $((ap_stop_counter % ap_retry)) -eq 0 ]]; then
-            log "connect_wifi" "failed to stop AP - trying again"
-            sudo create_ap --stop wlan0 &>>$LOG_FILE
-        fi
-        log "connect_wifi" "waiting for access point to stop.."
-        sleep 5
-    done
-
-    # configure wifi
-    log "connect_wifi" "setting new wpa_supplicant.conf"
-    sudo cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
-    sudo sed -i -e "s/SSID_PLACEHOLDER/$1/g" /etc/wpa_supplicant/wpa_supplicant.conf
-    sudo cat /etc/wpa_supplicant/wpa_supplicant.conf &>>$LOG_FILE
-    sudo sed -i -e "s/PW_PLACEHOLDER/$2/g" /etc/wpa_supplicant/wpa_supplicant.conf
-
-    log "connect_wifi" "reconfiguring wifi network"
-    {
-        sudo ifconfig wlan0 down
-        sudo wpa_cli -i wlan0 reconfigure
-        sleep 2
-        sudo ifconfig wlan0 up
-    } &>>$LOG_FILE
-
-    # wait for connection
-    local wifi_connect_count
-    wifi_connect_count=0
-    until [[ $wifi_connect_count -ge $WIFI_WAIT ]]; do
-        if [[ $(iwgetid wlan0 --raw) ]]; then
-            break
-        fi
-        log "connect_wifi" "waiting for wifi..."
-        sleep 5
-        wifi_connect_count=$((wifi_connect_count + 5))
-    done
-
-    if [[ $(iwgetid wlan0 --raw) ]]; then
-        log "connect_wifi" "connected"
-        show_image $IMAGE_WIFISUCCESS 10
-        show_image $IMAGE_DISCOVERY
-        service_discovery
-    else
-        log "connect_wifi" "not connected"
-        show_image $IMAGE_WIFIFAILED 10
-        create_access_point
-    fi
-}
-
 try_ip() {
     # $1 = IP, $2 = key
-    log "service_discovery" "Trying IP: $1 with key: $2"
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
         # found MoBro application -> done
         log "service_discovery" "MoBro application found on IP $1"
@@ -309,16 +231,33 @@ try_ip() {
 }
 
 service_discovery() {
-    log "service_discovery" "starting service discovery"
 
     echo "0" >$MOBRO_FOUND_FLAG
 
+    local mode ip key
+    mode=$(sed -n 1p <$DISCOVERY_FILE)
+    key=$(sed -n 2p <$DISCOVERY_FILE)
+    ip=$(sed -n 3p <$DISCOVERY_FILE)
+
+    # check if static ip is configured
+    if [[ $mode == "manual" ]]; then
+        log "service_discovery" "configured to use static ip"
+        log "service_discovery" "trying IP: $ip with key: $ip"
+        try_ip "$ip" "$ip"
+        if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
+            # couldn't find application
+            log "service_discovery" "no MoBro application found on static ip $ip with key $key"
+            show_image $IMAGE_NOTFOUND
+            return
+        fi
+    fi
+
     # check previous host if configured
-    local ip key
-    ip=$(sed -n 1p <$HOSTS_FILE)     # get 1st host if present (from last successful connection)
-    key=$(sed -n 1p <$DISCOVERY_KEY) # 1st line contains MoBro connection key
+    ip=$(sed -n 1p <$HOSTS_FILE) # get 1st host if present (from last successful connection)
+
     if ! [[ -z $ip || -z $key ]]; then
         log "service_discovery" "checking previous host"
+        log "service_discovery" "trying IP: $ip with key: $ip"
         try_ip "$ip" "$key"
         if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
@@ -338,6 +277,7 @@ service_discovery() {
     esac
 
     while read -r ip; do
+        log "service_discovery" "trying IP: $ip with key: $ip"
         try_ip "$ip" "$key"
         if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
@@ -397,80 +337,28 @@ service_discovery() {
     fi
 }
 
-hotspot_check() {
-    local updated ssid pw
-    updated=$(sed -n 3p <$WIFI_FILE) # 3rd line contains updated timestamp
-    ssid=$(sed -n 1p <$WIFI_FILE)    # 1st line contains SSID
-    pw=$(sed -n 2p <$WIFI_FILE)      # 2nd line contains PW
-    if [[ -n $updated ]]; then
-        if [[ $updated != "$LAST_CHECKED_WIFI" ]]; then
-            if ! [[ -z $ssid || -z $pw ]]; then
-                # if there is new access data -> instantly try connecting
-                LAST_CHECKED_WIFI=$updated
-                HOTSPOT_COUNTER=0
-                log "hotspot_check" "new credentials found. trying to connect to SSID $ssid"
-                connect_wifi "$ssid" "$pw"
-                return
-            fi
-        fi
-    fi
-
-    HOTSPOT_COUNTER=$((HOTSPOT_COUNTER + 1))
-    if [[ $HOTSPOT_COUNTER -ge $CHECK_INTERVAL_HOTSPOT ]]; then
-        log "hotspot_check" "start hotspot check"
-        HOTSPOT_COUNTER=0
-        if ! [[ -z $ssid || -z $pw ]]; then
-            # wifi configured -> try again
-            log "hotspot_check" "trying again to connect to $ssid"
-            connect_wifi "$ssid" "$pw"
-        fi
-    fi
-}
-
 background_check() {
-    local key updated
-    key=$(sed -n 1p <$DISCOVERY_KEY)     # 1st line contains discovery key
-    updated=$(sed -n 2p <$DISCOVERY_KEY) # 2nd line contains updated timestamp
-    if [[ -n $updated && -n $key ]]; then
-        if [[ $updated != "$LAST_CHECKED_KEY" ]]; then
-            # there is a new disocery key -> use new key
-            LAST_CHECKED_KEY=$updated
-            log "background_check" "new discovery key found"
-            BACKGROUND_COUNTER=0
-            show_image $IMAGE_DISCOVERY 2
-            service_discovery
-            return
-        fi
-    fi
-
-    BACKGROUND_COUNTER=$((BACKGROUND_COUNTER + 1))
-    if [[ $BACKGROUND_COUNTER -ge $CHECK_INTERVAL_BACKGROUND ]]; then
-        log "background_check" "starting background check"
-        BACKGROUND_COUNTER=0
-        if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
-            show_image $IMAGE_DISCOVERY
-        fi
-        service_discovery
-    fi
+    log "background_check" "starting background check"
+    service_discovery
 }
 
 initial_wifi_check() {
     # check if wifi is configured
     # (skip if no network set - e.g. first boot)
-    if [[ $(wc -l <$WIFI_FILE) -lt 3 ]]; then
-        log "Startup" "no previous network configuration found"
+    if [[ $(wc -l <$WIFI_FILE) -lt 6 ]]; then
+        log "startup" "no previous network configuration found"
         create_access_point
         return
     fi
 
     show_image $IMAGE_CONNECTWIFI
     # check if configured network is in range
-    log "Startup" "scanning for wireless networks"
+    log "startup" "scanning for wireless networks"
     search_ssids
     local wait_wifi ssid
     wait_wifi=1
     if [[ $(wc -l <$NETWORKS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        ssid=$(sed -n 1p <$WIFI_FILE) # ssid of configured network
+        ssid=$(sed -n 2p <$WIFI_FILE) # ssid of configured network
         if [[ $(grep "$ssid" -c <$NETWORKS_FILE) -eq 0 ]]; then
             wait_wifi=0
         fi
@@ -478,13 +366,13 @@ initial_wifi_check() {
 
     if [[ $wait_wifi -ne 1 ]]; then
         # previous wifi not reachable
-        log "Startup" "configured wifi network '$ssid' not in range"
+        log "startup" "configured wifi network '$ssid' not in range"
         show_image $IMAGE_WIFIFAILED
         create_access_point
         return
     fi
 
-    log "Startup" "waiting for wifi connection to network '$ssid'..."
+    log "startup" "waiting for wifi connection to network '$ssid'..."
     local wifi_connected wifi_connect_count
     wifi_connected=0
     wifi_connect_count=0
@@ -498,13 +386,13 @@ initial_wifi_check() {
     done
 
     if [[ $wifi_connected -ne 1 ]]; then
-        log "Startup" "couldn't connect to wifi network '$ssid'"
+        log "startup" "couldn't connect to wifi network '$ssid'"
         show_image $IMAGE_WIFIFAILED
         create_access_point
         return
     fi
 
-    log "Startup" "connected to wifi network '$ssid'"
+    log "startup" "connected to wifi network '$ssid'"
     show_image $IMAGE_WIFISUCCESS 3
 
     # search network for application
@@ -525,7 +413,7 @@ cp -f $LOG_FILE "$LOG_DIR/log_0.txt" 2>/dev/null
 # clear current log
 echo '' >$LOG_FILE
 
-log "Startup" "starting service"
+log "startup" "starting service"
 
 # env vars
 export DISPLAY=:0
@@ -534,7 +422,7 @@ export DISPLAY=:0
 echo "0" >$MOBRO_FOUND_FLAG
 
 # disable dnsmasq and hostapd
-log "Startup" "disabling services: dnsmasq, hostapd"
+log "startup" "disabling services: dnsmasq, hostapd"
 {
     sudo systemctl stop
     sudo systemctl disable dnsmasq.service
@@ -543,7 +431,7 @@ log "Startup" "disabling services: dnsmasq, hostapd"
 } &>>$LOG_FILE
 
 # start x
-log "Startup" "starting x server"
+log "startup" "starting x server"
 sudo xinit \
     /bin/sh -c "exec /usr/bin/matchbox-window-manager -use_titlebar no -use_cursor no" \
     -- -nocursor \
@@ -551,7 +439,7 @@ sudo xinit \
 
 # wait for x server
 while ! xset q &>/dev/null; do
-    log "Startup" "waiting for X.."
+    log "startup" "waiting for X.."
     sleep 5
 done
 sleep_pi 2 5
@@ -560,7 +448,7 @@ sleep_pi 2 5
 show_image $IMAGE_MOBRO 7
 
 # disabling screen blanking
-log "Startup" "disable blank screen"
+log "startup" "disable blank screen"
 {
     sudo xset s off
     sudo xset -dpms
@@ -569,30 +457,26 @@ log "Startup" "disable blank screen"
 
 # determine and set network mode
 if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
-    log "Startup" "network mode set to ETHERNET"
+    log "startup" "network mode set to ETHERNET"
     NETWORK_MODE='eth'
 else
-    log "Startup" "network mode set to WIFI"
+    log "startup" "network mode set to WIFI"
     NETWORK_MODE='wifi'
 fi
 
 # check for wifi interface
 if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
-    log "Startup" "no wifi interface detected, aborting"
+    log "startup" "no wifi interface detected, aborting"
     show_image $IMAGE_NOWIFIINTERFACE
     while true; do
         sleep 60
     done
 fi
 
-# we need to set the global variables for last checks
-LAST_CHECKED_WIFI=$(sed -n 4p <$WIFI_FILE)    # 4th line contains updated timestamp
-LAST_CHECKED_KEY=$(sed -n 2p <$DISCOVERY_KEY) # 2nd line contains updated timestamp
-
 case $NETWORK_MODE in
 "wifi")
     # unblock the wifi interface
-    log "Startup" "unblocking wifi interface"
+    log "startup" "unblocking wifi interface"
     sudo rfkill unblock 0 &>>$LOG_FILE
     # try to connect to wifi (if previously configured)
     # and try to connect to mobro
@@ -610,10 +494,13 @@ esac
 # Main Loop
 # ====================================================================================================================
 
-log "Main" "Entering main loop"
+log "main" "Entering main loop"
 while true; do
+    sleep $LOOP_INTERVAL
+    LOOP_COUNTER=$((LOOP_COUNTER + 1))
+
     if [[ $((LOOP_COUNTER % 10)) -eq 0 ]]; then
-        log "Main" "loop $LOOP_COUNTER"
+        log "main" "loop $LOOP_COUNTER"
     fi
 
     case $NETWORK_MODE in
@@ -623,12 +510,9 @@ while true; do
             if ! [[ $(iwgetid wlan0 --raw) ]]; then
                 create_access_point
             else
-                # we're connected - keep checking in background (page still response / page becomes available)
+                # we're connected - keep checking in background if the PC is still available
                 background_check
             fi
-        else
-            # check for new wifi data + if hotspot open too long, try to connect to wifi again
-            hotspot_check
         fi
         ;;
     "eth")
@@ -636,8 +520,6 @@ while true; do
         ;;
     esac
 
-    sleep $LOOP_INTERVAL
-    LOOP_COUNTER=$((LOOP_COUNTER + 1))
 done
 
-log "Main" "unexpected shutdown"
+log "main" "unexpected shutdown"
