@@ -227,12 +227,20 @@ $drivers = array_merge(
   <div class="multisteps-form mt-5">
     <!--progress bar-->
     <div class="row">
-      <div class="col-12 col-lg-8 ml-auto mr-auto mb-4">
+      <div class="col-12 col-lg-8 ml-auto mr-auto mb-3">
         <div class="multisteps-form__progress">
-          <button class="multisteps-form__progress-btn js-active" type="button" title="User Info">Network</button>
-          <button class="multisteps-form__progress-btn" type="button" title="Address">PC</button>
-          <button class="multisteps-form__progress-btn" type="button" title="Order Info">Screen</button>
-          <button class="multisteps-form__progress-btn" type="button" title="Comments">Confirmation</button>
+          <button class="multisteps-form__progress-btn js-active font-weight-bold" type="button" title="Network">
+            <span><i class="fas fa-network-wired"></i></span> / <span><i class="fas fa-wifi"></i></span>
+          </button>
+          <button class="multisteps-form__progress-btn" type="button" title="PC connection">
+            <span><i class="fas fa-laptop-house"></i></span>
+          </button>
+          <button class="multisteps-form__progress-btn" type="button" title="Screen">
+            <span><i class="fas fa-desktop"></i></span>
+          </button>
+          <button class="multisteps-form__progress-btn" type="button" title="Summary">
+            <span><i class="fas fa-check-double"></i></span>
+          </button>
         </div>
       </div>
     </div>
@@ -243,11 +251,11 @@ $drivers = array_merge(
 
           <!--single form panel-->
           <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active" data-animation="scaleIn">
-            <h3 class="multisteps-form__title">Network configuration</h3>
+            <h3 class="multisteps-form__title text-center">Network setup</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
-                <div class="col-2 font-weight-bold">Mode:</div>
-                <div class="col">
+                <div class="font-weight-bold ml-2 mr-3">Mode:</div>
+                <div>
                     <?php
                     if ($connectionMode == 'eth') {
                         echo '<span><i class="fas fa-network-wired"></i></span> Ethernet';
@@ -410,9 +418,11 @@ $drivers = array_merge(
               </div>
 
               <div class="button-row d-flex mt-4">
-                <a href="index.php" class="btn btn-danger" role="button" title="Cancel">&#x1f5d9; Cancel</a>
+                <a href="index.php" class="btn btn-danger" role="button" title="Cancel">
+                  <span><i class="fas fa-times"></i></span> Cancel
+                </a>
                 <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">
-                  Next &#x1f846;
+                  Next <span><i class="fas fa-chevron-circle-right"></i></span>
                 </button>
               </div>
             </div>
@@ -420,7 +430,7 @@ $drivers = array_merge(
 
           <!--single form panel-->
           <div class="multisteps-form__panel shadow p-4 rounded bg-white" data-animation="scaleIn">
-            <h3 class="multisteps-form__title">Setup connection to PC</h3>
+            <h3 class="multisteps-form__title text-center">PC connection</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
                 <div class="col">
@@ -428,7 +438,7 @@ $drivers = array_merge(
                     <input class="form-check-input" type="radio" name="discovery" id="discovery1" value="auto"
                         <?php if ($storedDiscoveryMode == 'auto') echo 'checked' ?>>
                     <label class="form-check-label" for="discovery1">
-                      Automatic discovery using PC network name
+                      Automatic discovery using network name
                     </label>
                   </div>
                   <div class="form-check">
@@ -444,7 +454,7 @@ $drivers = array_merge(
               <div class="form-row mt-3">
                 <div class="col">
                   <label class="form-check-label form-label" for="connectionKeyInput">
-                    PC network name
+                    Network name
                   </label>
                   <div class="input-group">
                     <div class="input-group-prepend">
@@ -460,7 +470,7 @@ $drivers = array_merge(
                     />
                   </div>
                   <small id="connectionKeyHelp" class="form-text text-muted">
-                    The 'PC Network Name' as configured in the MoBro PC application. (default: mobro)
+                    The 'Network Name' as configured in the MoBro PC application. (default: mobro)
                   </small>
                 </div>
               </div>
@@ -487,15 +497,19 @@ $drivers = array_merge(
                 </div>
               </div>
               <div class="button-row d-flex mt-4">
-                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">&#x1f844; Prev</button>
-                <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">Next &#x1f846;</button>
+                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">
+                  <span><i class="fas fa-chevron-circle-left"></i></span> Prev
+                </button>
+                <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">
+                  Next <span><i class="fas fa-chevron-circle-right"></i></span>
+                </button>
               </div>
             </div>
           </div>
 
           <!--single form panel-->
           <div class="multisteps-form__panel shadow p-4 rounded bg-white" data-animation="scaleIn">
-            <h3 class="multisteps-form__title">Screen configuration</h3>
+            <h3 class="multisteps-form__title text-center">Screen setup</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
                 <div class="col">
@@ -515,7 +529,7 @@ $drivers = array_merge(
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="screen" id="screen2" value="install">
                     <label class="form-check-label" for="screen2">
-                      Install the selected display driver below &#x2b0e;
+                      Install the selected display driver below <span><i class="fas fa-level-down-alt"></i></span>
                     </label>
                   </div>
                 </div>
@@ -548,15 +562,19 @@ $drivers = array_merge(
               </div>
 
               <div class="button-row d-flex mt-4">
-                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">&#x1f844; Prev</button>
-                <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">Next &#x1f846;</button>
+                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">
+                  <span><i class="fas fa-chevron-circle-left"></i></span> Prev
+                </button>
+                <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">
+                  Next <span><i class="fas fa-chevron-circle-right"></i></span>
+                </button>
               </div>
             </div>
           </div>
 
           <!--single form panel-->
           <div class="multisteps-form__panel shadow p-4 rounded bg-white" data-animation="scaleIn">
-            <h3 class="multisteps-form__title">New Configuration</h3>
+            <h3 class="multisteps-form__title text-center">Summary</h3>
             <div class="multisteps-form__content">
 
               <div class="form-row mt-4 confirmation-header">Network</div>
@@ -571,35 +589,35 @@ $drivers = array_merge(
                 <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
                 <div class="col-4 confirmation-title">SSID</div>
                 <div class="col" id="summarySSID">
-                    <?php echo $connectionMode == 'eth' ? '&#x1f5d9;' : '' ?>
+                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-key"></i></span></div>
                 <div class="col-4 confirmation-title">Password</div>
                 <div class="col" id="summaryPW">
-                    <?php echo $connectionMode == 'eth' ? '&#x1f5d9;' : '' ?>
+                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
                 <div class="col-4 confirmation-title">Country</div>
                 <div class="col" id="summaryCountry">
-                    <?php echo $connectionMode == 'eth' ? '&#x1f5d9;' : '' ?>
+                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
                 <div class="col-4 confirmation-title">Standard</div>
                 <div class="col" id="summarySecurity">
-                    <?php echo $connectionMode == 'eth' ? '&#x1f5d9;' : '' ?>
+                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
                 <div class="col-4 confirmation-title">Hidden network</div>
                 <div class="col" id="summaryHiddenNet">
-                    <?php echo $connectionMode == 'eth' ? '&#x1f5d9;' : '' ?>
+                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <hr>
@@ -611,7 +629,7 @@ $drivers = array_merge(
               </div>
               <div class="form-row" id="summaryConKeyRow">
                 <div class="col-1"><span><i class="fas fa-search"></i></span></div>
-                <div class="col-4 confirmation-title">PC network name</div>
+                <div class="col-4 confirmation-title">Network name</div>
                 <div class="col" id="summaryConKey"></div>
               </div>
               <div class="form-row" id="summaryIpRow">
@@ -629,16 +647,25 @@ $drivers = array_merge(
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-desktop"></i></span></div>
                 <div class="col-4 confirmation-title">Driver</div>
-                <div class="col" id="summaryDriver">&#x1f5d9;</div>
+                <div class="col" id="summaryDriver"><span><i class="fas fa-times"></i></span></div>
               </div>
 
-              <div class="row mt-4 alert alert-info">
-                Note: After applying the new configuration the Raspberry Pi will perform a reboot.
+              <div class="row mt-4 alert alert-info font-weight-normal">
+                <p class="m-0">
+                  <span><i class="fas fa-exclamation-circle mr-2"></i></span>
+                  After applying the new configuration the Raspberry Pi will reboot.
+                </p>
               </div>
               <div class="button-row d-flex mt-4">
-                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">&#x1f844; Prev</button>
-                <a href="index.php" class="btn btn-danger ml-auto" role="button" title="Cancel">&#x1f5d9; Cancel</a>
-                <button class="btn btn-success ml-4" type="submit" title="Apply">&#x2713; Apply</button>
+                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">
+                  <span><i class="fas fa-chevron-circle-left"></i></span> Prev
+                </button>
+                <a href="index.php" class="btn btn-danger ml-auto" role="button" title="Cancel">
+                  <span><i class="fas fa-times"></i></span> Cancel
+                </a>
+                <button class="btn btn-success ml-4" type="submit" title="Apply">
+                  <span><i class="fas fa-check"></i></span> Apply
+                </button>
               </div>
             </div>
           </div>
@@ -805,8 +832,8 @@ $drivers = array_merge(
       ?>
 
     summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
-    summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '&#x1f5d9;');
-    summaryIp.html($('#discovery1').prop('checked') ? '&#x1f5d9;' : $('#staticIpInput').val());
+    summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '<span><i class="fas fa-times"></i></span>');
+    summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
 
     $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
     $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
@@ -823,7 +850,7 @@ $drivers = array_merge(
       connKeyInput.removeAttr('disabled');
       connKeyInput.addClass('border-primary');
       summaryPcConnMode.html('Automatic discovery');
-      summaryIp.html('&#x1f5d9;');
+      summaryIp.html('<span><i class="fas fa-times"></i></span>');
       summaryConKey.html($('#connectionKeyInput').val());
     });
     $('#discovery2').on('click', _ => {
@@ -832,7 +859,7 @@ $drivers = array_merge(
       ipInput.removeAttr('disabled');
       ipInput.addClass('border-primary');
       summaryPcConnMode.html('Static IP');
-      summaryConKey.html('&#x1f5d9;');
+      summaryConKey.html('<span><i class="fas fa-times"></i></span>');
       summaryIp.html($('#staticIpInput').val());
     });
     $('#staticIpInput').on('change', _ => summaryIp.html($('#staticIpInput').val()));

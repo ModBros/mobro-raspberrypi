@@ -169,35 +169,35 @@ closeFile($file);
         <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
         <div class="col-4 confirmation-title">SSID</div>
         <div class="col" id="summarySSID">
-            <?php echo $ethConnected ? '&#x1f5d9;' : $storedSsid ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $storedSsid ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-key"></i></span></div>
         <div class="col-4 confirmation-title">Password</div>
         <div class="col" id="summaryPW">
-            <?php echo $ethConnected ? '&#x1f5d9;' : str_repeat("*", strlen($storedPw)) ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : str_repeat("*", strlen($storedPw)) ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
         <div class="col-4 confirmation-title">Country</div>
         <div class="col" id="summaryCountry">
-            <?php echo $ethConnected ? '&#x1f5d9;' : $storedCountry ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $storedCountry ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
         <div class="col-4 confirmation-title">Standard</div>
         <div class="col" id="summarySecurity">
-            <?php echo $ethConnected ? '&#x1f5d9;' : getSecurityMode($storedWpa) ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : getSecurityMode($storedWpa) ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
         <div class="col-4 confirmation-title">Hidden network</div>
         <div class="col" id="summaryHiddenNet">
-            <?php echo $ethConnected ? '&#x1f5d9;' : ($storedHidden == '0' ? "No" : "Yes") ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : ($storedHidden == '0' ? "No" : "Yes") ?>
         </div>
       </div>
       <hr>
@@ -214,16 +214,16 @@ closeFile($file);
       </div>
       <div class="row" id="summaryConKeyRow">
         <div class="col-1"><span><i class="fas fa-search"></i></span></div>
-        <div class="col-4 confirmation-title">PC network name</div>
+        <div class="col-4 confirmation-title">Network name</div>
         <div class="col" id="summaryConKey">
-            <?php echo $storedDiscoveryMode == 'auto' ? $storedKey : '&#x1f5d9;' ?>
+            <?php echo $storedDiscoveryMode == 'auto' ? $storedKey : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
       <div class="row" id="summaryIpRow">
         <div class="col-1"><span><i class="fas fa-at"></i></span></div>
         <div class="col-4 confirmation-title">IP address</div>
         <div class="col" id="summaryIp">
-            <?php echo $storedDiscoveryMode == 'auto' ? '&#x1f5d9;' : $storedIp ?>
+            <?php echo $storedDiscoveryMode == 'auto' ? '<span><i class="fas fa-times"></i></span>' : $storedIp ?>
         </div>
       </div>
     </div>
@@ -238,8 +238,9 @@ closeFile($file);
     <div class="row">
       <img src="../resources/modbros-logo.svg" height="70" class="mr-3 ml-3">
       <p>
-        Created with &#9829; in Austria<br>
-        &#169; ModBros <?php echo date("Y"); ?><br/>
+        Created with <span><i class="far fa-heart" style="color: #ff0066"></i></span> in Austria
+        <img src="../resources/austria.svg" height="12px"><br>
+        <span><i class="far fa-copyright"></i></span> ModBros <?php echo date("Y"); ?><br/>
         Contact: <a href="https://www.mod-bros.com" target="_blank">mod-bros.com</a><br/>
       </p>
       <p class="ml-auto mr-3 font-weight-normal">v<?php echo $version ?></p>
