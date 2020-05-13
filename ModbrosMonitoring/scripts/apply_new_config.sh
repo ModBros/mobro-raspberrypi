@@ -156,9 +156,8 @@ log "configuration" "starting to apply new configuration"
 wifi_config
 
 # install driver is it was selected
-# TODO enable
-# driver
+driver
 
 # reboot the Pi
 log "configuration" "done - rebooting"
-#sudo shutdown -r now
+sudo shutdown -r now
