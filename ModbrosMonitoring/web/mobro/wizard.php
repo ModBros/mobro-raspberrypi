@@ -12,7 +12,6 @@
   <style>
 
     .form-label {
-      /*color: #f30;*/
       font-weight: bold;
     }
 
@@ -178,6 +177,11 @@ function getDriverScripts($dir, $prefix)
     return $result;
 }
 
+function getOrDefault(&$var, $default)
+{
+    return trim($var ?: $default);
+}
+
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
@@ -187,24 +191,22 @@ $wlanConnected = isset($ssid) && trim($ssid) !== '';
 $connected = $ethConnected || $wlanConnected;
 $connectionMode = $ethConnected ? 'eth' : 'wifi';
 
-$file = fopen(Constants::FILE_DISCOVERY, "r");
-$storedDiscoveryMode = getIfNotEof($file, 'auto');
-$storedKey = getIfNotEof($file, 'mobro');
-$storedIp = getIfNotEof($file, '');
-closeFile($file);
+$props = parse_ini_file(Constants::FILE_DISCOVERY);
+$storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
+$storedKey = getOrDefault($props['key'], 'mobro');
+$storedIp = getOrDefault($props['ip'], '');
 
 $file = fopen(Constants::FILE_VERSION, "r");
 $storedVersion = getIfNotEof($file, 'Unknown');
 closeFile($file);
 
-$file = fopen(Constants::FILE_WIFI, "r");
-$storedNetworkMode = getIfNotEof($file, 'wifi');
-$storedSsid = getIfNotEof($file, '');
-$storedPw = getIfNotEof($file, '');
-$storedCountry = getIfNotEof($file, 'AT');
-$storedHidden = getIfNotEof($file, '0');
-$storedWpa = getIfNotEof($file, '');
-closeFile($file);
+$props = parse_ini_file(Constants::FILE_WIFI);
+$storedNetworkMode = getOrDefault($props['mode'], 'wifi');
+$storedSsid = getOrDefault($props['ssid'], '');
+$storedPw = getOrDefault($props['pw'], '');
+$storedCountry = getOrDefault($props['country'], 'AT');
+$storedHidden = getOrDefault($props['hidden'], '0');
+$storedWpa = getOrDefault($props['wpa'], '');
 
 $storedSsIds = array();
 $file = fopen(Constants::FILE_SSID, "r");

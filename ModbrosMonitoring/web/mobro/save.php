@@ -3,15 +3,14 @@
 include '../constants.php';
 
 // debug
-echo '<table>';
-foreach ($_POST as $key => $value) {
-    echo "<tr>";
-    echo "<td>" . $key . "</td>";
-    echo "<td>" . $value . "</td>";
-    echo "</tr>";
-}
-echo '</table>';
-
+//echo '<table>';
+//foreach ($_POST as $key => $value) {
+//    echo "<tr>";
+//    echo "<td>" . $key . "</td>";
+//    echo "<td>" . $value . "</td>";
+//    echo "</tr>";
+//}
+//echo '</table>';
 //exit();
 
 function getOrDefault($key, $default)
@@ -38,12 +37,21 @@ $driver = getOrDefault('driver', '');
 
 // write network file if in wifi mode
 if ($netMode == 'wifi') {
-    $wifiData = $netMode . "\n" . $ssid . "\n" . $pw . "\n" . $country . "\n" . $hidden . "\n" . $wpa . "\n";
+    $wifiData =
+        "mode={$netMode}\n" .
+        "ssid={$ssid}\n" .
+        "pw={$pw}\n" .
+        "country={$country}\n" .
+        "hidden={$hidden}\n" .
+        "wpa={$wpa}\n";
     file_put_contents(Constants::FILE_WIFI, $wifiData, LOCK_EX);
 }
 
 // write discovery file
-$discoveryData = $pcMode . "\n" . $connKey . "\n" . $ip . "\n";
+$discoveryData =
+    "mode={$pcMode}\n" .
+    "key={$connKey}\n" .
+    "ip={$ip}\n";
 file_put_contents(Constants::FILE_DISCOVERY, $discoveryData, LOCK_EX);
 
 // write driver file if selected

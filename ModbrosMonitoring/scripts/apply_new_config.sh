@@ -34,6 +34,10 @@ log() {
     echo "$date | ${temp:5} : [$1] $2" >>$LOG_FILE
 }
 
+prop() {
+    grep "$1" "$2" | cut -d '=' -f2
+}
+
 add_wpa() {
     echo "$1" >>"$WPA_CONFIG_TEMP"
 }
@@ -51,7 +55,7 @@ add_wpa_setting() {
 wifi_config() {
     log "configuration" "starting network configuration"
     local mode, ssid, pw, country, wpa, hidden, updated
-    mode=$(sed -n 1p <$WIFI_FILE) # 1st line contains network mode
+    mode=$(prop 'mode' $WIFI_FILE)
 
     if [[ $mode == "eth" ]]; then
         # connected by ethernet => set standard wpa config and we're done
@@ -61,12 +65,11 @@ wifi_config() {
     fi
 
     log "configuration" "network mode: Wifi - creating new wpa_supplicant"
-    ssid=$(sed -n 2p <$WIFI_FILE)    # 2nd line contains SSID
-    pw=$(sed -n 3p <$WIFI_FILE)      # 3rd line contains PW
-    country=$(sed -n 4p <$WIFI_FILE) # 4th line contains Country
-    wpa=$(sed -n 5p <$WIFI_FILE)     # 5th line contains wpa setting
-    hidden=$(sed -n 6p <$WIFI_FILE)  # 6th line contains hidden flag
-    updated=$(sed -n 7p <$WIFI_FILE) # 7th line contains updated timestamp
+    ssid=$(prop 'ssid' $WIFI_FILE)
+    pw=$(prop 'pw' $WIFI_FILE)
+    country=$(prop 'country' $WIFI_FILE)
+    wpa=$(prop 'wpa' $WIFI_FILE)
+    hidden=$(prop 'hidden' $WIFI_FILE)
 
     # start a new config file
     cp -f $WPA_CONFIG_EMPTY $WPA_CONFIG_TEMP
@@ -158,4 +161,4 @@ wifi_config
 
 # reboot the Pi
 log "configuration" "done - rebooting"
-sudo shutdown -r now
+#sudo shutdown -r now

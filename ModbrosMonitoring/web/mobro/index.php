@@ -87,28 +87,27 @@ function getSecurityMode($mode)
     }
 }
 
-$file = fopen(Constants::FILE_VERSION, "r");
-$version = getIfNotEof($file, '');
-closeFile($file);
-
-$file = fopen(Constants::FILE_WIFI, "r");
-$netMode = getIfNotEof($file, '');
-$storedSsid = getIfNotEof($file, '');
-$storedPw = getIfNotEof($file, '');
-$storedCountry = getIfNotEof($file, 'AT');
-$storedHidden = getIfNotEof($file, '0');
-$storedWpa = getIfNotEof($file, '');
-closeFile($file);
+function getOrDefault(&$var, $default)
+{
+    return trim($var ?: $default);
+}
 
 $file = fopen(Constants::FILE_VERSION, "r");
-$storedVersion = getIfNotEof($file, 'Unknown');
+$version = getIfNotEof($file, 'Unknown');
 closeFile($file);
 
-$file = fopen(Constants::FILE_DISCOVERY, "r");
-$storedDiscoveryMode = getIfNotEof($file, 'auto');
-$storedKey = getIfNotEof($file, 'mobro');
-$storedIp = getIfNotEof($file, '');
-closeFile($file);
+$props = parse_ini_file(Constants::FILE_WIFI);
+$storedNetworkMode = getOrDefault($props['mode'], 'wifi');
+$storedSsid = getOrDefault($props['ssid'], '');
+$storedPw = getOrDefault($props['pw'], '');
+$storedCountry = getOrDefault($props['country'], 'AT');
+$storedHidden = getOrDefault($props['hidden'], '0');
+$storedWpa = getOrDefault($props['wpa'], '');
+
+$props = parse_ini_file(Constants::FILE_DISCOVERY);
+$storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
+$storedKey = getOrDefault($props['key'], 'mobro');
+$storedIp = getOrDefault($props['ip'], '');
 ?>
 
 <div id="container" class="container">

@@ -63,6 +63,10 @@ log() {
     echo "$date | ${temp:5} : [$1] $2" >>$LOG_FILE
 }
 
+prop() {
+    grep "$1" "$2" | cut -d '=' -f2
+}
+
 wait_window() {
     until [[ $(xdotool search --onlyvisible --class "$1" | wc -l) -gt 0 ]]; do
         log "helper" "waiting for $1 to become available.."
@@ -235,9 +239,9 @@ service_discovery() {
     echo "0" >$MOBRO_FOUND_FLAG
 
     local mode ip key
-    mode=$(sed -n 1p <$DISCOVERY_FILE)
-    key=$(sed -n 2p <$DISCOVERY_FILE)
-    ip=$(sed -n 3p <$DISCOVERY_FILE)
+    mode=$(prop 'mode' $DISCOVERY_FILE)
+    key=$(prop 'key' $DISCOVERY_FILE)
+    ip=$(prop 'ip' $DISCOVERY_FILE)
 
     # check if static ip is configured
     if [[ $mode == "manual" ]]; then
@@ -358,7 +362,7 @@ wifi_check() {
     local wait_wifi ssid
     wait_wifi=1
     if [[ $(wc -l <$NETWORKS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        ssid=$(sed -n 2p <$WIFI_FILE) # ssid of configured network
+        ssid=$(prop 'ssid' $WIFI_FILE)
         if [[ $(grep "$ssid" -c <$NETWORKS_FILE) -eq 0 ]]; then
             wait_wifi=0
         fi
