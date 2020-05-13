@@ -134,7 +134,7 @@ show_mobro() {
     version=$(sed -n 1p <$VERSION_FILE)                                  # service version number
     uuid=$(sed 's/://g' </sys/class/net/wlan0/address)                   # unique ID of this pi
     resolution=$(sudo fbset | grep -m 1 mode | sed 's/^.*"\(.*\)"$/\1/') # current display resolution
-    url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&name=$name"
+    url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&device=pi&name=$name"
 
     if [[ $(pgrep -fc chromium) -gt 0 ]]; then
         if [[ $CURR_MOBRO_URL == "$url" ]]; then
