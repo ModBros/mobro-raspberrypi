@@ -134,8 +134,10 @@ driver() {
     driver=$(sed -n 1p <$DRIVER_FILE)
 
     if [[ -n "$driver" ]]; then
+        : >$DRIVER_FILE
+        cd "$(dirname "$driver")" || exit
         log "configuration" "installing new display driver: $driver"
-        sudo ".$driver"
+        sudo /bin/bash "$driver" >>$LOG_FILE
     else
         log "configuration" "skipping display driver installation"
     fi
