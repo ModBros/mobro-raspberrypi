@@ -249,7 +249,7 @@ $drivers = array_merge(
     <!--form panels-->
     <div class="row">
       <div class="col-12 col-lg-8 m-auto">
-        <form class="multisteps-form__form" action="save.php" method="POST">
+        <form id="configForm" class="multisteps-form__form" action="save.php" method="POST">
 
           <!--single form panel-->
           <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active" data-animation="scaleIn">
@@ -665,7 +665,7 @@ $drivers = array_merge(
                 <a href="index.php" class="btn btn-danger ml-auto" role="button" title="Cancel">
                   <span><i class="fas fa-times"></i></span> Cancel
                 </a>
-                <button class="btn btn-success ml-4" type="submit" title="Apply">
+                <button id="submitBtn" class="btn btn-success ml-4" type="submit" title="Apply">
                   <span><i class="fas fa-check"></i></span> Apply
                 </button>
               </div>
@@ -879,6 +879,12 @@ $drivers = array_merge(
       driverInput.removeAttr('disabled');
       driverInput.addClass('border-primary');
       summaryScreenMode.html('Install driver');
+    });
+
+    $("#submitBtn").on("click", function () {
+      $(this).prop("disabled", true);
+      $(this).html('<span><i class="fas fa-spinner"></i></span> Applying...');
+      $('#configForm').submit();
     });
   });
 

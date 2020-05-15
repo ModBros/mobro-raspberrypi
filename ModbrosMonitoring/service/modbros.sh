@@ -246,7 +246,7 @@ service_discovery() {
     # check if static ip is configured
     if [[ $mode == "manual" ]]; then
         log "service_discovery" "configured to use static ip"
-        log "service_discovery" "trying IP: $ip with key: $ip"
+        log "service_discovery" "trying IP: $ip with key: $key"
         try_ip "$ip" "$ip"
         if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
             # couldn't find application
@@ -261,7 +261,7 @@ service_discovery() {
 
     if ! [[ -z $ip || -z $key ]]; then
         log "service_discovery" "checking previous host"
-        log "service_discovery" "trying IP: $ip with key: $ip"
+        log "service_discovery" "trying IP: $ip with key: $key"
         try_ip "$ip" "$key"
         if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
