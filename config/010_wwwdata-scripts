@@ -1,1 +1,1 @@
-www-data ALL = NOPASSWD: /home/modbros/ModbrosMonitoring/scripts/
+www-data ALL = NOPASSWD: /home/modbros/mobro-raspberrypi/scripts/

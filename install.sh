@@ -95,9 +95,7 @@ echo -n "Configuring web server and resources..."
 rm -rf /var/www/*
 
 chmod +rx ./web/modbros/favicon.ico
-ln -s /home/modbros/ModbrosMonitoring/web /var/www/html
-ln -s /home/modbros/ModbrosMonitoring/data /home/modbros/ModbrosMonitoring/web/data
-ln -s /home/modbros/ModbrosMonitoring/log /home/modbros/ModbrosMonitoring/web/log
+ln -s /home/modbros/mobro-raspberrypi/web /var/www/html
 
 sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.3/fpm/php.ini
 cat ./config/15-fastcgi-php.conf >/etc/lighttpd/conf-available/15-fastcgi-php.conf
@@ -155,14 +153,14 @@ echo " done"
 
 echo -n "Pulling display drivers..."
 
-git clone https://github.com/goodtft/LCD-show.git /home/modbros/DisplayDrivers/GoodTFT
-git clone https://github.com/waveshare/LCD-show.git /home/modbros/DisplayDrivers/Waveshare
+git clone https://github.com/goodtft/LCD-show.git /home/modbros/display-drivers/GoodTFT
+git clone https://github.com/waveshare/LCD-show.git /home/modbros/display-drivers/Waveshare
 
 echo " done"
 
 echo -n "Setting permission for display drivers..."
-chmod +x /home/modbros/DisplayDrivers/GoodTFT/*show
-chmod +x /home/modbros/DisplayDrivers/Waveshare/*show
+chmod +x /home/modbros/display-drivers/GoodTFT/*show
+chmod +x /home/modbros/display-drivers/Waveshare/*show
 echo " done"
 
 # ==========================================================
@@ -197,7 +195,7 @@ echo " done"
 
 echo -n "Installing the ModBros service..."
 
-ln -s /home/modbros/ModbrosMonitoring/service/modbros.service /lib/systemd/system/modbros.service
+ln -s /home/modbros/mobro-raspberrypi/service/modbros.service /lib/systemd/system/modbros.service
 systemctl daemon-reload
 systemctl enable modbros.service
 systemctl stop modbros.service

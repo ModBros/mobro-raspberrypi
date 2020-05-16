@@ -6,10 +6,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # remove development files
-rm -f /home/modbros/ModbrosMonitoring/dependencies.txt
-rm -f /home/modbros/ModbrosMonitoring/ModbrosMonitoring.iml
-rm -f /home/modbros/ModbrosMonitoring/install.sh
-rm -rf /home/modbros/ModbrosMonitoring/.idea
+rm -f /home/modbros/mobro-raspberrypi/dependencies.txt
+rm -f /home/modbros/mobro-raspberrypi/mobro-raspberrypi.iml
+rm -f /home/modbros/mobro-raspberrypi/install.sh
+rm -rf /home/modbros/mobro-raspberrypi/.idea
 
 # remove documentation from already installed packages
 rm -rf /usr/share/man/* /usr/share/groff/* /usr/share/info/*
@@ -19,26 +19,26 @@ rm -rf /usr/share/lintian/* /usr/share/linda/* /var/cache/man/*
 rm -f /var/log/{auth,boot,bootstrap,daemon,kern}.log
 rm -f /var/log/{debug,dmesg,messages,syslog}
 
-rm -f /home/modbros/ModbrosMonitoring/log/log_?.txt
-: >/home/modbros/ModbrosMonitoring/log/log.txt
+rm -f /home/modbros/mobro-raspberrypi/log/log_?.txt
+: >/home/modbros/mobro-raspberrypi/log/log.txt
 
 # clean apt cache
 apt-get clean
 
 # reset wpa config
-cp -f /home/modbros/ModbrosMonitoring/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
+cp -f /home/modbros/mobro-raspberrypi/config/wpa_supplicant_clean.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 # reset data files
-: >/home/modbros/ModbrosMonitoring/data/hosts
-: >/home/modbros/ModbrosMonitoring/data/wifi
-: >/home/modbros/ModbrosMonitoring/data/ssids
-: >/home/modbros/ModbrosMonitoring/data/driver
+: >/home/modbros/mobro-raspberrypi/data/hosts
+: >/home/modbros/mobro-raspberrypi/data/wifi
+: >/home/modbros/mobro-raspberrypi/data/ssids
+: >/home/modbros/mobro-raspberrypi/data/driver
 
-echo "0" >/home/modbros/ModbrosMonitoring/data/mobro_found
+echo "0" >/home/modbros/mobro-raspberrypi/data/mobro_found
 
-echo "mode=auto" >/home/modbros/ModbrosMonitoring/data/discovery
-echo "key=mobro" >>/home/modbros/ModbrosMonitoring/data/discovery
-echo "ip=" >>/home/modbros/ModbrosMonitoring/data/discovery
+echo "mode=auto" >/home/modbros/mobro-raspberrypi/data/discovery
+echo "key=mobro" >>/home/modbros/mobro-raspberrypi/data/discovery
+echo "ip=" >>/home/modbros/mobro-raspberrypi/data/discovery
 
 # delete cache + bash history
 rm -rf /home/modbros/.cache/*

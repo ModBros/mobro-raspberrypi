@@ -10,9 +10,9 @@
 # ====================================================================================================================
 
 # Directories
-LOG_DIR='/home/modbros/ModbrosMonitoring/log'
-DATA_DIR='/home/modbros/ModbrosMonitoring/data'
-CONF_DIR='/home/modbros/ModbrosMonitoring/config'
+LOG_DIR='/home/modbros/mobro-raspberrypi/log'
+DATA_DIR='/home/modbros/mobro-raspberrypi/data'
+CONF_DIR='/home/modbros/mobro-raspberrypi/config'
 
 # Files
 WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"

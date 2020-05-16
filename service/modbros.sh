@@ -10,9 +10,9 @@
 # ====================================================================================================================
 
 # Directories
-LOG_DIR='/home/modbros/ModbrosMonitoring/log'
-RESOURCES_DIR='/home/modbros/ModbrosMonitoring/resources'
-DATA_DIR='/home/modbros/ModbrosMonitoring/data'
+LOG_DIR='/home/modbros/mobro-raspberrypi/log'
+RESOURCES_DIR='/home/modbros/mobro-raspberrypi/resources'
+DATA_DIR='/home/modbros/mobro-raspberrypi/data'
 
 # Files
 HOSTS_FILE="$DATA_DIR/hosts"

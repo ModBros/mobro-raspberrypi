@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/modbros/ModbrosMonitoring/scripts
-ExecStart=/home/modbros/ModbrosMonitoring/service/modbros.sh
+WorkingDirectory=/home/modbros/mobro-raspberrypi/scripts
+ExecStart=/home/modbros/mobro-raspberrypi/service/modbros.sh
 StandardOutput=null
 StandardError=null
 Restart=on-abort
