@@ -281,7 +281,7 @@ service_discovery() {
     esac
 
     while read -r ip; do
-        log "service_discovery" "trying IP: $ip with key: $ip"
+        log "service_discovery" "trying IP: $ip with key: $key"
         try_ip "$ip" "$key"
         if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
             # found MoBro application -> done
