@@ -434,6 +434,15 @@ log "startup" "disabling services: dnsmasq, hostapd"
     sudo systemctl disable hostapd.service
 } &>>$LOG_FILE
 
+# determine and set network mode
+if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
+    log "startup" "network mode set to ETHERNET"
+    NETWORK_MODE='eth'
+else
+    log "startup" "network mode set to WIFI"
+    NETWORK_MODE='wifi'
+fi
+
 # start x
 log "startup" "starting x server"
 sudo xinit \
@@ -442,11 +451,31 @@ sudo xinit \
     &>>$LOG_FILE &
 
 # wait for x server
+sleep 2
+NO_SCREEN_FOUND=0
 while ! xset q &>/dev/null; do
     log "startup" "waiting for X.."
+    if [[ $(grep -c "no screens found" $LOG_FILE) -gt 0 ]]; then
+        NO_SCREEN_FOUND=1
+        stop_process "xinit"
+        break
+    fi
     sleep 5
 done
 sleep_pi 2 5
+
+# handle case if no connected display is found
+if [[ $NO_SCREEN_FOUND == 1 ]]; then
+    log "startup" "no screen found. skipping X and waiting for display configuration"
+    if [[ $NETWORK_MODE == "wifi" ]]; then
+        search_ssids
+        log "startup" "creating access point"
+        create_access_point_call
+    fi
+    while true; do
+        sleep 60
+    done
+fi
 
 # show background
 show_image $IMAGE_MOBRO 7
@@ -459,26 +488,16 @@ log "startup" "disable blank screen"
     sudo xset s noblank
 } &>>$LOG_FILE
 
-# determine and set network mode
-if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
-    log "startup" "network mode set to ETHERNET"
-    NETWORK_MODE='eth'
-else
-    log "startup" "network mode set to WIFI"
-    NETWORK_MODE='wifi'
-fi
-
-# check for wifi interface
-if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
-    log "startup" "no wifi interface detected, aborting"
-    show_image $IMAGE_NOWIFIINTERFACE
-    while true; do
-        sleep 60
-    done
-fi
-
 case $NETWORK_MODE in
 "wifi")
+    # check for wifi interface
+    if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
+        log "startup" "no wifi interface detected, aborting"
+        show_image $IMAGE_NOWIFIINTERFACE
+        while true; do
+            sleep 60
+        done
+    fi
     # unblock the wifi interface
     log "startup" "unblocking wifi interface"
     sudo rfkill unblock 0 &>>$LOG_FILE
