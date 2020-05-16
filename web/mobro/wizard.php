@@ -217,6 +217,7 @@ while ($file && !feof($file)) {
     }
 }
 closeFile($file);
+$storedSsIds = array_unique($storedSsIds);
 
 $drivers = array_merge(
     getDriverScripts(Constants::DIR_DRIVER_GOODTFT, 'GoodTFT'),
