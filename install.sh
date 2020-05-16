@@ -1,14 +1,23 @@
 #!/bin/bash
 
-# ==========================================================
-# Modbros Monitoring Service - Raspberry Pi
-#
-# installation script
-# (intended for and tested only on clean Raspbian Buster lite)
-#
-# Created with <3 in Austria by: (c) ModBros 2020
+# ==========================================================================
+# Modbros Monitoring Service (MoBro) - Raspberry Pi image
+# Copyright (C) 2020 ModBros
 # Contact: mod-bros.com
-# ==========================================================
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# ==========================================================================
 
 if [[ $EUID -ne 0 ]]; then
     echo "This script requires root privileges"
@@ -22,9 +31,9 @@ if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' http://www.google.
     exit 1
 fi
 
-# ==========================================================
-# Add user and setting permissions
-# ==========================================================
+# ==========================================================================
+# Setting user permissions
+# ==========================================================================
 
 echo -n "Setting necessary permissions for modbros user..."
 
@@ -36,9 +45,9 @@ cp -f ./config/010_modbros-nopasswd /etc/sudoers.d
 
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # Set file permissions
-# ==========================================================
+# ==========================================================================
 
 echo -n "Setting script and file permissions..."
 
@@ -53,18 +62,17 @@ chmod 444 ./resources/*
 
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # update Pi
-# ==========================================================
-
+# ==========================================================================
 echo -n "Updating Raspberry..."
 apt-get update >/dev/null
 apt-get upgrade -y >/dev/null
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # install dependencies
-# ==========================================================
+# ==========================================================================
 
 echo "Installing dependencies"
 apt-get update >/dev/null
@@ -74,9 +82,9 @@ while read dep; do
     echo " done"
 done <"./dependencies.txt"
 
-# ==========================================================
+# ==========================================================================
 # Stop and disable access point services + bluetooth
-# ==========================================================
+# ==========================================================================
 
 systemctl stop dnsmasq >/dev/null
 systemctl stop hostapd >/dev/null
@@ -86,9 +94,9 @@ systemctl disable hostapd.service >/dev/null
 
 systemctl disable hciuart >/dev/null
 
-# ==========================================================
+# ==========================================================================
 # configuring web server and resources
-# ==========================================================
+# ==========================================================================
 
 echo -n "Configuring web server and resources..."
 
@@ -116,9 +124,9 @@ cp -f ./config/010_wwwdata-scripts /etc/sudoers.d
 chmod 440 /etc/sudoers.d/010_wwwdata-scripts
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # Applying configuration
-# ==========================================================
+# ==========================================================================
 
 echo -n "Applying configurations..."
 
@@ -130,9 +138,9 @@ cat ./config/hosts >/etc/hosts
 
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # swap + eeprom update
-# =========================================================x=
+# ==========================================================================
 
 echo -n "Disabling automatic eeprom update..."
 # Prevent the automatic eeprom update service from running
@@ -147,9 +155,9 @@ update-rc.d dphys-swapfile remove
 apt purge dphys-swapfile
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # Display drivers
-# ==========================================================
+# ==========================================================================
 
 echo -n "Pulling display drivers..."
 
@@ -163,9 +171,9 @@ chmod +x /home/modbros/display-drivers/GoodTFT/*show
 chmod +x /home/modbros/display-drivers/Waveshare/*show
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # createAp
-# ==========================================================
+# ==========================================================================
 
 echo -n "Installing access point script..."
 
@@ -175,13 +183,12 @@ chmod -R 755 create_ap
 cd create_ap || exit
 make install
 cd ..
-rm -rf create_ap
 
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # Cleanup
-# ==========================================================
+# ==========================================================================
 
 echo -n "Removing no longer relevant packages..."
 apt-get autoremove --purge -y >/dev/null
@@ -189,9 +196,9 @@ apt-get autoclean -y >/dev/null
 apt-get clean -y >/dev/null
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # Service
-# ==========================================================
+# ==========================================================================
 
 echo -n "Installing the ModBros service..."
 
@@ -202,9 +209,9 @@ systemctl stop modbros.service
 
 echo " done"
 
-# ==========================================================
+# ==========================================================================
 # Reboot
-# ==========================================================
+# ==========================================================================
 
 echo "Installation completed"
 echo "Rebooting..."
