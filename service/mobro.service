@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/home/modbros/mobro-raspberrypi/scripts
-ExecStart=/home/modbros/mobro-raspberrypi/service/modbros.sh
+ExecStart=/home/modbros/mobro-raspberrypi/service/mobro.sh
 StandardOutput=null
 StandardError=null
 Restart=on-abort

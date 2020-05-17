@@ -52,9 +52,9 @@ echo " done"
 echo -n "Setting script and file permissions..."
 
 chmod 755 ./scripts/*.sh
-chmod 755 ./service/modbros.sh
+chmod 755 ./service/mobro.sh
 
-chmod 644 ./service/modbros.service
+chmod 644 ./service/mobro.service
 chmod 666 ./data/*
 chmod 666 ./log/*
 chmod 666 ./config/*
@@ -202,10 +202,10 @@ echo " done"
 
 echo -n "Installing the ModBros service..."
 
-ln -s /home/modbros/mobro-raspberrypi/service/modbros.service /lib/systemd/system/modbros.service
+ln -s /home/modbros/mobro-raspberrypi/service/mobro.service /lib/systemd/system/mobro.service
 systemctl daemon-reload
-systemctl enable modbros.service
-systemctl stop modbros.service
+systemctl enable mobro.service
+systemctl stop mobro.service
 
 echo " done"
 
