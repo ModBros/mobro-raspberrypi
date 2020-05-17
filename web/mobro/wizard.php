@@ -169,18 +169,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 <?php
 
 include '../constants.php';
-
-function getIfNotEof($file, $default)
-{
-    return $file && !feof($file) ? trim(fgets($file)) : $default;
-}
-
-function closeFile($file)
-{
-    if ($file) {
-        fclose($file);
-    }
-}
+include '../util.php';
 
 function getDriverScripts($dir, $prefix)
 {
@@ -196,11 +185,6 @@ function getDriverScripts($dir, $prefix)
     return $result;
 }
 
-function getOrDefault(&$var, $default)
-{
-    return trim($var ?: $default);
-}
-
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
@@ -210,16 +194,12 @@ $wlanConnected = isset($ssid) && trim($ssid) !== '';
 $connected = $ethConnected || $wlanConnected;
 $connectionMode = $ethConnected ? 'eth' : 'wifi';
 
-$props = parse_ini_file(Constants::FILE_DISCOVERY);
+$props = parseProperties(Constants::FILE_DISCOVERY);
 $storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
 $storedKey = getOrDefault($props['key'], 'mobro');
 $storedIp = getOrDefault($props['ip'], '');
 
-$file = fopen(Constants::FILE_VERSION, "r");
-$storedVersion = getIfNotEof($file, 'Unknown');
-closeFile($file);
-
-$props = parse_ini_file(Constants::FILE_WIFI);
+$props = parseProperties(Constants::FILE_WIFI);
 $storedNetworkMode = getOrDefault($props['mode'], 'wifi');
 $storedSsid = getOrDefault($props['ssid'], '');
 $storedPw = getOrDefault($props['pw'], '');

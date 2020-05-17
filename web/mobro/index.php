@@ -68,6 +68,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 <?php
 
 include '../constants.php';
+include '../util.php';
 
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
@@ -76,18 +77,6 @@ $ssid = shell_exec('iwgetid wlan0 -r');
 $wlanConnected = isset($ssid) && trim($ssid) !== '';
 
 $connected = $ethConnected || $wlanConnected;
-
-function getIfNotEof($file, $default)
-{
-    return $file && !feof($file) ? trim(fgets($file)) : $default;
-}
-
-function closeFile($file)
-{
-    if ($file) {
-        fclose($file);
-    }
-}
 
 function getSecurityMode($mode)
 {
@@ -106,16 +95,9 @@ function getSecurityMode($mode)
     }
 }
 
-function getOrDefault(&$var, $default)
-{
-    return trim($var ?: $default);
-}
+$version = getFirstLine(Constants::FILE_VERSION, 'Unknown');
 
-$file = fopen(Constants::FILE_VERSION, "r");
-$version = getIfNotEof($file, 'Unknown');
-closeFile($file);
-
-$props = parse_ini_file(Constants::FILE_WIFI);
+$props = parseProperties(Constants::FILE_WIFI);
 $storedNetworkMode = getOrDefault($props['mode'], 'wifi');
 $storedSsid = getOrDefault($props['ssid'], '');
 $storedPw = getOrDefault($props['pw'], '');
@@ -123,7 +105,7 @@ $storedCountry = getOrDefault($props['country'], 'AT');
 $storedHidden = getOrDefault($props['hidden'], '0');
 $storedWpa = getOrDefault($props['wpa'], '');
 
-$props = parse_ini_file(Constants::FILE_DISCOVERY);
+$props = parseProperties(Constants::FILE_DISCOVERY);
 $storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
 $storedKey = getOrDefault($props['key'], 'mobro');
 $storedIp = getOrDefault($props['ip'], '');
