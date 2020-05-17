@@ -146,8 +146,11 @@ show_mobro() {
     local name version uuid resolution url
     name=$(cat /proc/device-tree/model)                                  # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
     version=$(sed -n 1p <$VERSION_FILE)                                  # service version number
-    uuid=$(sed 's/://g' </sys/class/net/wlan0/address)                   # unique ID of this pi
     resolution=$(sudo fbset | grep -m 1 mode | sed 's/^.*"\(.*\)"$/\1/') # current display resolution
+    case $NETWORK_MODE in
+    "wifi") uuid=$(sed 's/://g' </sys/class/net/wlan0/address) ;; # unique ID of this pi
+    "eth") uuid=$(sed 's/://g' </sys/class/net/eth0/address) ;; # unique ID of this pi
+    esac
     url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&device=pi&name=$name"
 
     if [[ $(pgrep -fc chromium) -gt 0 ]]; then
