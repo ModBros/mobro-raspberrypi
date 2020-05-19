@@ -231,6 +231,17 @@ create_access_point_call() {
         &>>$LOG_FILE
 }
 
+try_ip_static() {
+    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover") -eq 403 ]]; then
+        # 403 -> mobro is there but wrong connection key.
+        # since we're going for static ip, we don't need to match the key -> success
+        echo "1" >$MOBRO_FOUND_FLAG
+        return 0
+    else
+        return 1
+    fi
+}
+
 try_ip() {
     # $1 = IP, $2 = key
     if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
@@ -258,15 +269,15 @@ service_discovery() {
 
     # check if static ip is configured
     if [[ $mode == "manual" ]]; then
-        log "service_discovery" "configured to use static ip"
-        log "service_discovery" "trying IP: $ip with key: $key"
-        try_ip "$ip" "$ip"
-        if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
-            # couldn't find application
-            log "service_discovery" "no MoBro application found on static ip $ip with key $key"
+        log "service_discovery" "configured to use static ip. trying: $ip"
+        if [[ $(try_ip_static "$ip") -eq 0 ]]; then
+            log "service_discovery" "MoBro application found on static IP $ip"
+            show_mobro "$ip"
+        else
+            log "service_discovery" "no MoBro application found on static ip $ip"
             show_image $IMAGE_NOTFOUND
-            return
         fi
+        return
     fi
 
     # check previous host if configured
