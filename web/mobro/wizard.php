@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   <meta charset="UTF-8">
   <title>MoBro Setup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
   <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
 
   <link href="../vendor/bootstrap.min.css" rel="stylesheet"/>
@@ -49,10 +50,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     }
 
     .multisteps-form__progress-btn {
-      transition-property: all;
-      transition-duration: 0.15s;
-      transition-timing-function: linear;
-      transition-delay: 0s;
       position: relative;
       padding-top: 20px;
       color: rgba(108, 117, 125, 0.7);
@@ -79,9 +76,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       content: '';
       -webkit-transform: translateX(-50%);
       transform: translateX(-50%);
-      transition: all 0.15s linear 0s, -webkit-transform 0.15s cubic-bezier(0.05, 1.09, 0.16, 1.4) 0s;
-      transition: all 0.15s linear 0s, transform 0.15s cubic-bezier(0.05, 1.09, 0.16, 1.4) 0s;
-      transition: all 0.15s linear 0s, transform 0.15s cubic-bezier(0.05, 1.09, 0.16, 1.4) 0s, -webkit-transform 0.15s cubic-bezier(0.05, 1.09, 0.16, 1.4) 0s;
       border: 2px solid currentColor;
       border-radius: 50%;
       background-color: #fff;
@@ -93,10 +87,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       position: absolute;
       top: 5px;
       left: calc(-50% - 13px / 2);
-      transition-property: all;
-      transition-duration: 0.15s;
-      transition-timing-function: linear;
-      transition-delay: 0s;
       display: block;
       width: 100%;
       height: 2px;
@@ -151,11 +141,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       background-color: #e13300;
       border-color: #e13300;
       color: white;
-      transition: all 1s ease;
-      -webkit-transition: all 1s ease;
-      -moz-transition: all 1s ease;
-      -o-transition: all 1s ease;
-      -ms-transition: all 1s ease;
     }
   </style>
 
@@ -227,7 +212,7 @@ $drivers = array_merge(
 
 <div class="container">
   <div class="multisteps-form mt-5">
-    <!--progress bar-->
+
     <div class="row">
       <div class="col-12 col-lg-8 ml-auto mr-auto mb-3">
         <div class="multisteps-form__progress">
@@ -246,13 +231,13 @@ $drivers = array_merge(
         </div>
       </div>
     </div>
-    <!--form panels-->
+
     <div class="row">
       <div class="col-12 col-lg-8 m-auto">
         <form id="configForm" class="multisteps-form__form" action="save.php" method="POST">
 
-          <!--single form panel-->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active" data-animation="scaleIn">
+          <!-- NETWORK SETUP -->
+          <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active">
             <h3 class="multisteps-form__title text-center">Network setup</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
@@ -430,8 +415,8 @@ $drivers = array_merge(
             </div>
           </div>
 
-          <!--single form panel-->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white" data-animation="scaleIn">
+          <!-- PC CONNECTION SETUP -->
+          <div class="multisteps-form__panel shadow p-4 rounded bg-white">
             <h3 class="multisteps-form__title text-center">PC connection</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
@@ -509,8 +494,8 @@ $drivers = array_merge(
             </div>
           </div>
 
-          <!--single form panel-->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white" data-animation="scaleIn">
+          <!-- SCREEN SETUP -->
+          <div class="multisteps-form__panel shadow p-4 rounded bg-white">
             <h3 class="multisteps-form__title text-center">Screen setup</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
@@ -574,8 +559,8 @@ $drivers = array_merge(
             </div>
           </div>
 
-          <!--single form panel-->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white" data-animation="scaleIn">
+          <!-- SUMMARY/CONFIRMATION -->
+          <div class="multisteps-form__panel shadow p-4 rounded bg-white">
             <h3 class="multisteps-form__title text-center">Summary</h3>
             <div class="multisteps-form__content">
 
@@ -671,6 +656,7 @@ $drivers = array_merge(
               </div>
             </div>
           </div>
+
         </form>
       </div>
     </div>
@@ -678,214 +664,166 @@ $drivers = array_merge(
 </div>
 
 <script>
-  //DOM elements
-  const DOMstrings = {
-    stepsBtnClass: 'multisteps-form__progress-btn',
-    stepsBtns: document.querySelectorAll(`.multisteps-form__progress-btn`),
-    stepsBar: document.querySelector('.multisteps-form__progress'),
-    stepsForm: document.querySelector('.multisteps-form__form'),
-    stepsFormTextareas: document.querySelectorAll('.multisteps-form__textarea'),
-    stepFormPanelClass: 'multisteps-form__panel',
-    stepFormPanels: document.querySelectorAll('.multisteps-form__panel'),
-    stepPrevBtnClass: 'js-btn-prev',
-    stepNextBtnClass: 'js-btn-next'
-  };
+  const stepButtons = $('.multisteps-form__progress-btn').toArray();
+  const stepBar = $('.multisteps-form__progress')[0];
+  const stepForm = $('.multisteps-form__form')[0];
+  const stepPanels = $('.multisteps-form__panel').toArray();
 
-  //remove class from a set of items
-  const removeClasses = (elemSet, className) => {
-    elemSet.forEach(elem => {
-      elem.classList.remove(className);
-    });
-  };
+  function removeClass(elements, clazz) {
+    elements.forEach(elem => elem.classList.remove(clazz));
+  }
 
-  //return exect parent node of the element
-  const findParent = (elem, parentClass) => {
-    let currentNode = elem;
-    while (!currentNode.classList.contains(parentClass)) {
+  function findParent(element, parentClazz) {
+    let currentNode = element;
+    while (!currentNode.classList.contains(parentClazz)) {
       currentNode = currentNode.parentNode;
     }
     return currentNode;
-  };
+  }
 
-  //get active button step number
-  const getActiveStep = elem => {
-    return Array.from(DOMstrings.stepsBtns).indexOf(elem);
-  };
+  function getActiveStepIndex(element) {
+    return stepButtons.indexOf(element);
+  }
 
-  //set all steps before clicked (and clicked too) to active
-  const setActiveStep = activeStepNum => {
-
-    //remove active state from all the state
-    removeClasses(DOMstrings.stepsBtns, 'js-active');
-
-    //set picked items to active
-    DOMstrings.stepsBtns.forEach((elem, index) => {
-      if (index <= activeStepNum) {
-        elem.classList.add('js-active');
+  function setActiveStep(idx) {
+    removeClass(stepButtons, 'js-active');
+    stepButtons.forEach((e, i) => {
+      if (i <= idx) {
+        e.classList.add('js-active');
       }
     });
-  };
+  }
 
-  //get active panel
-  const getActivePanel = () => {
-    let activePanel;
-    DOMstrings.stepFormPanels.forEach(elem => {
-      if (elem.classList.contains('js-active')) {
-        activePanel = elem;
+  function getActivePanel() {
+    stepPanels.forEach(e => {
+      if (e.classList.contains('js-active')) {
+        return e;
       }
     });
-    return activePanel;
-  };
+    return null;
+  }
 
-  //open active panel (and close unactive panels)
-  const setActivePanel = activePanelNum => {
-
-    //remove active class from all the panels
-    removeClasses(DOMstrings.stepFormPanels, 'js-active');
-
-    //show active panel
-    DOMstrings.stepFormPanels.forEach((elem, index) => {
+  function setActivePanel(activePanelNum) {
+    removeClass(stepPanels, 'js-active');
+    stepPanels.forEach((elem, index) => {
       if (index === activePanelNum) {
         elem.classList.add('js-active');
         setFormHeight(elem);
       }
     });
-  };
+  }
 
-  //set form height equal to current panel height
-  const formHeight = activePanel => {
-    const activePanelHeight = activePanel.offsetHeight;
-    DOMstrings.stepsForm.style.height = `${activePanelHeight}px`;
-  };
+  function formHeight(panel) {
+    const activePanelHeight = panel.offsetHeight;
+    stepForm.style.height = `${activePanelHeight}px`;
+  }
 
-  const setFormHeight = () => {
+  function setFormHeight() {
     const activePanel = getActivePanel();
-    formHeight(activePanel);
-  };
+    if (activePanel != null) {
+      formHeight(activePanel);
+    }
+  }
 
-  //STEPS BAR CLICK FUNCTION
-  DOMstrings.stepsBar.addEventListener('click', e => {
-
-    //check if click target is a step button
+  stepBar.addEventListener('click', e => {
     const eventTarget = e.target;
-    if (!eventTarget.classList.contains(`${DOMstrings.stepsBtnClass}`)) {
+    if (!eventTarget.classList.contains('multisteps-form__progress-btn')) {
       return;
     }
-
-    //get active button step number
-    const activeStep = getActiveStep(eventTarget);
-
-    //set all steps before clicked (and clicked too) to active
-    setActiveStep(activeStep);
-
-    //open active panel
-    setActivePanel(activeStep);
+    const stepIdx = getActiveStepIndex(eventTarget);
+    setActiveStep(stepIdx);
+    setActivePanel(stepIdx);
   });
 
-  //PREV/NEXT BTNS CLICK
-  DOMstrings.stepsForm.addEventListener('click', e => {
-
+  stepForm.addEventListener('click', e => {
     const eventTarget = e.target;
-
-    //check if we clicked on `PREV` or NEXT` buttons
-    if (!(eventTarget.classList.contains(`${DOMstrings.stepPrevBtnClass}`) || eventTarget.classList.contains(`${DOMstrings.stepNextBtnClass}`))) {
+    if (!(eventTarget.classList.contains('js-btn-prev') || eventTarget.classList.contains('js-btn-next'))) {
       return;
     }
-
-    //find active panel
-    const activePanel = findParent(eventTarget, `${DOMstrings.stepFormPanelClass}`);
-    let activePanelNum = Array.from(DOMstrings.stepFormPanels).indexOf(activePanel);
-
-    //set active step and active panel onclick
-    if (eventTarget.classList.contains(`${DOMstrings.stepPrevBtnClass}`)) {
-      activePanelNum--;
+    const activePanel = findParent(eventTarget, 'multisteps-form__panel');
+    let idx = stepPanels.indexOf(activePanel);
+    if (eventTarget.classList.contains('js-btn-prev')) {
+      idx--;
     } else {
-      activePanelNum++;
+      idx++;
     }
-    setActiveStep(activePanelNum);
-    setActivePanel(activePanelNum);
+    setActiveStep(idx);
+    setActivePanel(idx);
   });
 
-  //SETTING PROPER FORM HEIGHT ONLOAD
   window.addEventListener('load', setFormHeight, false);
-
-  //SETTING PROPER FORM HEIGHT ONRESIZE
   window.addEventListener('resize', setFormHeight, false);
 
-  $(document).ready(function () {
+  const summaryPcConnMode = $('#summaryPcConnMode');
+  const summaryConKey = $('#summaryConKey');
+  const summaryIp = $('#summaryIp');
+  const summaryScreenMode = $('#summaryScreenMode');
 
-    // summary fields
-    let summaryPcConnMode = $('#summaryPcConnMode');
-    let summaryConKey = $('#summaryConKey');
-    let summaryIp = $('#summaryIp');
-    let summaryScreenMode = $('#summaryScreenMode');
-
-    // network
-      <?php
-      if ($connectionMode == 'wifi') {
-          echo "
+  // network
+  <?php
+  if ($connectionMode == 'wifi') {
+      echo "
             $('#summarySSID').html($('#ssidInput').val());
             $('#summaryPW').html(\"*\".repeat($('#passwordInput').val().length));
             $('#summaryCountry').html($('#countryInput option:selected').text());
             $('#summarySecurity').html($('#wpaInput option:selected').text());
             $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No');
         ";
-      }
-      ?>
+  }
+  ?>
 
-    summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
-    summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '<span><i class="fas fa-times"></i></span>');
-    summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
+  summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
+  summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '<span><i class="fas fa-times"></i></span>');
+  summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
 
-    $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
-    $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
-    $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
-    $('#wpaInput').on('change', _ => $('#summarySecurity').html($('#wpaInput option:selected').text()));
-    $('#hiddenNetworkInput').on('change', _ => $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No'));
+  $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
+  $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
+  $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
+  $('#wpaInput').on('change', _ => $('#summarySecurity').html($('#wpaInput option:selected').text()));
+  $('#hiddenNetworkInput').on('change', _ => $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No'));
 
-    // PC config toggle
-    let ipInput = $('#staticIpInput');
-    let connKeyInput = $('#connectionKeyInput');
-    $('#discovery1').on('click', _ => {
-      ipInput.attr('disabled', 'disabled');
-      ipInput.removeClass('border-primary');
-      connKeyInput.removeAttr('disabled');
-      connKeyInput.addClass('border-primary');
-      summaryPcConnMode.html('Automatic discovery');
-      summaryIp.html('<span><i class="fas fa-times"></i></span>');
-      summaryConKey.html($('#connectionKeyInput').val());
-    });
-    $('#discovery2').on('click', _ => {
-      connKeyInput.attr('disabled', 'disabled');
-      connKeyInput.removeClass('border-primary');
-      ipInput.removeAttr('disabled');
-      ipInput.addClass('border-primary');
-      summaryPcConnMode.html('Static IP');
-      summaryConKey.html('<span><i class="fas fa-times"></i></span>');
-      summaryIp.html($('#staticIpInput').val());
-    });
-    $('#staticIpInput').on('change', _ => summaryIp.html($('#staticIpInput').val()));
-    $('#connectionKeyInput').on('change', _ => summaryConKey.html($('#connectionKeyInput').val()));
+  // PC config toggle
+  let ipInput = $('#staticIpInput');
+  let connKeyInput = $('#connectionKeyInput');
+  $('#discovery1').on('click', _ => {
+    ipInput.attr('disabled', 'disabled');
+    ipInput.removeClass('border-primary');
+    connKeyInput.removeAttr('disabled');
+    connKeyInput.addClass('border-primary');
+    summaryPcConnMode.html('Automatic discovery');
+    summaryIp.html('<span><i class="fas fa-times"></i></span>');
+    summaryConKey.html($('#connectionKeyInput').val());
+  });
+  $('#discovery2').on('click', _ => {
+    connKeyInput.attr('disabled', 'disabled');
+    connKeyInput.removeClass('border-primary');
+    ipInput.removeAttr('disabled');
+    ipInput.addClass('border-primary');
+    summaryPcConnMode.html('Static IP');
+    summaryConKey.html('<span><i class="fas fa-times"></i></span>');
+    summaryIp.html($('#staticIpInput').val());
+  });
+  $('#staticIpInput').on('change', _ => summaryIp.html($('#staticIpInput').val()));
+  $('#connectionKeyInput').on('change', _ => summaryConKey.html($('#connectionKeyInput').val()));
 
-    // driver install toggle
-    let driverInput = $('#driverInput');
-    driverInput.on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
-    $('#screen1').on('click', _ => {
-      driverInput.attr('disabled', 'disabled');
-      driverInput.removeClass('border-primary');
-      summaryScreenMode.html('Skip driver installation');
-    });
-    $('#screen2').on('click', _ => {
-      driverInput.removeAttr('disabled');
-      driverInput.addClass('border-primary');
-      summaryScreenMode.html('Install driver');
-    });
+  // driver install toggle
+  let driverInput = $('#driverInput');
+  driverInput.on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
+  $('#screen1').on('click', _ => {
+    driverInput.attr('disabled', 'disabled');
+    driverInput.removeClass('border-primary');
+    summaryScreenMode.html('Skip driver installation');
+  });
+  $('#screen2').on('click', _ => {
+    driverInput.removeAttr('disabled');
+    driverInput.addClass('border-primary');
+    summaryScreenMode.html('Install driver');
+  });
 
-    $("#submitBtn").on("click", function () {
-      $(this).prop("disabled", true);
-      $(this).html('<span><i class="fas fa-spinner"></i></span> Applying...');
-      $('#configForm').submit();
-    });
+  $("#submitBtn").on("click", function () {
+    $(this).prop("disabled", true);
+    $(this).html('<span><i class="fas fa-spinner"></i></span> Applying...');
+    $('#configForm').submit();
   });
 
 </script>
