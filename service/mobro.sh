@@ -199,7 +199,7 @@ create_access_point() {
     ap_create_counter=1
     ap_retry=$((AP_RETRY_WAIT / 5))
     ap_fail=$((AP_FAIL_WAIT / 5))
-    until [[ $(create_ap --list-running | grep -c wlan0) -gt 0 ]]; do
+    until is_access_point_open; do
         ap_create_counter=$((ap_create_counter + 1))
         if [[ $ap_create_counter -gt $ap_fail ]]; then
             log "create_access_point" "failed to create access point multiple times - rebooting.."
@@ -231,11 +231,32 @@ create_access_point_call() {
         &>>$LOG_FILE
 }
 
+is_access_point_open() {
+    if [[ $(create_ap --list-running | grep wlan0 -c) -gt 0 ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+set_mobro_found() {
+    echo "1" >$MOBRO_FOUND_FLAG
+    echo "$1" >$HOSTS_FILE
+}
+
+is_mobro_found() {
+    if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 try_ip_static() {
-    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover") -eq 403 ]]; then
+    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover") -eq 403 ]]; then
         # 403 -> mobro is there but wrong connection key.
-        # since we're going for static ip, we don't need to match the key -> success
-        echo "1" >$MOBRO_FOUND_FLAG
+        # since we're going for static ip, we don't need to match the key
+        set_mobro_found "$1"
         return 0
     else
         return 1
@@ -244,34 +265,35 @@ try_ip_static() {
 
 try_ip() {
     # $1 = IP, $2 = key
-    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
-        # found MoBro application -> done
-        log "service_discovery" "MoBro application found on IP $1"
-        show_mobro "$1"
-
-        # write found (use file as kind of global variable)
-        # -> this function is started in a sub process!
-        echo "1" >$MOBRO_FOUND_FLAG
-
-        # write to file to find it faster on next boot
-        echo "$1" >$HOSTS_FILE
+    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover?key=$2") -eq 200 ]]; then
+        # 200 -> mobro is there and we're using the correct connection key
+        set_mobro_found "$1"
+        return 0
+    else
+        return 1
     fi
 }
 
 service_discovery() {
 
     echo "0" >$MOBRO_FOUND_FLAG
+    show_image $IMAGE_DISCOVERY 2
 
-    local mode ip key
+    local mode ip key interface
     mode=$(prop 'mode' $DISCOVERY_FILE)
     key=$(prop 'key' $DISCOVERY_FILE)
     ip=$(prop 'ip' $DISCOVERY_FILE)
+    case $NETWORK_MODE in
+    "wifi") interface='wlan0' ;;
+    "eth") interface='eth0' ;;
+    esac
 
     # check if static ip is configured
     if [[ $mode == "manual" ]]; then
         log "service_discovery" "configured to use static ip. trying: $ip"
-        if [[ $(try_ip_static "$ip") -eq 0 ]]; then
+        if try_ip_static "$ip"; then
             log "service_discovery" "MoBro application found on static IP $ip"
+            set_mobro_found "$ip"
             show_mobro "$ip"
         else
             log "service_discovery" "no MoBro application found on static ip $ip"
@@ -280,94 +302,110 @@ service_discovery() {
         return
     fi
 
+    log "service_discovery" "configured to automatic discovery using connection key"
     # check previous host if configured
     ip=$(sed -n 1p <$HOSTS_FILE) # get 1st host if present (from last successful connection)
-
     if ! [[ -z $ip || -z $key ]]; then
-        log "service_discovery" "checking previous host"
-        log "service_discovery" "trying IP: $ip with key: $key"
+        log "service_discovery" "checking previous host on $ip with key '$key'"
         try_ip "$ip" "$key"
-        if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
-            # found MoBro application -> done
-            return
-        fi
     fi
 
-    # search available IPs on the network
-    log "service_discovery" "performing arp scan"
-    case $NETWORK_MODE in
-    "wifi")
-        sudo arp-scan --interface=wlan0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>>$LOG_FILE 1>>"$HOSTS_FILE"
-        ;;
-    "eth")
-        sudo arp-scan --interface=eth0 --localnet --retry=3 --timeout=500 --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" 2>>$LOG_FILE 1>>"$HOSTS_FILE"
-        ;;
-    esac
+    if ! is_mobro_found; then
+        # search available IPs on the network via arp scan
+        log "service_discovery" "performing arp scan"
+        sudo arp-scan \
+            --interface="$interface" \
+            --localnet \
+            --retry=3 \
+            --timeout=500 \
+            --backoff=2 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" \
+            2>>$LOG_FILE 1>>"$HOSTS_FILE"
 
-    while read -r ip; do
-        log "service_discovery" "trying IP: $ip with key: $key"
-        try_ip "$ip" "$key"
-        if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
-            # found MoBro application -> done
-            return
-        fi
-    done <$HOSTS_FILE
-
-    # fallback: get current ip of pi to try all host in range
-    log "service_discovery" "fallback"
-    local pi_ip
-    case $NETWORK_MODE in
-    "wifi")
-        pi_ip=$(ifconfig wlan0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>>$LOG_FILE)
-        ;;
-    "eth")
-        pi_ip=$(ifconfig eth0 | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>>$LOG_FILE)
-        ;;
-    esac
-    if [[ -n $pi_ip ]]; then
-        local pi_ip_1 pi_ip_2 pi_ip_3 pi_ip_4
-        pi_ip_1=$(echo "$pi_ip" | cut -d . -f 1)
-        pi_ip_2=$(echo "$pi_ip" | cut -d . -f 2)
-        pi_ip_3=$(echo "$pi_ip" | cut -d . -f 3)
-        pi_ip_4=0
-        log "service_discovery" "trying all IPs in range $pi_ip_1.$pi_ip_2.$pi_ip_3.X"
-
-        local num_cores
-        num_cores=$(nproc --all)
-        while [[ $pi_ip_4 -lt 255 ]]; do
-            for j in $(seq $((4 * num_cores))); do
-                try_ip "$pi_ip_1.$pi_ip_2.$pi_ip_3.$pi_ip_4" "$key" &
-                pids[$j]=$! # remember pids of started sub processes
-                if [[ pi_ip_4 -ge 255 ]]; then
-                    break
-                fi
-                pi_ip_4=$((pi_ip_4 + 1))
-            done
-
-            # wait for all started checks to finish
-            for pid in ${pids[*]}; do
-                wait $pid
-            done
-            unset pids
-
-            # no need to continue if found
-            if [[ $(cat $MOBRO_FOUND_FLAG) -eq 1 ]]; then
-                return
+        while read -r ip; do
+            log "service_discovery" "trying IP: $ip with key: $key"
+            try_ip "$ip" "$key" &
+            pids[$j]=$! # remember pids of started sub processes
+            if is_mobro_found; then
+                break # no need to continue if found
             fi
+        done <$HOSTS_FILE
+
+        for pid in ${pids[*]}; do
+            # wait for all started checks to finish
+            wait $pid
         done
+        unset pids
     fi
 
-    if [[ $(cat $MOBRO_FOUND_FLAG) -ne 1 ]]; then
+    if ! is_mobro_found; then
+        # fallback: get current ip of pi to try all host in range
+        log "service_discovery" "fallback"
+        local pi_ip
+        pi_ip=$(ifconfig "$interface" | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>>$LOG_FILE)
+        if [[ -n $pi_ip ]]; then
+            local pi_ip_1 pi_ip_2 pi_ip_3 pi_ip_4
+            pi_ip_1=$(echo "$pi_ip" | cut -d . -f 1)
+            pi_ip_2=$(echo "$pi_ip" | cut -d . -f 2)
+            pi_ip_3=$(echo "$pi_ip" | cut -d . -f 3)
+            pi_ip_4=0
+            log "service_discovery" "trying all IPs in range $pi_ip_1.$pi_ip_2.$pi_ip_3.X"
+
+            local num_cores
+            num_cores=$(nproc --all)
+            while [[ $pi_ip_4 -lt 255 ]]; do
+                for j in $(seq $((5 * num_cores))); do
+                    try_ip "$pi_ip_1.$pi_ip_2.$pi_ip_3.$pi_ip_4" "$key" &
+                    pids[$j]=$! # remember pids of started sub processes
+                    if [[ pi_ip_4 -ge 255 ]]; then
+                        break
+                    fi
+                    pi_ip_4=$((pi_ip_4 + 1))
+                done
+
+                # wait for all started checks to finish
+                for pid in ${pids[*]}; do
+                    wait $pid
+                done
+                unset
+
+                if is_mobro_found; then
+                    break # no need to continue if found
+                fi
+            done
+        fi
+    fi
+
+    if is_mobro_found; then
+        # found MoBro application
+        log "service_discovery" "MoBro application found on IP $ip"
+        show_mobro "$(sed -n 1p <$HOSTS_FILE)"
+    else
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
         truncate -s 0 $HOSTS_FILE
-        show_image $IMAGE_NOTFOUND
+        show_image $IMAGE_NOTFOUND 5
     fi
 }
 
 background_check() {
-    log "background_check" "starting background check"
-    service_discovery
+    # check if host is still reachable
+    # if we made a successful connection the IP will be in the hosts file
+    local ip
+    ip=$(sed -n 1p <$HOSTS_FILE)
+    if [[ -z $ip ]]; then
+        log "background_check" "no previous host found. starting discovery"
+        service_discovery
+        return
+    fi
+    log "background_check" "checking for host on $ip"
+    if try_ip_static "$ip"; then
+        # connected host is still reachable => nothing to do
+        log "background_check" "host still reachable"
+    else
+        log "background_check" "host no longer reachable. starting discovery"
+        show_image $IMAGE_NOTFOUND 5
+        service_discovery
+    fi
 }
 
 wifi_check() {
@@ -424,7 +462,6 @@ wifi_check() {
     show_image $IMAGE_WIFISUCCESS 3
 
     # search network for application
-    show_image $IMAGE_DISCOVERY 2
     service_discovery
 }
 
@@ -532,7 +569,6 @@ case $NETWORK_MODE in
 "eth")
     show_image $IMAGE_ETHSUCCESS 3
     # search network for application
-    show_image $IMAGE_DISCOVERY 2
     service_discovery
     ;;
 esac
@@ -552,7 +588,7 @@ while true; do
 
     case $NETWORK_MODE in
     "wifi")
-        if [[ $(create_ap --list-running | grep wlan0 -c) -eq 0 ]]; then
+        if ! is_access_point_open; then
             # no hotspot running
             if ! [[ $(iwgetid wlan0 --raw) ]]; then
                 create_access_point
