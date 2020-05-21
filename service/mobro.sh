@@ -99,7 +99,7 @@ stop_process() {
 }
 
 stop_chrome() {
-    stop_process "chromium-browser"
+    stop_process "chromium"
     CURR_MOBRO_URL=''
 }
 
