@@ -18,7 +18,7 @@ GET /log
     returns: the current logfile (from this boot)
     params (optional):
       lines: only return the most recent n lines
-      all: return all log files (including previous boots, up to max. 10)
+      count: include log files of previous n boots (max = 10, default = 0)
 
 ------------------------------------------------------------------------------
 API endpoints:
