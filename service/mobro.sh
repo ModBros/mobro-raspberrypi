@@ -397,14 +397,22 @@ background_check() {
         service_discovery
         return
     fi
-    if try_ip_static "$ip"; then
-        # connected host is still reachable => nothing to do
-        log "background_check" "MoBro on $ip still reachable"
-    else
-        log "background_check" "MoBro on $ip no longer reachable. starting discovery"
-        show_image $IMAGE_NOTFOUND 5
-        service_discovery
-    fi
+
+    # try multiple times to make sure we didn't just drop connection for a few seconds
+    for i in {0..4}; do
+        if try_ip_static "$ip"; then
+            # reachable -> we're good
+            log "background_check" "MoBro on $ip still reachable"
+            return
+        fi
+        log "background_check" "check $i failed"
+        sleep 2
+    done
+
+    # we lost connection -> start searching again
+    log "background_check" "MoBro on $ip no longer reachable. starting discovery"
+    show_image $IMAGE_NOTFOUND 5
+    service_discovery
 }
 
 wifi_check() {
