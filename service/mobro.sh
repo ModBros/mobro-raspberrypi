@@ -397,12 +397,11 @@ background_check() {
         service_discovery
         return
     fi
-    log "background_check" "checking for host on $ip"
     if try_ip_static "$ip"; then
         # connected host is still reachable => nothing to do
-        log "background_check" "host still reachable"
+        log "background_check" "MoBro on $ip still reachable"
     else
-        log "background_check" "host no longer reachable. starting discovery"
+        log "background_check" "MoBro on $ip no longer reachable. starting discovery"
         show_image $IMAGE_NOTFOUND 5
         service_discovery
     fi
