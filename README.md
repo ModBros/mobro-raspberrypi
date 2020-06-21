@@ -8,17 +8,6 @@
 
 **Official Raspberry Pi image of MoBro - The ModBros Monitoring Software**
 
-1. [What is MoBro?](#what-is-mobro)
-2. [Windows application](#windows-application)
-3. [Raspberry Pi image](#raspberry-pi-image)
-    1. [What does this image do?](#what-does-this-image-do)
-    2. [Supported Raspberry Pi Models](#supported-raspberry-pi-models)
-    3. [Download and install](#download-and-install)
-4. [Planned further development](#planned-further-development)
-    1. [USB gadget mode](#usb-gadget-mode)
-    2. [Screensaver / Turn off screen](#screensaver--turn-off-screen)
-    3. [OverlayFS](#overlayfs)
-
 ## What is MoBro?
 ![MoBro logo](./images/mobro_logo.png)
 
@@ -57,42 +46,46 @@ All the required configuration is done via an easy web based configuration wizar
 
 No coding skills or Linux experience required. 
 
-### Supported Raspberry Pi Models
+#### Supported Raspberry Pi Models
 
 This image is ready to run on all Raspberry Pi models.  
 For wireless operation a model with built-in Wifi is required.
 
 [Supported models and known limitations](https://www.mod-bros.com/en/faq/mobro/raspberry/supported-hardware)
 
-### Download and install
+#### Download and install
 
 Detailed instructions on how to download flash and setup the image can be found here:
-
-[Download and flash](https://www.mod-bros.com/en/faq/mobro/raspberry/download)  
+[Download and flash](https://www.mod-bros.com/en/faq/mobro/raspberry/download), 
 [Setup](https://www.mod-bros.com/en/faq/mobro/raspberry/setup)
 
 ## Planned further development
 
 Major features planned for future development:
 
-### USB Gadget Mode  
+#### USB Gadget Mode  
 Make use of USB gadget mode and RNDIS on windows to enable the use of the Raspberry Pi via a single USB cable for power and data.  
 Would require no Wifi setup or ethernet cable.
 
 [GITHUB: USB gadget mode enabled in the image to allow single wire connection to machine](https://github.com/ModBros/mobro-raspberrypi/issues/1)  
 [FORUM: Using RNDIS/Ethernet to connect Raspberry Pi Zero to computer network](https://www.mod-bros.com/en/forum/t/using-rndis-ethernet-to-connect-raspberry-pi-zero-to-computer-network~926)
 
-### Screensaver / Turn off screen  
+#### Screensaver / Turn off screen  
 If the Pi doesn't power down when the PC is shut down, the display stays on an the Pi periodically tries to reconnect ot the PC.  
 We could add a setting the display some sort of screensaver in this case.  
 Or turn off the display completely (if possible).
 
 [FORUM: New Feature Request - Screensaver/Powersave Mode](https://www.mod-bros.com/en/forum/t/new-feature-request-screensaver-powersave-mode~854)
 
-### OverlayFS  
+#### Automatic updatability
+
+Updating currently requires the SD card to be flashed again with the new image. This is not ideal.
+Enable automatic update or at least manually triggered update via configuration page or rest endpoint.  
+
+
+#### OverlayFS  
 Make use of [OverlayFS](https://www.datalight.com/blog/2016/01/27/explaining-overlayfs-%E2%80%93-what-it-does-and-how-it-works/) 
 for the MoBro Raspberry Pi image to prevent SD card corruption.  
 Especially relevant if the Raspberry Pi isn't able to perform clean shutdowns.  
 E.g.: It is directly connected to and powered by the motherboard and therefore just looses power whenever the PC 
 is shut down.
-
