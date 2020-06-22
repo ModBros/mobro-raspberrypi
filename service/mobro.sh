@@ -399,14 +399,16 @@ background_check() {
     fi
 
     # try multiple times to make sure we didn't just drop connection for a few seconds
+    local response_code
     for i in {0..4}; do
-        if try_ip_static "$ip"; then
+        response_code=$(curl -o /dev/null --silent --max-time 10 --connect-timeout 5 --write-out '%{http_code}' "$ip:$MOBRO_PORT/discover")
+        if [[ $response_code == 403 || $response_code == 200 ]]; then
             # reachable -> we're good
             log "background_check" "MoBro on $ip still reachable"
             return
         fi
-        log "background_check" "check $i failed"
-        sleep 2
+        log "background_check" "check $i failed with code $response_code"
+        sleep 5
     done
 
     # we lost connection -> start searching again
