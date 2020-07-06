@@ -55,3 +55,29 @@ function parseProperties($filePath)
     }
     return $result;
 }
+
+function getDriverScripts($dir, $prefix)
+{
+    $result = array();
+    foreach (scandir($dir) as $key => $value) {
+        $full_path = Constants::DIR_DRIVER_GOODTFT . DIRECTORY_SEPARATOR . $value;
+        if (!is_dir($full_path)) {
+            if (fnmatch('*show', $value)) {
+                $result[$full_path] = $prefix . " - " . $value;
+            }
+        }
+    }
+    return $result;
+}
+
+function getDrivers()
+{
+    return array_merge(
+        [
+            'hdmi' => 'HDMI',
+            'manual' => 'Manual installation'
+        ],
+        getDriverScripts(Constants::DIR_DRIVER_GOODTFT, 'GoodTFT'),
+        getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
+    );
+}

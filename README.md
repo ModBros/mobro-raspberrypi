@@ -56,7 +56,7 @@ For wireless operation a model with built-in Wifi is required.
 
 ### Download and install
 
-Detailed instructions on how to download flash and setup the image can be found here:
+Detailed instructions on how to download flash and setup the image can be found here:  
 [Download and flash](https://www.mod-bros.com/en/faq/mobro/raspberry/download), 
 [Setup](https://www.mod-bros.com/en/faq/mobro/raspberry/setup)
 

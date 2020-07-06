@@ -109,6 +109,13 @@ $props = parseProperties(Constants::FILE_DISCOVERY);
 $storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
 $storedKey = getOrDefault($props['key'], 'mobro');
 $storedIp = getOrDefault($props['ip'], '');
+
+$props = parseProperties(Constants::FILE_DISPLAY);
+$storedDriver = getOrDefault($props['driver'], 'hdmi');
+$storedRotation = getOrDefault($props['rotation'], '0');
+
+$drivers = getDrivers();
+
 ?>
 
 <div id="container" class="container">
@@ -147,6 +154,7 @@ $storedIp = getOrDefault($props['ip'], '');
   <div class="card mt-3">
     <h4 class="card-header">Current status / configuration</h4>
     <div class="card-body">
+
       <div class="row confirmation-header">
         <div class="col-1"></div>
         <div class="col-10">Network Configuration</div>
@@ -154,53 +162,55 @@ $storedIp = getOrDefault($props['ip'], '');
       <div class="row">
         <div class="col-1"></div>
         <div class="col-4 confirmation-title">Mode</div>
-        <div class="col" id="summaryNetworkMode">
+        <div class="col">
             <?php echo $ethConnected ? 'Ethernet' : 'Wireless' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"></div>
         <div class="col-4 confirmation-title">Connected</div>
-        <div class="col" id="summaryNetworkMode">
+        <div class="col">
             <?php echo $connected ? 'Connected' : 'Not connected' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
         <div class="col-4 confirmation-title">SSID</div>
-        <div class="col" id="summarySSID">
+        <div class="col">
             <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $storedSsid ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-key"></i></span></div>
         <div class="col-4 confirmation-title">Password</div>
-        <div class="col" id="summaryPW">
+        <div class="col">
             <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : str_repeat("*", strlen($storedPw)) ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
         <div class="col-4 confirmation-title">Country</div>
-        <div class="col" id="summaryCountry">
+        <div class="col">
             <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $storedCountry ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
         <div class="col-4 confirmation-title">Standard</div>
-        <div class="col" id="summarySecurity">
+        <div class="col">
             <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : getSecurityMode($storedWpa) ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
         <div class="col-4 confirmation-title">Hidden network</div>
-        <div class="col" id="summaryHiddenNet">
+        <div class="col">
             <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : ($storedHidden == '0' ? "No" : "Yes") ?>
         </div>
       </div>
+
       <hr>
+
       <div class="row mt-3 confirmation-header">
         <div class="col-1"></div>
         <div class="col-10">PC Connection</div>
@@ -208,22 +218,43 @@ $storedIp = getOrDefault($props['ip'], '');
       <div class="row">
         <div class="col-1"></div>
         <div class="col-4 confirmation-title">Mode</div>
-        <div class="col" id="summaryPcConnMode">
+        <div class="col">
             <?php echo $storedDiscoveryMode == 'auto' ? 'Automatic discovery' : 'Static IP' ?>
         </div>
       </div>
-      <div class="row" id="summaryConKeyRow">
+      <div class="row">
         <div class="col-1"><span><i class="fas fa-search"></i></span></div>
         <div class="col-4 confirmation-title">Network name</div>
-        <div class="col" id="summaryConKey">
+        <div class="col">
             <?php echo $storedDiscoveryMode == 'auto' ? $storedKey : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
-      <div class="row" id="summaryIpRow">
+      <div class="row">
         <div class="col-1"><span><i class="fas fa-at"></i></span></div>
         <div class="col-4 confirmation-title">IP address</div>
-        <div class="col" id="summaryIp">
+        <div class="col">
             <?php echo $storedDiscoveryMode == 'auto' ? '<span><i class="fas fa-times"></i></span>' : $storedIp ?>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row mt-3 confirmation-header">
+        <div class="col-1"></div>
+        <div class="col-10">Display</div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-desktop"></i></span></div>
+        <div class="col-4 confirmation-title">Driver</div>
+        <div class="col">
+            <?php echo $drivers[$storedDriver] ?>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-sync-alt"></i></span></div>
+        <div class="col-4 confirmation-title">Rotation</div>
+        <div class="col">
+            <?php echo $storedRotation ?>°
         </div>
       </div>
     </div>

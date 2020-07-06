@@ -32,7 +32,7 @@ cp -f /home/modbros/mobro-raspberrypi/config/wpa_supplicant_clean.conf /etc/wpa_
 : >/home/modbros/mobro-raspberrypi/data/hosts
 : >/home/modbros/mobro-raspberrypi/data/wifi
 : >/home/modbros/mobro-raspberrypi/data/ssids
-: >/home/modbros/mobro-raspberrypi/data/driver
+: >/home/modbros/mobro-raspberrypi/data/display
 
 echo "0" >/home/modbros/mobro-raspberrypi/data/mobro_found
 

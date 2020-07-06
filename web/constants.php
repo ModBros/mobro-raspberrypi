@@ -9,7 +9,7 @@ class Constants
     public const FILE_DISCOVERY = self::BASE_PATH . '/data/discovery';
     public const FILE_SSID = self::BASE_PATH . '/data/ssids';
     public const FILE_WIFI = self::BASE_PATH . '/data/wifi';
-    public const FILE_DRIVER = self::BASE_PATH . '/data/driver';
+    public const FILE_DISPLAY = self::BASE_PATH . '/data/display';
 
     public const DIR_LOG = self::BASE_PATH . '/log';
     public const DIR_DRIVER_GOODTFT = self::HOME_DIR . '/display-drivers/GoodTFT';

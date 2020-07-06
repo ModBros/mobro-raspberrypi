@@ -156,20 +156,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 include '../constants.php';
 include '../util.php';
 
-function getDriverScripts($dir, $prefix)
-{
-    $result = array();
-    foreach (scandir($dir) as $key => $value) {
-        $full_path = Constants::DIR_DRIVER_GOODTFT . DIRECTORY_SEPARATOR . $value;
-        if (!is_dir($full_path)) {
-            if (fnmatch('*show', $value)) {
-                $result[$prefix . " - " . $value] = $full_path;
-            }
-        }
-    }
-    return $result;
-}
-
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
@@ -192,6 +178,10 @@ $storedCountry = getOrDefault($props['country'], 'AT');
 $storedHidden = getOrDefault($props['hidden'], '0');
 $storedWpa = getOrDefault($props['wpa'], '');
 
+$props = parseProperties(Constants::FILE_DISPLAY);
+$storedDriver = getOrDefault($props['driver'], 'hdmi');
+$storedRotation = getOrDefault($props['rotation'], '0');
+
 $storedSsIds = array();
 $file = fopen(Constants::FILE_SSID, "r");
 while ($file && !feof($file)) {
@@ -202,11 +192,6 @@ while ($file && !feof($file)) {
 }
 closeFile($file);
 $storedSsIds = array_unique($storedSsIds);
-
-$drivers = array_merge(
-    getDriverScripts(Constants::DIR_DRIVER_GOODTFT, 'GoodTFT'),
-    getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
-);
 
 ?>
 
@@ -498,33 +483,10 @@ $drivers = array_merge(
           <div class="multisteps-form__panel shadow p-4 rounded bg-white">
             <h3 class="multisteps-form__title text-center">Screen setup</h3>
             <div class="multisteps-form__content">
-              <div class="form-row mt-4">
-                <div class="col">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="screen" id="screen1" value="skip" checked>
-                    <label class="form-check-label" for="screen1">
-                      Skip driver installation
-                    </label>
-                    <small id="screen1" class="form-text text-muted">
-                      <ul>
-                        <li>Connected via HDMI</li>
-                        <li>Already installed, display is working</li>
-                        <li>I'll install the required drivers manually myself</li>
-                      </ul>
-                    </small>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="screen" id="screen2" value="install">
-                    <label class="form-check-label" for="screen2">
-                      Install the selected display driver below <span><i class="fas fa-level-down-alt"></i></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
               <div class="form-row mt-2">
                 <div class="col">
                   <label class="form-check-label form-label" for="driverInput">
-                    Display driver selection
+                    Display driver
                   </label>
                   <div class="input-group">
                     <div class="input-group-prepend">
@@ -532,18 +494,42 @@ $drivers = array_merge(
                         <i class="fas fa-desktop"></i>
                       </span>
                     </div>
-                    <select id="driverInput" name="driver" class="form-control" aria-describedby="staticIpHelp"
-                            disabled>
-                      <option value="" selected>No driver selected</option>
+                    <select id="driverInput" name="driver" class="form-control" aria-describedby="driverInputHelp">
                         <?php
-                        foreach ($drivers as $key => $value) {
-                            echo '<option value="' . $value . '">' . $key . '</option>';
+                        foreach (getDrivers() as $key => $value) {
+                            $selected = $storedDriver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
                         ?>
                     </select>
                   </div>
                   <small id="driverInputHelp" class="form-text text-muted">
-                    Check your display and select the corresponding driver from the list
+                    Check your display and select the corresponding driver from the list if required<br>
+                  </small>
+                </div>
+              </div>
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="rotationInput">
+                    Rotation
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-sync-alt"></i>
+                      </span>
+                    </div>
+                    <select id="rotationInput" name="rotation" class="form-control"
+                            aria-describedby="rotationInputHelp">
+                      <option value="0" <?php echo $storedRotation == '0' ? 'selected' : '' ?>>0°</option>
+                      <option value="90" <?php echo $storedRotation == '90' ? 'selected' : '' ?>>90°</option>
+                      <option value="180" <?php echo $storedRotation == '180' ? 'selected' : '' ?>>180°</option>
+                      <option value="270" <?php echo $storedRotation == '270' ? 'selected' : '' ?>>270°</option>
+                    </select>
+                  </div>
+                  <small id="rotationInputHelp" class="form-text text-muted">
+                    Rotation of the image in degrees (0° = no rotation)
                   </small>
                 </div>
               </div>
@@ -626,15 +612,20 @@ $drivers = array_merge(
               </div>
               <hr>
               <div class="form-row mt-2 confirmation-header">Screen</div>
-              <div class="form-row">
-                <div class="col-1"></div>
-                <div class="col-4 confirmation-title">Mode</div>
-                <div class="col" id="summaryScreenMode">Skip driver installation</div>
-              </div>
+              <!--              <div class="form-row">-->
+              <!--                <div class="col-1"></div>-->
+              <!--                <div class="col-4 confirmation-title">Mode</div>-->
+              <!--                <div class="col" id="summaryScreenMode">Skip driver installation</div>-->
+              <!--              </div>-->
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-desktop"></i></span></div>
                 <div class="col-4 confirmation-title">Driver</div>
-                <div class="col" id="summaryDriver"><span><i class="fas fa-times"></i></span></div>
+                <div class="col" id="summaryDriver"></div>
+              </div>
+              <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-sync-alt"></i></span></div>
+                <div class="col-4 confirmation-title">Rotation</div>
+                <div class="col" id="summaryRotation"></div>
               </div>
 
               <div class="row mt-4 alert alert-info font-weight-normal">
@@ -775,6 +766,8 @@ $drivers = array_merge(
   summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
   summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '<span><i class="fas fa-times"></i></span>');
   summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
+  $('#summaryDriver').html($('#driverInput option:selected').text())
+  $('#summaryRotation').html($('#rotationInput option:selected').text());
 
   $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
   $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
@@ -803,22 +796,13 @@ $drivers = array_merge(
     summaryConKey.html('<span><i class="fas fa-times"></i></span>');
     summaryIp.html($('#staticIpInput').val());
   });
+
   $('#staticIpInput').on('change', _ => summaryIp.html($('#staticIpInput').val()));
   $('#connectionKeyInput').on('change', _ => summaryConKey.html($('#connectionKeyInput').val()));
 
-  // driver install toggle
-  let driverInput = $('#driverInput');
-  driverInput.on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
-  $('#screen1').on('click', _ => {
-    driverInput.attr('disabled', 'disabled');
-    driverInput.removeClass('border-primary');
-    summaryScreenMode.html('Skip driver installation');
-  });
-  $('#screen2').on('click', _ => {
-    driverInput.removeAttr('disabled');
-    driverInput.addClass('border-primary');
-    summaryScreenMode.html('Install driver');
-  });
+
+  $('#driverInput').on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
+  $('#rotationInput').on('change', _ => $('#summaryRotation').html($('#rotationInput option:selected').text()));
 
   $("#submitBtn").on("click", function () {
     $(this).prop("disabled", true);

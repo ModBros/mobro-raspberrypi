@@ -28,8 +28,9 @@ CONF_DIR='/home/modbros/mobro-raspberrypi/config'
 WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"
 WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
 WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
+BOOT_CONFIG="$CONF_DIR/config.txt"
 
-DRIVER_FILE="$DATA_DIR/driver"
+DISPLAY_FILE="$DATA_DIR/display"
 WIFI_FILE="$DATA_DIR/wifi"
 LOG_FILE="$LOG_DIR/log.txt"
 
@@ -139,18 +140,30 @@ wifi_config() {
     sudo mv -f $WPA_CONFIG_TEMP /etc/wpa_supplicant/wpa_supplicant.conf
 }
 
-driver() {
-    local driver
-    driver=$(sed -n 1p <$DRIVER_FILE)
+display() {
+    local driver, rotation
+    driver=$(prop 'driver' $DISPLAY_FILE)
+    rotation=$(prop 'rotation' $DISPLAY_FILE)
 
-    if [[ -n "$driver" ]]; then
-        : >$DRIVER_FILE
-        cd "$(dirname "$driver")" || exit
-        log "configuration" "installing new display driver: $driver"
-        sudo /bin/bash "$driver" >>$LOG_FILE
-    else
-        log "configuration" "skipping display driver installation"
-    fi
+    case $driver in
+    hdmi)
+        log "configuration" "display driver: HDMI"
+        cat "$BOOT_CONFIG" >/boot/config.txt
+        sudo echo "$((rotation / 90))" >>/boot/config.txt
+        ;;
+    manual)
+        log "configuration" "manual display driver installation (skipping)"
+        ;;
+    *)
+        if [[ -n "$driver" ]]; then
+            cd "$(dirname "$driver")" || exit
+            log "configuration" "installing new display driver: $driver"
+            sudo /bin/bash "$driver" "$rotation" >>$LOG_FILE
+        else
+            log "configuration" "skipping display driver installation"
+        fi
+        ;;
+    esac
 }
 
 # ====================================================================================================================
@@ -167,8 +180,8 @@ log "configuration" "starting to apply new configuration"
 # set new wifi configuration
 wifi_config
 
-# install driver is it was selected
-driver
+# handle display drivers
+display
 
 # reboot the Pi
 log "configuration" "done - rebooting"

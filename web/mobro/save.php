@@ -51,8 +51,8 @@ $connKey = getOrDefault('key', 'mobro');
 $ip = getOrDefault('ip', '');
 
 // screen
-$screenMode = getOrDefault('screen', 'hdmi');
 $driver = getOrDefault('driver', '');
+$rotation = getOrDefault('rotation', '0');
 
 // write network file if in wifi mode
 if ($netMode == 'wifi') {
@@ -73,10 +73,11 @@ $discoveryData =
     "ip={$ip}\n";
 file_put_contents(Constants::FILE_DISCOVERY, $discoveryData, LOCK_EX);
 
-// write driver file if selected
-if ($screenMode == 'install' && !empty($driver)) {
-    file_put_contents(Constants::FILE_DRIVER, $driver, LOCK_EX);
-}
+// write display file
+$displayData =
+    "driver={$driver}\n" .
+    "rotation={$rotation}\n";
+file_put_contents(Constants::FILE_DISPLAY, $displayData, LOCK_EX);
 
 // apply config and reboot the Pi
 shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG);
