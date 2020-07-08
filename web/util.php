@@ -63,20 +63,39 @@ function getDriverScripts($dir, $prefix)
         $full_path = Constants::DIR_DRIVER_GOODTFT . DIRECTORY_SEPARATOR . $value;
         if (!is_dir($full_path)) {
             if (fnmatch('*show', $value)) {
-                $result[$full_path] = $prefix . " - " . $value;
+                if (isset($prefix)) {
+                    $result[$full_path] = $prefix . " - " . $value;
+                } else {
+                    $result[$full_path] = $value;
+                }
             }
         }
     }
     return $result;
 }
 
-function getDrivers()
+function getGoodTFTDrivers()
+{
+    return getDriverScripts(Constants::DIR_DRIVER_GOODTFT, null);
+}
+
+function getWaveshareDrivers()
+{
+    return getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, null);
+}
+
+function getOtherDriverOptions()
+{
+    return [
+        'hdmi' => 'HDMI',
+        'manual' => 'Manual installation'
+    ];
+}
+
+function getAllDrivers()
 {
     return array_merge(
-        [
-            'hdmi' => 'HDMI',
-            'manual' => 'Manual installation'
-        ],
+        getOtherDriverOptions(),
         getDriverScripts(Constants::DIR_DRIVER_GOODTFT, 'GoodTFT'),
         getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
     );

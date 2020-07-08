@@ -114,7 +114,7 @@ $props = parseProperties(Constants::FILE_DISPLAY);
 $storedDriver = getOrDefault($props['driver'], 'hdmi');
 $storedRotation = getOrDefault($props['rotation'], '0');
 
-$drivers = getDrivers();
+$drivers = getAllDrivers();
 
 ?>
 

@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
 
   <link href="../vendor/bootstrap.min.css" rel="stylesheet"/>
+  <link href="../vendor/bootstrap-select.min.css" rel="stylesheet"/>
   <link href="../vendor/fontawesome-free-5.13.0-web/css/all.min.css" rel="stylesheet"/>
 
   <style>
@@ -142,10 +143,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       border-color: #e13300;
       color: white;
     }
+
+    .bootstrap-select .btn {
+      border: 1px solid #ced4da;
+    }
+
+    .bootstrap-select .dropdown-item.active,
+    .bootstrap-select .dropdown-item:active {
+      background-color: #f30;
+    }
   </style>
 
   <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
   <script src="../vendor/bootstrap.bundle.min.js"></script>
+  <script src="../vendor/bootstrap-select.min.js"></script>
 
 </head>
 
@@ -300,7 +311,8 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-globe-europe"></i>
                       </span>
                     </div>
-                    <select id="countryInput" name="country" class="form-control" aria-describedby="countryInputHelp"
+                    <select id="countryInput" name="country" class="form-control selectpicker"
+                            aria-describedby="countryInputHelp"
                         <?php if ($connectionMode == 'eth') echo 'disabled' ?>
                     >
                         <?php
@@ -342,7 +354,7 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-lock"></i>
                       </span>
                       </div>
-                      <select id="wpaInput" name="wpa" class="form-control" aria-describedby="wpaInputHelp"
+                      <select id="wpaInput" name="wpa" class="form-control selectpicker" aria-describedby="wpaInputHelp"
                           <?php if ($connectionMode == 'eth') echo 'disabled' ?>
                       >
                         <option value="" <?php if (empty($storedWpa)) echo 'selected="selected"' ?>>
@@ -494,12 +506,25 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-desktop"></i>
                       </span>
                     </div>
-                    <select id="driverInput" name="driver" class="form-control" aria-describedby="driverInputHelp">
+                    <select id="driverInput" name="driver" class="form-control selectpicker"
+                            aria-describedby="driverInputHelp">
                         <?php
-                        foreach (getDrivers() as $key => $value) {
+                        foreach (getOtherDriverOptions() as $key => $value) {
                             $selected = $storedDriver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
+                        echo '<optgroup label="GoodTFT">';
+                        foreach (getGoodTFTDrivers() as $key => $value) {
+                            $selected = $storedDriver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
+                        echo '</optgroup>';
+                        echo '<optgroup label="WaveShare">';
+                        foreach (getWaveshareDrivers() as $key => $value) {
+                            $selected = $storedDriver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
+                        echo '</optgroup>';
                         ?>
                     </select>
                   </div>
@@ -520,7 +545,7 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-sync-alt"></i>
                       </span>
                     </div>
-                    <select id="rotationInput" name="rotation" class="form-control"
+                    <select id="rotationInput" name="rotation" class="form-control selectpicker"
                             aria-describedby="rotationInputHelp">
                       <option value="0" <?php echo $storedRotation == '0' ? 'selected' : '' ?>>0°</option>
                       <option value="90" <?php echo $storedRotation == '90' ? 'selected' : '' ?>>90°</option>
@@ -529,7 +554,8 @@ $storedSsIds = array_unique($storedSsIds);
                     </select>
                   </div>
                   <small id="rotationInputHelp" class="form-text text-muted">
-                    Rotation of the image in degrees (0° = no rotation)
+                    Rotation of the display in degrees (0° = no rotation)<br>
+                    Does not apply on manual driver installation
                   </small>
                 </div>
               </div>
