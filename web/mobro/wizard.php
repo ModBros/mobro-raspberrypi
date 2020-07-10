@@ -319,7 +319,9 @@ $storedSsIds = array_unique($storedSsIds);
                         if (($handle = fopen("../resources/country_codes.csv", "r")) !== FALSE) {
                             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                                 $selected = $data[1] == $storedCountry ? 'selected="selected"' : '';
-                                echo '<option value="' . $data[1] . '" ' . $selected . '>' . $data[0] . '</option>';
+                                $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $data[1] . ".png") ? $data[1] : '_unknown') . ".png";
+                                echo '<option data-content="<img src=\'' . $flag . '\' height=\'24px\' class=\'mr-2\'>' . $data[0]
+                                    . '" value="' . $data[1] . '" ' . $selected . '>' . $data[0] . '</option>';
                             }
                             fclose($handle);
                         }
@@ -555,7 +557,7 @@ $storedSsIds = array_unique($storedSsIds);
                   </div>
                   <small id="rotationInputHelp" class="form-text text-muted">
                     Rotation of the display in degrees (0° = no rotation)<br>
-                    Does not apply on manual driver installation
+                    Does not apply on manual driver installation!
                   </small>
                 </div>
               </div>
@@ -638,11 +640,6 @@ $storedSsIds = array_unique($storedSsIds);
               </div>
               <hr>
               <div class="form-row mt-2 confirmation-header">Screen</div>
-              <!--              <div class="form-row">-->
-              <!--                <div class="col-1"></div>-->
-              <!--                <div class="col-4 confirmation-title">Mode</div>-->
-              <!--                <div class="col" id="summaryScreenMode">Skip driver installation</div>-->
-              <!--              </div>-->
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-desktop"></i></span></div>
                 <div class="col-4 confirmation-title">Driver</div>

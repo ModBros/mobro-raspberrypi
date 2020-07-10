@@ -270,7 +270,7 @@ $drivers = getAllDrivers();
       <img src="../resources/modbros-logo.svg" height="70" class="mr-3 ml-3">
       <p>
         Created with <span><i class="far fa-heart" style="color: #ff0066"></i></span> in Austria
-        <img src="../resources/austria.svg" height="12px"><br>
+        <img src="../resources/flags/AT.png" height="24"><br>
         <span><i class="far fa-copyright"></i></span> ModBros <?php echo date("Y"); ?><br/>
         Contact: <a href="https://www.mod-bros.com" target="_blank">mod-bros.com</a><br/>
       </p>
