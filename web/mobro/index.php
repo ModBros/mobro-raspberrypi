@@ -191,7 +191,10 @@ $drivers = getAllDrivers();
         <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
         <div class="col-4 confirmation-title">Country</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $storedCountry ?>
+            <?php
+            $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $storedCountry . ".png") ? $storedCountry : '_unknown') . ".png";
+            echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : '<img src="' . $flag . '" height="24px" class="mr-2">' . $storedCountry
+            ?>
         </div>
       </div>
       <div class="row">
