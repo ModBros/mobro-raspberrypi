@@ -149,7 +149,10 @@ display() {
     hdmi)
         log "configuration" "display driver: HDMI"
         cat "$BOOT_CONFIG" >/boot/config.txt
-        sudo echo "$((rotation / 90))" >>/boot/config.txt
+        log "configuration" "display rotation: $rotation"
+        echo -e "\ndisplay_rotate=$((rotation / 90))" >>/boot/config.txt
+        sudo rm -f /usr/share/X11/xorg.conf.d/*
+        sudo rm -f /etc/X11/xorg.conf.d/*
         ;;
     manual)
         log "configuration" "manual display driver installation (skipping)"
@@ -158,6 +161,7 @@ display() {
         if [[ -n "$driver" ]]; then
             cd "$(dirname "$driver")" || exit
             log "configuration" "installing new display driver: $driver"
+            log "configuration" "display rotation: $rotation"
             sudo /bin/bash "$driver" "$rotation" >>$LOG_FILE
         else
             log "configuration" "skipping display driver installation"

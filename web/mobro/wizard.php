@@ -556,7 +556,7 @@ $storedSsIds = array_unique($storedSsIds);
                     </select>
                   </div>
                   <small id="rotationInputHelp" class="form-text text-muted">
-                    Rotation of the display in degrees (0° = no rotation)<br>
+                    Clockwise rotation of the display in degrees (0° = no rotation)<br>
                     Does not apply on manual driver installation!
                   </small>
                 </div>
