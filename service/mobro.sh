@@ -253,7 +253,9 @@ is_mobro_found() {
 }
 
 try_ip_static() {
-    if [[ $(curl -o /dev/null --silent --max-time 5 --connect-timeout 3 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover") -eq 403 ]]; then
+    local response_code
+    response_code=$(curl -o /dev/null --silent --connect-timeout 5 --retry 2 --write-out '%{http_code}' "$1:$MOBRO_PORT/discover")
+    if [[ $response_code == 403 || $response_code == 200 ]]; then
         # 403 -> mobro is there but wrong connection key.
         # since we're going for static ip, we don't need to match the key
         set_mobro_found "$1"
@@ -400,19 +402,15 @@ background_check() {
 
     # try multiple times to make sure we didn't just drop connection for a few seconds
     local response_code
-    for i in {0..4}; do
-        response_code=$(curl -o /dev/null --silent --max-time 10 --connect-timeout 5 --write-out '%{http_code}' "$ip:$MOBRO_PORT/discover")
-        if [[ $response_code == 403 || $response_code == 200 ]]; then
-            # reachable -> we're good
-            log "background_check" "MoBro on $ip still reachable"
-            return
-        fi
-        log "background_check" "check $i failed with code $response_code"
-        sleep 5
-    done
+    response_code=$(curl -o /dev/null --silent --connect-timeout 5 --retry 5 --write-out '%{http_code}' "$ip:$MOBRO_PORT/discover")
+    if [[ $response_code == 403 || $response_code == 200 ]]; then
+        # reachable -> we're good
+        log "background_check" "MoBro on $ip still reachable"
+        return
+    fi
 
     # we lost connection -> start searching again
-    log "background_check" "MoBro on $ip no longer reachable. starting discovery"
+    log "background_check" "MoBro on $ip no longer reachable (code $response_code). starting discovery"
     show_image $IMAGE_NOTFOUND 5
     service_discovery
 }
