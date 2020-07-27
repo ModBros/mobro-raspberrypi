@@ -11,19 +11,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * added readme
 * added changelog
 * support for display rotation
+* show flag in country selection
 
 ### Changed
 
 * reduced logging in background check
 * multiple connection attempts in background check  
 (to avoid disconnection after just one bad request)
+* better styling for select items
 
 
 ## [v10](https://github.com/ModBros/mobro-raspberrypi/compare/v9...v10) - 2020-05-21
-
-### Changed
-
-* code cleanup and refactoring
 
 ### Fixed
 
@@ -52,7 +50,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * disabled swapping
 * mount /var/run and /var/log as tmpfs 
 * updated _config.txt_
-* code refactoring 
 * major project restructuring
 * renamed service
 * adapted parameters for log endpoint
