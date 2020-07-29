@@ -60,7 +60,7 @@ function getDriverScripts($dir, $prefix)
 {
     $result = array();
     foreach (scandir($dir) as $key => $value) {
-        $full_path = Constants::DIR_DRIVER_GOODTFT . DIRECTORY_SEPARATOR . $value;
+        $full_path = $dir . DIRECTORY_SEPARATOR . $value;
         if (!is_dir($full_path)) {
             if (fnmatch('*show', $value)) {
                 if (isset($prefix)) {
