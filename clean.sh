@@ -44,5 +44,10 @@ echo "ip=" >>/home/modbros/mobro-raspberrypi/data/discovery
 rm -rf /home/modbros/.cache/*
 : >/home/modbros/.bash_history
 
+# reset driver
+cat /home/modbros/mobro-raspberrypi/config/config.txt >/boot/config.txt
+cat /home/modbros/mobro-raspberrypi/config/99-fbturbo.conf >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
+sudo rm -rf /etc/X11/xorg.conf.d/*
+
 # overwrite free space of partition
 #sfill -f -z -l -l -v /

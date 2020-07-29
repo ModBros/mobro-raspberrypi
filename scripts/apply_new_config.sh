@@ -29,6 +29,7 @@ WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"
 WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
 WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
 BOOT_CONFIG="$CONF_DIR/config.txt"
+FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 
 DISPLAY_FILE="$DATA_DIR/display"
 WIFI_FILE="$DATA_DIR/wifi"
@@ -151,7 +152,7 @@ display() {
         cat "$BOOT_CONFIG" >/boot/config.txt
         log "configuration" "display rotation: $rotation"
         echo -e "\ndisplay_rotate=$((rotation / 90))" >>/boot/config.txt
-        sudo rm -f /usr/share/X11/xorg.conf.d/*
+        cat "$FBTURBO_CONFIG" >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
         sudo rm -f /etc/X11/xorg.conf.d/*
         ;;
     manual)
