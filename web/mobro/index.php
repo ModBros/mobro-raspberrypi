@@ -47,7 +47,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       box-shadow: 0px 0px 5px black;
     }
 
-    .btn-wizard:hover {
+    .btn-wizard: {
       background-color: #e13300;
       border-color: #e13300;
       color: white;
@@ -113,8 +113,11 @@ $storedIp = getOrDefault($props['ip'], '');
 $props = parseProperties(Constants::FILE_DISPLAY);
 $storedDriver = getOrDefault($props['driver'], 'hdmi');
 $storedRotation = getOrDefault($props['rotation'], '0');
+$storedScreensaver = getOrDefault($props['screensaver'], 'disabled');
+$storedDelay = getOrDefault($props['delay'], '1');
 
 $drivers = getAllDrivers();
+$screensavers = getScreensavers();
 
 ?>
 
@@ -124,7 +127,7 @@ $drivers = getAllDrivers();
     <div class="card-header">
       <div class="row">
         <div class="col">
-          <img src="../resources/mobro-logo.svg" width="300">
+          <img src="../resources/mobro-black.svg" width="300">
           <h4 class="text-uppercase my-3">The custom monitoring solution without stupid cables</h4>
         </div>
         <div class="col-auto">
@@ -258,6 +261,20 @@ $drivers = getAllDrivers();
         <div class="col-4 confirmation-title">Rotation</div>
         <div class="col">
             <?php echo $storedRotation ?>°
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-moon"></i></span></div>
+        <div class="col-4 confirmation-title">Screensaver</div>
+        <div class="col">
+            <?php echo $screensavers[$storedScreensaver] ?>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-stopwatch"></i></span></div>
+        <div class="col-4 confirmation-title">Screensaver delay</div>
+        <div class="col">
+            <?php echo $storedScreensaver == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $storedDelay . ' minute(s)' ?>
         </div>
       </div>
     </div>

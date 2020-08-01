@@ -100,3 +100,9 @@ function getAllDrivers()
         getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
     );
 }
+
+function getScreensavers()
+{
+    return [
+    ];
+}

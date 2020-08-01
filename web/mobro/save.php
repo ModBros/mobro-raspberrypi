@@ -53,6 +53,8 @@ $ip = getOrDefault('ip', '');
 // screen
 $driver = getOrDefault('driver', '');
 $rotation = getOrDefault('rotation', '0');
+$screensaver = getOrDefault('screensaver', 'disabled');
+$delay = getOrDefault('screensaverDelay', '1');
 
 // write network file if in wifi mode
 if ($netMode == 'wifi') {
@@ -76,7 +78,9 @@ file_put_contents(Constants::FILE_DISCOVERY, $discoveryData, LOCK_EX);
 // write display file
 $displayData =
     "driver={$driver}\n" .
-    "rotation={$rotation}\n";
+    "rotation={$rotation}\n".
+    "screensaver={$screensaver}\n" .
+    "delay={$delay}\n";
 file_put_contents(Constants::FILE_DISPLAY, $displayData, LOCK_EX);
 
 // apply config and reboot the Pi

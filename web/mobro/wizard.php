@@ -144,6 +144,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       color: white;
     }
 
+    .btn-outline-primary,
+    .btn-outline-primary:active,
+    .btn-outline-primary:disabled,
+    .btn-outline-primary:visited {
+      color: #f30;
+      background-color: white;
+      border-color: #f30;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: #f30;
+      border-color: #f30;
+      color: white;
+    }
+
     .bootstrap-select .btn {
       border: 1px solid #ced4da;
     }
@@ -192,6 +207,8 @@ $storedWpa = getOrDefault($props['wpa'], '');
 $props = parseProperties(Constants::FILE_DISPLAY);
 $storedDriver = getOrDefault($props['driver'], 'hdmi');
 $storedRotation = getOrDefault($props['rotation'], '0');
+$storedScreensaver = getOrDefault($props['screensaver'], 'disabled');
+$storedDelay = getOrDefault($props['delay'], '1');
 
 $storedSsIds = array();
 $file = fopen(Constants::FILE_SSID, "r");
@@ -562,6 +579,66 @@ $storedSsIds = array_unique($storedSsIds);
                 </div>
               </div>
 
+              <hr>
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="screensaverInput">
+                    Screensaver
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-moon"></i>
+                      </span>
+                    </div>
+                    <select id="screensaverInput" name="screensaver" class="form-control selectpicker"
+                            aria-describedby="screensaverInputHelp">
+                        <?php
+                        foreach (getScreensavers() as $key => $value) {
+                            $selected = $storedScreensaver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
+                        ?>
+                    </select>
+                  </div>
+                  <small id="screensaverInputHelp" class="form-text text-muted">
+                    The screensaver to display in case the Raspberry Pi looses connection to the monitored PC
+                  </small>
+                </div>
+              </div>
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="screensaverDelayInput">
+                    Delay
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-stopwatch"></i>
+                      </span>
+                    </div>
+                    <input class="form-control" type="number" name="screensaverDelay" value="<?php echo $storedDelay ?>"
+                           min="0" id="screensaverDelayInput"
+                        <?php if ($storedScreensaver == 'disabled') echo 'disabled' ?>
+                           aria-describedby="screensaverDelayInputHelp"
+                    >
+                    <span class="mt-2 ml-1 mr-3">minute(s)</span>
+                  </div>
+                  <small id="screensaverDelayInputHelp" class="form-text text-muted">
+                    The delay in minutes before the screensaver is shown
+                  </small>
+                </div>
+                <div class="col-auto">
+                  <button id="screensaverPreviewButton" class="btn btn-outline-primary mt-4" type="button"
+                      <?php if ($storedScreensaver == 'disabled') echo 'disabled' ?>
+                          title="Preview">
+                    Preview
+                  </button>
+                </div>
+              </div>
+
               <div class="button-row d-flex mt-4">
                 <button class="btn btn-primary js-btn-prev" type="button" title="Prev">
                   <span><i class="fas fa-chevron-circle-left"></i></span> Prev
@@ -649,6 +726,16 @@ $storedSsIds = array_unique($storedSsIds);
                 <div class="col-1"><span><i class="fas fa-sync-alt"></i></span></div>
                 <div class="col-4 confirmation-title">Rotation</div>
                 <div class="col" id="summaryRotation"></div>
+              </div>
+              <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-moon"></i></span></div>
+                <div class="col-4 confirmation-title">Screensaver</div>
+                <div class="col" id="summaryScreensaver"></div>
+              </div>
+              <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-stopwatch"></i></span></div>
+                <div class="col-4 confirmation-title">Screensaver delay</div>
+                <div class="col" id="summaryScreensaverDelay"></div>
               </div>
 
               <div class="row mt-4 alert alert-info font-weight-normal">
@@ -772,6 +859,8 @@ $storedSsIds = array_unique($storedSsIds);
   const summaryConKey = $('#summaryConKey');
   const summaryIp = $('#summaryIp');
   const summaryScreenMode = $('#summaryScreenMode');
+  const summaryScreensaver = $('#summaryScreensaver');
+  const summaryScreensaverDelay = $('#summaryScreensaverDelay');
 
   // network
   <?php
@@ -791,6 +880,8 @@ $storedSsIds = array_unique($storedSsIds);
   summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
   $('#summaryDriver').html($('#driverInput option:selected').text())
   $('#summaryRotation').html($('#rotationInput option:selected').text());
+  summaryScreensaver.html($('#screensaverInput option:selected').text())
+  summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val())
 
   $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
   $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
@@ -826,11 +917,35 @@ $storedSsIds = array_unique($storedSsIds);
 
   $('#driverInput').on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
   $('#rotationInput').on('change', _ => $('#summaryRotation').html($('#rotationInput option:selected').text()));
+  let scrensaverDelayInput = $('#screensaverDelayInput');
+  let previewBtn = $('#screensaverPreviewButton');
+  $('#screensaverInput').on('change', _ => {
+    summaryScreensaver.html($('#screensaverInput option:selected').text());
+    let enabled = $('#screensaverInput option:selected').val() == 'disabled';
+    if (enabled) {
+      scrensaverDelayInput.attr('disabled', 'disabled');
+      previewBtn.attr('disabled', 'disabled');
+    } else {
+      scrensaverDelayInput.removeAttr('disabled');
+      previewBtn.removeAttr('disabled');
+    }
+    summaryScreensaverDelay.html(enabled ? '<span><i class="fas fa-times"></i></span>' : scrensaverDelayInput.val());
+  });
+  $('#screensaverDelayInput').on('change', _ => {
+    let enabled = $('#screensaverInput option:selected').val() == 'disabled';
+    summaryScreensaverDelay.html(enabled ? '<span><i class="fas fa-times"></i></span>' : scrensaverDelayInput.val());
+  });
+
 
   $("#submitBtn").on("click", function () {
     $(this).prop("disabled", true);
     $(this).html('<span><i class="fas fa-spinner"></i></span> Applying...');
     $('#configForm').submit();
+  });
+
+  $("#screensaverPreviewButton").on("click", function () {
+    var val = $('#screensaverInput').val();
+    window.open('/mobro-raspberrypi/web/screensavers/' + val, '_blank');
   });
 
 </script>
