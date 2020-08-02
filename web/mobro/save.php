@@ -37,11 +37,14 @@ function getOrDefault($key, $default)
     return isset($_POST[$key]) ? $_POST[$key] : $default;
 }
 
+// localization
+$country = getOrDefault('country', 'AT');
+$timezone = getOrDefault('timezone', 'UTC');
+
 // network
 $netMode = getOrDefault('networkMode', 'wifi');
 $ssid = getOrDefault('ssid', '');
 $pw = getOrDefault('pw', '');
-$country = getOrDefault('country', 'AT');
 $wpa = getOrDefault('wpa', '');
 $hidden = empty($_POST['hidden']) ? '0' : '1';
 
@@ -55,6 +58,12 @@ $driver = getOrDefault('driver', '');
 $rotation = getOrDefault('rotation', '0');
 $screensaver = getOrDefault('screensaver', 'disabled');
 $delay = getOrDefault('screensaverDelay', '1');
+
+// write localization file
+$localizationData =
+    "country={$country}\n" .
+    "timezone={$timezone}\n";
+file_put_contents(Constants::FILE_LOCALIZATION, $localizationData, LOCK_EX);
 
 // write network file if in wifi mode
 if ($netMode == 'wifi') {

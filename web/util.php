@@ -74,6 +74,21 @@ function getDriverScripts($dir, $prefix)
     return $result;
 }
 
+function getGroupedTimeZones()
+{
+    $result = array();
+    if (($handle = fopen(Constants::FILE_TIMEZONES, "r")) !== FALSE) {
+        while (($data = fgetcsv($handle, 1000, "/")) !== FALSE) {
+            if (!array_key_exists($data[0], $result)) {
+                $result[$data[0]] = array();
+            }
+            $result[$data[0]][implode("/", $data)] = end($data);
+        }
+        fclose($handle);
+    }
+    return $result;
+}
+
 function getGoodTFTDrivers()
 {
     return getDriverScripts(Constants::DIR_DRIVER_GOODTFT, null);

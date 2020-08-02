@@ -101,7 +101,6 @@ $props = parseProperties(Constants::FILE_WIFI);
 $storedNetworkMode = getOrDefault($props['mode'], 'wifi');
 $storedSsid = getOrDefault($props['ssid'], '');
 $storedPw = getOrDefault($props['pw'], '');
-$storedCountry = getOrDefault($props['country'], 'AT');
 $storedHidden = getOrDefault($props['hidden'], '0');
 $storedWpa = getOrDefault($props['wpa'], '');
 
@@ -115,6 +114,10 @@ $storedDriver = getOrDefault($props['driver'], 'hdmi');
 $storedRotation = getOrDefault($props['rotation'], '0');
 $storedScreensaver = getOrDefault($props['screensaver'], 'disabled');
 $storedDelay = getOrDefault($props['delay'], '1');
+
+$props = parseProperties(Constants::FILE_LOCALIZATION);
+$storedCountry = getOrDefault($props['country'], 'AT');
+$storedTimezone = getOrDefault($props['timezone'], 'UTC');
 
 $drivers = getAllDrivers();
 $screensavers = getScreensavers();
@@ -160,6 +163,30 @@ $screensavers = getScreensavers();
 
       <div class="row confirmation-header">
         <div class="col-1"></div>
+        <div class="col-10">Localization</div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
+        <div class="col-4 confirmation-title">Country</div>
+        <div class="col">
+            <?php
+            $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $storedCountry . ".png") ? $storedCountry : '_unknown') . ".png";
+            echo '<img src="' . $flag . '" height="24px" class="mr-2">' . $storedCountry
+            ?>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-clock"></i></span></div>
+        <div class="col-4 confirmation-title">Timezone</div>
+        <div class="col">
+            <?php echo $storedTimezone ?>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row confirmation-header">
+        <div class="col-1"></div>
         <div class="col-10">Network Configuration</div>
       </div>
       <div class="row">
@@ -188,16 +215,6 @@ $screensavers = getScreensavers();
         <div class="col-4 confirmation-title">Password</div>
         <div class="col">
             <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : str_repeat("*", strlen($storedPw)) ?>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
-        <div class="col-4 confirmation-title">Country</div>
-        <div class="col">
-            <?php
-            $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $storedCountry . ".png") ? $storedCountry : '_unknown') . ".png";
-            echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : '<img src="' . $flag . '" height="24px" class="mr-2">' . $storedCountry
-            ?>
         </div>
       </div>
       <div class="row">

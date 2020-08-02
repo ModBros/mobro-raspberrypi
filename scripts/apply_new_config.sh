@@ -31,6 +31,7 @@ WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
 BOOT_CONFIG="$CONF_DIR/config.txt"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 
+LOCALIZATION_FILE="$DATA_DIR/localization"
 DISPLAY_FILE="$DATA_DIR/display"
 WIFI_FILE="$DATA_DIR/wifi"
 LOG_FILE="$LOG_DIR/log.txt"
@@ -64,9 +65,16 @@ add_wpa_setting() {
 # Configuration Functions
 # ====================================================================================================================
 
+timezone_config() {
+    local timezone
+    timezone=$(prop 'timezone' $LOCALIZATION_FILE)
+    log "configuration" "setting timezone: $timezone"
+    sudo timedatectl set-timezone "$timezone"
+}
+
 wifi_config() {
     log "configuration" "starting network configuration"
-    local mode, ssid, pw, country, wpa, hidden, updated
+    local mode, ssid, pw, country, wpa, hidden
     mode=$(prop 'mode' $WIFI_FILE)
 
     if [[ $mode == "eth" ]]; then
@@ -79,7 +87,7 @@ wifi_config() {
     log "configuration" "network mode: Wifi - creating new wpa_supplicant"
     ssid=$(prop 'ssid' $WIFI_FILE)
     pw=$(prop 'pw' $WIFI_FILE)
-    country=$(prop 'country' $WIFI_FILE)
+    country=$(prop 'country' $LOCALIZATION_FILE)
     wpa=$(prop 'wpa' $WIFI_FILE)
     hidden=$(prop 'hidden' $WIFI_FILE)
 
@@ -181,6 +189,9 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 log "configuration" "starting to apply new configuration"
+
+# configure timezone
+timezone_config
 
 # set new wifi configuration
 wifi_config

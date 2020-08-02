@@ -191,6 +191,10 @@ $wlanConnected = isset($ssid) && trim($ssid) !== '';
 $connected = $ethConnected || $wlanConnected;
 $connectionMode = $ethConnected ? 'eth' : 'wifi';
 
+$props = parseProperties(Constants::FILE_LOCALIZATION);
+$storedCountry = getOrDefault($props['country'], 'AT');
+$storedTimezone = getOrDefault($props['timezone'], 'UTC');
+
 $props = parseProperties(Constants::FILE_DISCOVERY);
 $storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
 $storedKey = getOrDefault($props['key'], 'mobro');
@@ -200,7 +204,6 @@ $props = parseProperties(Constants::FILE_WIFI);
 $storedNetworkMode = getOrDefault($props['mode'], 'wifi');
 $storedSsid = getOrDefault($props['ssid'], '');
 $storedPw = getOrDefault($props['pw'], '');
-$storedCountry = getOrDefault($props['country'], 'AT');
 $storedHidden = getOrDefault($props['hidden'], '0');
 $storedWpa = getOrDefault($props['wpa'], '');
 
@@ -229,7 +232,10 @@ $storedSsIds = array_unique($storedSsIds);
     <div class="row">
       <div class="col-12 col-lg-8 ml-auto mr-auto mb-3">
         <div class="multisteps-form__progress">
-          <button class="multisteps-form__progress-btn js-active font-weight-bold" type="button" title="Network">
+          <button class="multisteps-form__progress-btn js-active font-weight-bold" type="button" title="Localization">
+            <span><i class="fas fa-globe-europe"></i></span>
+          </button>
+          <button class="multisteps-form__progress-btn" type="button" title="Network">
             <span><i class="fas fa-network-wired"></i></span> / <span><i class="fas fa-wifi"></i></span>
           </button>
           <button class="multisteps-form__progress-btn" type="button" title="PC connection">
@@ -249,8 +255,90 @@ $storedSsIds = array_unique($storedSsIds);
       <div class="col-12 col-lg-8 m-auto">
         <form id="configForm" class="multisteps-form__form" action="save.php" method="POST">
 
-          <!-- NETWORK SETUP -->
+          <!-- LOCALIZATION SETUP -->
           <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active">
+            <h3 class="multisteps-form__title text-center">Localization</h3>
+            <div class="multisteps-form__content">
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="countryInput">
+                    Country
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-globe-europe"></i>
+                      </span>
+                    </div>
+                    <select id="countryInput" name="country" class="form-control selectpicker"
+                            aria-describedby="countryInputHelp">
+                        <?php
+                        if (($handle = fopen("../resources/country_codes.csv", "r")) !== FALSE) {
+                            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                                $selected = $data[1] == $storedCountry ? 'selected="selected"' : '';
+                                $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $data[1] . ".png") ? $data[1] : '_unknown') . ".png";
+                                echo '<option data-content="<img src=\'' . $flag . '\' height=\'24px\' class=\'mr-2\'>' . $data[0]
+                                    . '" value="' . $data[1] . '" ' . $selected . '>' . $data[0] . '</option>';
+                            }
+                            fclose($handle);
+                        }
+                        ?>
+                    </select>
+                  </div>
+                  <small id="countryInputHelp" class="form-text text-muted">
+                    The country in which the device is being used. <br>
+                    This is needed so the 5G wireless networking can choose the correct frequency bands.
+                  </small>
+                </div>
+              </div>
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="timeZoneInput">
+                    Timezone
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-clock"></i>
+                      </span>
+                    </div>
+                    <select id="timeZoneInput" name="timezone" class="form-control selectpicker"
+                            aria-describedby="timeZoneInputHelp">
+                      <option value="UTC">UTC</option>
+                        <?php
+                        foreach (getGroupedTimeZones() as $group => $data) {
+                            echo '<optgroup label="' . $group . '">';
+                            foreach ($data as $key => $value) {
+                                $selected = $storedTimezone == $key ? 'selected="selected"' : '';
+                                echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                            }
+                            echo '</optgroup>';
+                        }
+                        ?>
+                    </select>
+                  </div>
+                  <small id="timeZoneInputHelp" class="form-text text-muted">
+                    The timezone in which the device is being used. <br>
+                    Needed so the correct time and date can be displayed (e.g. screensaver, ...)
+                  </small>
+                </div>
+              </div>
+
+              <div class="button-row d-flex mt-4">
+                <a href="index.php" class="btn btn-danger" role="button" title="Cancel">
+                  <span><i class="fas fa-times"></i></span> Cancel
+                </a>
+                <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">
+                  Next <span><i class="fas fa-chevron-circle-right"></i></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- NETWORK SETUP -->
+          <div class="multisteps-form__panel shadow p-4 rounded bg-white">
             <h3 class="multisteps-form__title text-center">Network setup</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
@@ -313,41 +401,6 @@ $storedSsIds = array_unique($storedSsIds);
                   </div>
                   <small id="pwHelp" class="form-text text-muted">
                     The password needed to connect to the selected wireless network.
-                  </small>
-                </div>
-              </div>
-
-              <div class="form-row mt-2">
-                <div class="col">
-                  <label class="form-check-label form-label" for="countryInput">
-                    Country
-                  </label>
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text">
-                        <i class="fas fa-globe-europe"></i>
-                      </span>
-                    </div>
-                    <select id="countryInput" name="country" class="form-control selectpicker"
-                            aria-describedby="countryInputHelp"
-                        <?php if ($connectionMode == 'eth') echo 'disabled' ?>
-                    >
-                        <?php
-                        if (($handle = fopen("../resources/country_codes.csv", "r")) !== FALSE) {
-                            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                                $selected = $data[1] == $storedCountry ? 'selected="selected"' : '';
-                                $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $data[1] . ".png") ? $data[1] : '_unknown') . ".png";
-                                echo '<option data-content="<img src=\'' . $flag . '\' height=\'24px\' class=\'mr-2\'>' . $data[0]
-                                    . '" value="' . $data[1] . '" ' . $selected . '>' . $data[0] . '</option>';
-                            }
-                            fclose($handle);
-                        }
-                        ?>
-                    </select>
-                  </div>
-                  <small id="countryInputHelp" class="form-text text-muted">
-                    The country in which the device is being used. <br>
-                    This is needed so the 5G wireless networking can choose the correct frequency bands.
                   </small>
                 </div>
               </div>
@@ -421,9 +474,9 @@ $storedSsIds = array_unique($storedSsIds);
               </div>
 
               <div class="button-row d-flex mt-4">
-                <a href="index.php" class="btn btn-danger" role="button" title="Cancel">
-                  <span><i class="fas fa-times"></i></span> Cancel
-                </a>
+                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">
+                  <span><i class="fas fa-chevron-circle-left"></i></span> Prev
+                </button>
                 <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">
                   Next <span><i class="fas fa-chevron-circle-right"></i></span>
                 </button>
@@ -655,6 +708,20 @@ $storedSsIds = array_unique($storedSsIds);
             <h3 class="multisteps-form__title text-center">Summary</h3>
             <div class="multisteps-form__content">
 
+              <div class="form-row mt-4 confirmation-header">Localization</div>
+              <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
+                <div class="col-4 confirmation-title">Country</div>
+                <div class="col" id="summaryCountry">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-clock"></i></span></div>
+                <div class="col-4 confirmation-title">Timezone</div>
+                <div class="col" id="summaryTimezone">
+                </div>
+              </div>
+              <hr>
               <div class="form-row mt-4 confirmation-header">Network</div>
               <div class="form-row">
                 <div class="col-1"></div>
@@ -674,13 +741,6 @@ $storedSsIds = array_unique($storedSsIds);
                 <div class="col-1"><span><i class="fas fa-key"></i></span></div>
                 <div class="col-4 confirmation-title">Password</div>
                 <div class="col" id="summaryPW">
-                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="col-1"><span><i class="fas fa-globe-europe"></i></span></div>
-                <div class="col-4 confirmation-title">Country</div>
-                <div class="col" id="summaryCountry">
                     <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
@@ -868,13 +928,14 @@ $storedSsIds = array_unique($storedSsIds);
       echo "
             $('#summarySSID').html($('#ssidInput').val());
             $('#summaryPW').html(\"*\".repeat($('#passwordInput').val().length));
-            $('#summaryCountry').html($('#countryInput option:selected').text());
             $('#summarySecurity').html($('#wpaInput option:selected').text());
             $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No');
         ";
   }
   ?>
 
+  $('#summaryCountry').html($('#countryInput option:selected').text());
+  $('#summaryTimezone').html($('#timeZoneInput option:selected').text());
   summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
   summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '<span><i class="fas fa-times"></i></span>');
   summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
@@ -883,9 +944,10 @@ $storedSsIds = array_unique($storedSsIds);
   summaryScreensaver.html($('#screensaverInput option:selected').text())
   summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val())
 
+  $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
+  $('#timeZoneInput').on('change', _ => $('#summaryTimezone').html($('#timeZoneInput option:selected').text()));
   $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
   $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
-  $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
   $('#wpaInput').on('change', _ => $('#summarySecurity').html($('#wpaInput option:selected').text()));
   $('#hiddenNetworkInput').on('change', _ => $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No'));
 
