@@ -104,5 +104,13 @@ function getAllDrivers()
 function getScreensavers()
 {
     return [
+        'disabled' => 'Disabled',
+        'black.html' => 'Black',
+        'mobro_boot_light.html' => 'MoBro - Boot screen',
+        'mobro_boot_dark.html' => 'MoBro - Boot screen (dark)',
+        'mobro_logo_dark.html' => 'MoBro - Logo',
+        'mobro_logo_dark_bounce.html' => 'MoBro - Logo (bounce)',
+        'modbros_logo_dark.html' => 'ModBros - Logo',
+        'modbros_logo_dark_bounce.html' => 'ModBros - Logo (bounce)',
     ];
 }

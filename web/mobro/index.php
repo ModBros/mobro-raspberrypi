@@ -127,7 +127,7 @@ $screensavers = getScreensavers();
     <div class="card-header">
       <div class="row">
         <div class="col">
-          <img src="../resources/mobro-black.svg" width="300">
+          <img src="../resources/mobro_logo_dark.svg" width="300">
           <h4 class="text-uppercase my-3">The custom monitoring solution without stupid cables</h4>
         </div>
         <div class="col-auto">
@@ -287,7 +287,7 @@ $screensavers = getScreensavers();
   <footer class="main-footer mt-5">
     <hr>
     <div class="row">
-      <img src="../resources/modbros-logo.svg" height="70" class="mr-3 ml-3">
+      <img src="../resources/modbros_logo.svg" height="70" class="mr-3 ml-3">
       <p>
         Created with <span><i class="far fa-heart" style="color: #ff0066"></i></span> in Austria
         <img src="../resources/flags/AT.png" height="24"><br>

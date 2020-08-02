@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * added changelog
 * support for display rotation
 * show flag in country selection
+* configurable screensaver
 
 ### Changed
 

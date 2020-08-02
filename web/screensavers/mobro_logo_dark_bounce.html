@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>MoBro Screensaver Preview</title>
+  <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    img, div {
+      width: 200px;
+      height: 50px;
+    }
+
+    .x {
+      animation: x 13s linear infinite alternate;
+    }
+
+    .y {
+      animation: y 7s linear infinite alternate;
+    }
+
+    @keyframes x {
+      100% {
+        transform: translateX(calc(100vw - 200px));
+      }
+    }
+
+    @keyframes y {
+      100% {
+        transform: translateY(calc(100vh - 50px));
+      }
+    }
+
+    html {
+      background: black;
+    }
+  </style>
+</head>
+<body>
+<div class="x">
+  <img class="y" src="../resources/mobro_logo_light.svg">
+</div>
+</body>
+</html>

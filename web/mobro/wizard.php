@@ -945,7 +945,7 @@ $storedSsIds = array_unique($storedSsIds);
 
   $("#screensaverPreviewButton").on("click", function () {
     var val = $('#screensaverInput').val();
-    window.open('/mobro-raspberrypi/web/screensavers/' + val, '_blank');
+    window.open('../screensavers/' + val, '_blank');
   });
 
 </script>
