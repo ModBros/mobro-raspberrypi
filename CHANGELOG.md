@@ -21,6 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 (to avoid disconnection after just one bad request)
 * better styling for select items
 
+### Fixed
+
+* Pi didn't reconnect to PC after it lost connection once 
+
 
 ## [v10](https://github.com/ModBros/mobro-raspberrypi/compare/v9...v10) - 2020-05-21
 

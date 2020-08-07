@@ -404,8 +404,9 @@ background_check() {
     local response_code
     response_code=$(curl -o /dev/null --silent --connect-timeout 5 --retry 5 --write-out '%{http_code}' "$ip:$MOBRO_PORT/discover")
     if [[ $response_code == 403 || $response_code == 200 ]]; then
-        # reachable -> we're good
-        log "background_check" "MoBro on $ip still reachable"
+        # reachable
+        log "background_check" "MoBro on $ip reachable"
+        show_mobro "$ip"
         return
     fi
 
