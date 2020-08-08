@@ -200,7 +200,7 @@ $storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
 $storedKey = getOrDefault($props['key'], 'mobro');
 $storedIp = getOrDefault($props['ip'], '');
 
-$props = parseProperties(Constants::FILE_WIFI);
+$props = parseProperties(Constants::FILE_NETWORK);
 $storedNetworkMode = getOrDefault($props['mode'], 'wifi');
 $storedSsid = getOrDefault($props['ssid'], '');
 $storedPw = getOrDefault($props['pw'], '');

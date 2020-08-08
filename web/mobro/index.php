@@ -97,7 +97,7 @@ function getSecurityMode($mode)
 
 $version = getFirstLine(Constants::FILE_VERSION, 'Unknown');
 
-$props = parseProperties(Constants::FILE_WIFI);
+$props = parseProperties(Constants::FILE_NETWORK);
 $storedNetworkMode = getOrDefault($props['mode'], 'wifi');
 $storedSsid = getOrDefault($props['ssid'], '');
 $storedPw = getOrDefault($props['pw'], '');

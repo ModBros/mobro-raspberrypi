@@ -26,10 +26,10 @@ DATA_DIR='/home/modbros/mobro-raspberrypi/data'
 
 # Files
 HOSTS_FILE="$DATA_DIR/hosts"
-WIFI_FILE="$DATA_DIR/wifi"
+NETWORK_FILE="$DATA_DIR/network"
 VERSION_FILE="$DATA_DIR/version"
 MOBRO_FOUND_FLAG="$DATA_DIR/mobro_found"
-NETWORKS_FILE="$DATA_DIR/ssids"
+SSIDS_FILE="$DATA_DIR/ssids"
 DISCOVERY_FILE="$DATA_DIR/discovery"
 LOG_FILE="$LOG_DIR/log.txt"
 
@@ -60,7 +60,7 @@ STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (
 LOOP_COUNTER=0    # counter variable for main loop iterations
 CURR_MOBRO_URL='' # save current MoBro Url
 CURR_IMAGE=''     # save currently displayed image
-NETWORK_MODE=''   # save current netowrk mode (eth|wifi)
+NETWORK_MODE=''   # save current network mode (eth|wifi)
 
 # ====================================================================================================================
 # Functions
@@ -177,9 +177,9 @@ show_mobro() {
 
 search_ssids() {
     log "search_ssids" "scanning for wireless networks"
-    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>>$LOG_FILE 1>$NETWORKS_FILE
+    sudo iwlist wlan0 scan | grep -i essid: | sed 's/^.*"\(.*\)"$/\1/' 2>>$LOG_FILE 1>$SSIDS_FILE
     log "search_ssids" "detected wifi networks in range:"
-    cat $NETWORKS_FILE &>>$LOG_FILE
+    cat $SSIDS_FILE &>>$LOG_FILE
 }
 
 create_access_point() {
@@ -419,7 +419,7 @@ background_check() {
 wifi_check() {
     # check if wifi is configured
     # (skip if no network set - e.g. first boot)
-    if [[ $(wc -l <$WIFI_FILE) -lt 6 ]]; then
+    if [[ $(wc -l <$NETWORK_FILE) -lt 6 ]]; then
         log "startup" "no previous network configuration found"
         create_access_point
         return
@@ -431,9 +431,9 @@ wifi_check() {
     search_ssids
     local wait_wifi ssid
     wait_wifi=1
-    if [[ $(wc -l <$NETWORKS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        ssid=$(prop 'ssid' $WIFI_FILE)
-        if [[ $(grep "$ssid" -c <$NETWORKS_FILE) -eq 0 ]]; then
+    if [[ $(wc -l <$SSIDS_FILE) -ge 1 ]]; then # check if scan returned anything first
+        ssid=$(prop 'ssid' $NETWORK_FILE)
+        if [[ $(grep "$ssid" -c <$SSIDS_FILE) -eq 0 ]]; then
             wait_wifi=0
         fi
     fi

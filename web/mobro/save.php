@@ -65,17 +65,16 @@ $localizationData =
     "timezone={$timezone}\n";
 file_put_contents(Constants::FILE_LOCALIZATION, $localizationData, LOCK_EX);
 
-// write network file if in wifi mode
-if ($netMode == 'wifi') {
-    $wifiData =
-        "mode={$netMode}\n" .
-        "ssid={$ssid}\n" .
-        "pw={$pw}\n" .
-        "country={$country}\n" .
-        "hidden={$hidden}\n" .
-        "wpa={$wpa}\n";
-    file_put_contents(Constants::FILE_WIFI, $wifiData, LOCK_EX);
-}
+// write network file
+$wifiData =
+    "mode={$netMode}\n" .
+    "ssid={$ssid}\n" .
+    "pw={$pw}\n" .
+    "country={$country}\n" .
+    "hidden={$hidden}\n" .
+    "wpa={$wpa}\n";
+file_put_contents(Constants::FILE_NETWORK, $wifiData, LOCK_EX);
+
 
 // write discovery file
 $discoveryData =

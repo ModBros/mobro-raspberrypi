@@ -33,7 +33,7 @@ FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 
 LOCALIZATION_FILE="$DATA_DIR/localization"
 DISPLAY_FILE="$DATA_DIR/display"
-WIFI_FILE="$DATA_DIR/wifi"
+NETWORK_FILE="$DATA_DIR/network"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # ====================================================================================================================
@@ -72,10 +72,10 @@ timezone_config() {
     sudo timedatectl set-timezone "$timezone"
 }
 
-wifi_config() {
+network_config() {
     log "configuration" "starting network configuration"
     local mode, ssid, pw, country, wpa, hidden
-    mode=$(prop 'mode' $WIFI_FILE)
+    mode=$(prop 'mode' $NETWORK_FILE)
 
     if [[ $mode == "eth" ]]; then
         # connected by ethernet => set standard wpa config and we're done
@@ -85,11 +85,11 @@ wifi_config() {
     fi
 
     log "configuration" "network mode: Wifi - creating new wpa_supplicant"
-    ssid=$(prop 'ssid' $WIFI_FILE)
-    pw=$(prop 'pw' $WIFI_FILE)
+    ssid=$(prop 'ssid' $NETWORK_FILE)
+    pw=$(prop 'pw' $NETWORK_FILE)
     country=$(prop 'country' $LOCALIZATION_FILE)
-    wpa=$(prop 'wpa' $WIFI_FILE)
-    hidden=$(prop 'hidden' $WIFI_FILE)
+    wpa=$(prop 'wpa' $NETWORK_FILE)
+    hidden=$(prop 'hidden' $NETWORK_FILE)
 
     # start a new config file
     cp -f $WPA_CONFIG_EMPTY $WPA_CONFIG_TEMP
@@ -193,8 +193,8 @@ log "configuration" "starting to apply new configuration"
 # configure timezone
 timezone_config
 
-# set new wifi configuration
-wifi_config
+# set new network configuration
+network_config
 
 # handle display drivers
 display
