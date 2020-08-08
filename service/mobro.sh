@@ -31,6 +31,7 @@ VERSION_FILE="$DATA_DIR/version"
 MOBRO_FOUND_FLAG="$DATA_DIR/mobro_found"
 SSIDS_FILE="$DATA_DIR/ssids"
 DISCOVERY_FILE="$DATA_DIR/discovery"
+DISPLAY_FILE="$DATA_DIR/display"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # Resources
@@ -57,10 +58,11 @@ AP_FAIL_WAIT=90               # how long to wait until AP creation/stopping is c
 STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (if wifi configured)
 
 # Global Vars
-LOOP_COUNTER=0    # counter variable for main loop iterations
-CURR_MOBRO_URL='' # save current MoBro Url
-CURR_IMAGE=''     # save currently displayed image
-NETWORK_MODE=''   # save current network mode (eth|wifi)
+LOOP_COUNTER=0  # counter variable for main loop iterations
+CURR_URL=''     # save current chromium Url
+CURR_IMAGE=''   # save currently displayed image
+NETWORK_MODE='' # save current network mode (eth|wifi)
+SCREENSAVER=0   # flag if screensaver is active
 
 # ====================================================================================================================
 # Functions
@@ -100,7 +102,7 @@ stop_process() {
 
 stop_chrome() {
     stop_process "chromium"
-    CURR_MOBRO_URL=''
+    CURR_URL=''
 }
 
 stop_feh() {
@@ -142,6 +144,28 @@ show_image() {
     sleep "${2:-1}"
 }
 
+show_page_chrome() {
+    if [[ $(pgrep -fc chromium) -gt 0 ]]; then
+        if [[ $CURR_URL == "$1" ]]; then
+            # already showing requested page
+            return
+        fi
+        stop_chrome
+    fi
+    stop_feh
+    CURR_URL="$1"
+    log "chromium" "switching to: '$1'"
+    # check-for-update-interval flag can be removed once chromium is fixed
+    # temporary workaround for: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=264399
+    chromium-browser "$1" \
+        --noerrdialogs \
+        --incognito \
+        --check-for-update-interval=2592000 \
+        --kiosk \
+        &>>$LOG_FILE &
+    wait_window "chromium"
+}
+
 show_mobro() {
     local name version uuid resolution url
     name=$(cat /proc/device-tree/model)                                  # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
@@ -152,27 +176,16 @@ show_mobro() {
     "eth") uuid=$(sed 's/://g' </sys/class/net/eth0/address) ;; # unique ID of this pi
     esac
     url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&device=pi&name=$name"
+    SCREENSAVER=0
+    show_page_chrome "$url"
+}
 
-    if [[ $(pgrep -fc chromium) -gt 0 ]]; then
-        if [[ $CURR_MOBRO_URL == "$url" ]]; then
-            # already showing requested page
-            return
-        fi
-        stop_chrome
+show_screensaver() {
+    if [[ $SCREENSAVER == 0 ]]; then
+        log "screensaver" "activating screensaver: $1"
     fi
-    show_image $IMAGE_FOUND 5
-    stop_feh
-    CURR_MOBRO_URL="$url"
-    log "chromium" "switching to MoBro application on '$url'"
-    # check-for-update-interval flag can be removed once chromium is fixed
-    # temporary workaround for: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=264399
-    chromium-browser "$url" \
-        --noerrdialogs \
-        --incognito \
-        --check-for-update-interval=2592000 \
-        --kiosk \
-        &>>$LOG_FILE &
-    wait_window "chromium"
+    SCREENSAVER=1
+    show_page_chrome "http://localhost/screensavers/$1"
 }
 
 search_ssids() {
@@ -279,7 +292,9 @@ try_ip() {
 service_discovery() {
 
     echo "0" >$MOBRO_FOUND_FLAG
-    show_image $IMAGE_DISCOVERY 2
+    if [[ $SCREENSAVER == 0 ]]; then
+        show_image $IMAGE_DISCOVERY 2
+    fi
 
     local mode ip key interface
     mode=$(prop 'mode' $DISCOVERY_FILE)
@@ -296,10 +311,13 @@ service_discovery() {
         if try_ip_static "$ip"; then
             log "service_discovery" "MoBro application found on static IP $ip"
             set_mobro_found "$ip"
+            show_image $IMAGE_FOUND 5
             show_mobro "$ip"
         else
             log "service_discovery" "no MoBro application found on static ip $ip"
-            show_image $IMAGE_NOTFOUND
+            if [[ $SCREENSAVER == 0 ]]; then
+                show_image $IMAGE_NOTFOUND
+            fi
         fi
         return
     fi
@@ -380,12 +398,15 @@ service_discovery() {
     if is_mobro_found; then
         # found MoBro application
         log "service_discovery" "MoBro application found on IP $ip"
+        show_image $IMAGE_FOUND 5
         show_mobro "$(sed -n 1p <$HOSTS_FILE)"
     else
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
         truncate -s 0 $HOSTS_FILE
-        show_image $IMAGE_NOTFOUND 5
+        if [[ $SCREENSAVER == 0 ]]; then
+            show_image $IMAGE_NOTFOUND 5
+        fi
     fi
 }
 
@@ -410,9 +431,19 @@ background_check() {
         return
     fi
 
-    # we lost connection -> start searching again
+    # we lost connection
     log "background_check" "MoBro on $ip no longer reachable (code $response_code). starting discovery"
-    show_image $IMAGE_NOTFOUND 5
+    show_image $IMAGE_NOTFOUND 10
+
+    # check if screensaver is configured
+    local screensaver
+    screensaver=$(prop 'screensaver' $DISPLAY_FILE)
+    if [[ -n $screensaver && $screensaver != "disabled" ]]; then
+        # switch to screensaver
+        show_screensaver "$screensaver"
+    fi
+
+    # start searching again
     service_discovery
 }
 
