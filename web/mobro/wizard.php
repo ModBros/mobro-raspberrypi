@@ -271,7 +271,7 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-globe-europe"></i>
                       </span>
                     </div>
-                    <select id="countryInput" name="country" class="form-control selectpicker"
+                    <select id="countryInput" name="country" class="form-control selectpicker" data-live-search="true"
                             aria-describedby="countryInputHelp">
                         <?php
                         if (($handle = fopen("../resources/country_codes.csv", "r")) !== FALSE) {
@@ -304,7 +304,7 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-clock"></i>
                       </span>
                     </div>
-                    <select id="timeZoneInput" name="timezone" class="form-control selectpicker"
+                    <select id="timeZoneInput" name="timezone" class="form-control selectpicker" data-live-search="true"
                             aria-describedby="timeZoneInputHelp">
                       <option value="UTC">UTC</option>
                         <?php
@@ -578,7 +578,7 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-desktop"></i>
                       </span>
                     </div>
-                    <select id="driverInput" name="driver" class="form-control selectpicker"
+                    <select id="driverInput" name="driver" class="form-control selectpicker" data-live-search="true"
                             aria-describedby="driverInputHelp">
                         <?php
                         foreach (getOtherDriverOptions() as $key => $value) {
