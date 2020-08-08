@@ -127,5 +127,7 @@ function getScreensavers()
         'mobro_logo_dark_bounce.html' => 'MoBro - Logo (bounce)',
         'modbros_logo_dark.html' => 'ModBros - Logo',
         'modbros_logo_dark_bounce.html' => 'ModBros - Logo (bounce)',
+        'clock_date.php' => 'Date + Clock',
+        'pong.php' => 'Pong Clock'
     ];
 }
