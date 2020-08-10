@@ -72,7 +72,7 @@ log() {
     local temp date
     temp=$(sudo vcgencmd measure_temp)
     date=$(date "+%d.%m.%y %T")
-    echo "$date | ${temp:5} : [$1] $2" >>$LOG_FILE
+    echo "$date [$LOOP_COUNTER][${temp:5:-4}][$1] $2" >>$LOG_FILE
 }
 
 prop() {
@@ -620,10 +620,6 @@ log "main" "Entering main loop"
 while true; do
     sleep $LOOP_INTERVAL
     LOOP_COUNTER=$((LOOP_COUNTER + 1))
-
-    if [[ $((LOOP_COUNTER % 10)) -eq 0 ]]; then
-        log "main" "loop $LOOP_COUNTER"
-    fi
 
     case $NETWORK_MODE in
     "wifi")
