@@ -25,13 +25,11 @@ RESOURCES_DIR='/home/modbros/mobro-raspberrypi/resources'
 DATA_DIR='/home/modbros/mobro-raspberrypi/data'
 
 # Files
+MOBRO_CONFIG_FILE="$DATA_DIR/mobro_config"
 HOSTS_FILE="$DATA_DIR/hosts"
-NETWORK_FILE="$DATA_DIR/network"
+SSIDS_FILE="$DATA_DIR/ssids"
 VERSION_FILE="$DATA_DIR/version"
 MOBRO_FOUND_FLAG="$DATA_DIR/mobro_found"
-SSIDS_FILE="$DATA_DIR/ssids"
-DISCOVERY_FILE="$DATA_DIR/discovery"
-DISPLAY_FILE="$DATA_DIR/display"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # Resources
@@ -297,9 +295,9 @@ service_discovery() {
     fi
 
     local mode ip key interface
-    mode=$(prop 'mode' $DISCOVERY_FILE)
-    key=$(prop 'key' $DISCOVERY_FILE)
-    ip=$(prop 'ip' $DISCOVERY_FILE)
+    mode=$(prop 'discovery_mode' $MOBRO_CONFIG_FILE)
+    key=$(prop 'discovery_key' $MOBRO_CONFIG_FILE)
+    ip=$(prop 'discovery_ip' $MOBRO_CONFIG_FILE)
     case $NETWORK_MODE in
     "wifi") interface='wlan0' ;;
     "eth") interface='eth0' ;;
@@ -450,7 +448,9 @@ background_check() {
 wifi_check() {
     # check if wifi is configured
     # (skip if no network set - e.g. first boot)
-    if [[ $(wc -l <$NETWORK_FILE) -lt 6 ]]; then
+    local mode
+    mode=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
+    if [[ -z "$mode" ]]; then
         log "startup" "no previous network configuration found"
         create_access_point
         return
@@ -463,7 +463,7 @@ wifi_check() {
     local wait_wifi ssid
     wait_wifi=1
     if [[ $(wc -l <$SSIDS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        ssid=$(prop 'ssid' $NETWORK_FILE)
+        ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
         if [[ $(grep "$ssid" -c <$SSIDS_FILE) -eq 0 ]]; then
             wait_wifi=0
         fi

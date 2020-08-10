@@ -43,7 +43,7 @@ include '../util.php';
 <script>
   let timezone = 'UTC';
   <?php
-  $tz = getOrDefault(parseProperties(Constants::FILE_LOCALIZATION)['timezone'], 'UTC');
+  $tz = getOrDefault(parseProperties(Constants::FILE_MOBRO_CONFIG)['localization_timezone'], 'UTC');
   echo "timezone = '$tz';";
   ?>
 

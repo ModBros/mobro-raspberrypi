@@ -97,27 +97,28 @@ function getSecurityMode($mode)
 
 $version = getFirstLine(Constants::FILE_VERSION, 'Unknown');
 
-$props = parseProperties(Constants::FILE_NETWORK);
-$storedNetworkMode = getOrDefault($props['mode'], 'wifi');
-$storedSsid = getOrDefault($props['ssid'], '');
-$storedPw = getOrDefault($props['pw'], '');
-$storedHidden = getOrDefault($props['hidden'], '0');
-$storedWpa = getOrDefault($props['wpa'], '');
+$props = parseProperties(Constants::FILE_MOBRO_CONFIG);
+// localization
+$localization_country = getOrDefault($props['localization_country'], 'AT');
+$localization_timezone = getOrDefault($props['localization_timezone'], 'UTC');
 
-$props = parseProperties(Constants::FILE_DISCOVERY);
-$storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
-$storedKey = getOrDefault($props['key'], 'mobro');
-$storedIp = getOrDefault($props['ip'], '');
+// discovery
+$discovery_mode = getOrDefault($props['discovery_mode'], 'auto');
+$discovery_key = getOrDefault($props['discovery_key'], 'mobro');
+$discovery_ip = getOrDefault($props['discovery_ip'], '');
 
-$props = parseProperties(Constants::FILE_DISPLAY);
-$storedDriver = getOrDefault($props['driver'], 'hdmi');
-$storedRotation = getOrDefault($props['rotation'], '0');
-$storedScreensaver = getOrDefault($props['screensaver'], 'disabled');
-$storedDelay = getOrDefault($props['delay'], '1');
+// network
+$network_mode = getOrDefault($props['network_mode'], 'wifi');
+$network_ssid = getOrDefault($props['network_ssid'], '');
+$network_pw = getOrDefault($props['network_pw'], '');
+$network_wpa = getOrDefault($props['network_wpa'], '');
+$network_hidden = getOrDefault($props['network_hidden'], '0');
 
-$props = parseProperties(Constants::FILE_LOCALIZATION);
-$storedCountry = getOrDefault($props['country'], 'AT');
-$storedTimezone = getOrDefault($props['timezone'], 'UTC');
+// display
+$display_driver = getOrDefault($props['display_driver'], 'hdmi');
+$display_rotation = getOrDefault($props['display_rotation'], '0');
+$display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
+$display_screensaver_delay = getOrDefault($props['display_screensaver_delay'], '1');
 
 $drivers = getAllDrivers();
 $screensavers = getScreensavers();
@@ -170,8 +171,8 @@ $screensavers = getScreensavers();
         <div class="col-4 confirmation-title">Country</div>
         <div class="col">
             <?php
-            $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $storedCountry . ".png") ? $storedCountry : '_unknown') . ".png";
-            echo '<img src="' . $flag . '" height="24px" class="mr-2">' . $storedCountry
+            $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $localization_country . ".png") ? $localization_country : '_unknown') . ".png";
+            echo '<img src="' . $flag . '" height="24px" class="mr-2">' . $localization_country
             ?>
         </div>
       </div>
@@ -179,7 +180,7 @@ $screensavers = getScreensavers();
         <div class="col-1"><span><i class="fas fa-clock"></i></span></div>
         <div class="col-4 confirmation-title">Timezone</div>
         <div class="col">
-            <?php echo $storedTimezone ?>
+            <?php echo $localization_timezone ?>
         </div>
       </div>
 
@@ -207,28 +208,28 @@ $screensavers = getScreensavers();
         <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
         <div class="col-4 confirmation-title">SSID</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $storedSsid ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $network_ssid ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-key"></i></span></div>
         <div class="col-4 confirmation-title">Password</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : str_repeat("*", strlen($storedPw)) ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : str_repeat("*", strlen($network_pw)) ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
         <div class="col-4 confirmation-title">Standard</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : getSecurityMode($storedWpa) ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : getSecurityMode($network_wpa) ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
         <div class="col-4 confirmation-title">Hidden network</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : ($storedHidden == '0' ? "No" : "Yes") ?>
+            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : ($network_hidden == '0' ? "No" : "Yes") ?>
         </div>
       </div>
 
@@ -242,21 +243,21 @@ $screensavers = getScreensavers();
         <div class="col-1"></div>
         <div class="col-4 confirmation-title">Mode</div>
         <div class="col">
-            <?php echo $storedDiscoveryMode == 'auto' ? 'Automatic discovery' : 'Static IP' ?>
+            <?php echo $discovery_mode == 'auto' ? 'Automatic discovery' : 'Static IP' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-search"></i></span></div>
         <div class="col-4 confirmation-title">Network name</div>
         <div class="col">
-            <?php echo $storedDiscoveryMode == 'auto' ? $storedKey : '<span><i class="fas fa-times"></i></span>' ?>
+            <?php echo $discovery_mode == 'auto' ? $discovery_key : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-at"></i></span></div>
         <div class="col-4 confirmation-title">IP address</div>
         <div class="col">
-            <?php echo $storedDiscoveryMode == 'auto' ? '<span><i class="fas fa-times"></i></span>' : $storedIp ?>
+            <?php echo $discovery_mode == 'auto' ? '<span><i class="fas fa-times"></i></span>' : $discovery_ip ?>
         </div>
       </div>
 
@@ -270,28 +271,28 @@ $screensavers = getScreensavers();
         <div class="col-1"><span><i class="fas fa-desktop"></i></span></div>
         <div class="col-4 confirmation-title">Driver</div>
         <div class="col">
-            <?php echo $drivers[$storedDriver] ?>
+            <?php echo $drivers[$display_driver] ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-sync-alt"></i></span></div>
         <div class="col-4 confirmation-title">Rotation</div>
         <div class="col">
-            <?php echo $storedRotation ?>°
+            <?php echo $display_rotation ?>°
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-moon"></i></span></div>
         <div class="col-4 confirmation-title">Screensaver</div>
         <div class="col">
-            <?php echo $screensavers[$storedScreensaver] ?>
+            <?php echo $screensavers[$display_screensaver] ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-stopwatch"></i></span></div>
         <div class="col-4 confirmation-title">Screensaver delay</div>
         <div class="col">
-            <?php echo $storedScreensaver == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $storedDelay . ' minute(s)' ?>
+            <?php echo $display_screensaver == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $display_screensaver_delay . ' minute(s)' ?>
         </div>
       </div>
     </div>

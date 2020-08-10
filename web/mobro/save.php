@@ -38,58 +38,45 @@ function getOrDefault($key, $default)
 }
 
 // localization
-$country = getOrDefault('country', 'AT');
-$timezone = getOrDefault('timezone', 'UTC');
+$localization_country = getOrDefault('localization_country', 'AT');
+$localization_timezone = getOrDefault('localization_timezone', 'UTC');
 
 // network
-$netMode = getOrDefault('networkMode', 'wifi');
-$ssid = getOrDefault('ssid', '');
-$pw = getOrDefault('pw', '');
-$wpa = getOrDefault('wpa', '');
-$hidden = empty($_POST['hidden']) ? '0' : '1';
+$network_mode = getOrDefault('network_mode', 'wifi');
+$network_ssid = getOrDefault('network_ssid', '');
+$network_pw = getOrDefault('network_pw', '');
+$network_wpa = getOrDefault('network_wpa', '');
+$network_hidden = empty($_POST['network_hidden']) ? '0' : '1';
 
-// pc
-$pcMode = getOrDefault('discovery', 'auto');
-$connKey = getOrDefault('key', 'mobro');
-$ip = getOrDefault('ip', '');
+// discovery
+$discovery_mode = getOrDefault('discovery_mode', 'auto');
+$discovery_key = getOrDefault('discovery_key', 'mobro');
+$discovery_ip = getOrDefault('discovery_ip', '');
 
-// screen
-$driver = getOrDefault('driver', '');
-$rotation = getOrDefault('rotation', '0');
-$screensaver = getOrDefault('screensaver', 'disabled');
-$delay = getOrDefault('screensaverDelay', '1');
+// display
+$display_driver = getOrDefault('display_driver', '');
+$display_rotation = getOrDefault('display_rotation', '0');
+$display_screensaver = getOrDefault('display_screensaver', 'disabled');
+$display_screensaver_delay = getOrDefault('display_screensaver_delay', '1');
 
-// write localization file
-$localizationData =
-    "country={$country}\n" .
-    "timezone={$timezone}\n";
-file_put_contents(Constants::FILE_LOCALIZATION, $localizationData, LOCK_EX);
+// write configuration file
+$configuration_file_contents =
+    "localization_country={$localization_country}\n" .
+    "localization_timezone={$localization_timezone}\n" .
+    "network_mode={$network_mode}\n" .
+    "network_ssid={$network_ssid}\n" .
+    "network_pw={$network_pw}\n" .
+    "network_wpa={$network_wpa}\n" .
+    "network_hidden={$network_hidden}\n" .
+    "discovery_mode={$discovery_mode}\n" .
+    "discovery_key={$discovery_key}\n" .
+    "discovery_ip={$discovery_ip}\n" .
+    "display_driver={$display_driver}\n" .
+    "display_rotation={$display_rotation}\n" .
+    "display_screensaver={$display_screensaver}\n" .
+    "display_screensaver_delay={$display_screensaver_delay}\n";
+file_put_contents(Constants::FILE_MOBRO_CONFIG, $configuration_file_contents, LOCK_EX);
 
-// write network file
-$wifiData =
-    "mode={$netMode}\n" .
-    "ssid={$ssid}\n" .
-    "pw={$pw}\n" .
-    "country={$country}\n" .
-    "hidden={$hidden}\n" .
-    "wpa={$wpa}\n";
-file_put_contents(Constants::FILE_NETWORK, $wifiData, LOCK_EX);
-
-
-// write discovery file
-$discoveryData =
-    "mode={$pcMode}\n" .
-    "key={$connKey}\n" .
-    "ip={$ip}\n";
-file_put_contents(Constants::FILE_DISCOVERY, $discoveryData, LOCK_EX);
-
-// write display file
-$displayData =
-    "driver={$driver}\n" .
-    "rotation={$rotation}\n".
-    "screensaver={$screensaver}\n" .
-    "delay={$delay}\n";
-file_put_contents(Constants::FILE_DISPLAY, $displayData, LOCK_EX);
 
 // apply config and reboot the Pi
 shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG);

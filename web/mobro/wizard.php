@@ -189,40 +189,40 @@ $ssid = shell_exec('iwgetid wlan0 -r');
 $wlanConnected = isset($ssid) && trim($ssid) !== '';
 
 $connected = $ethConnected || $wlanConnected;
-$connectionMode = $ethConnected ? 'eth' : 'wifi';
 
-$props = parseProperties(Constants::FILE_LOCALIZATION);
-$storedCountry = getOrDefault($props['country'], 'AT');
-$storedTimezone = getOrDefault($props['timezone'], 'UTC');
+$props = parseProperties(Constants::FILE_MOBRO_CONFIG);
+// localization
+$localization_country = getOrDefault($props['localization_country'], 'AT');
+$localization_timezone = getOrDefault($props['localization_timezone'], 'UTC');
 
-$props = parseProperties(Constants::FILE_DISCOVERY);
-$storedDiscoveryMode = getOrDefault($props['mode'], 'auto');
-$storedKey = getOrDefault($props['key'], 'mobro');
-$storedIp = getOrDefault($props['ip'], '');
+// discovery
+$discovery_mode = getOrDefault($props['discovery_mode'], 'auto');
+$discovery_key = getOrDefault($props['discovery_key'], 'mobro');
+$discovery_ip = getOrDefault($props['discovery_ip'], '');
 
-$props = parseProperties(Constants::FILE_NETWORK);
-$storedNetworkMode = getOrDefault($props['mode'], 'wifi');
-$storedSsid = getOrDefault($props['ssid'], '');
-$storedPw = getOrDefault($props['pw'], '');
-$storedHidden = getOrDefault($props['hidden'], '0');
-$storedWpa = getOrDefault($props['wpa'], '');
+// network
+$network_mode = $ethConnected ? 'eth' : 'wifi';
+$network_ssid = getOrDefault($props['network_ssid'], '');
+$network_pw = getOrDefault($props['network_pw'], '');
+$network_wpa = getOrDefault($props['network_wpa'], '');
+$network_hidden = getOrDefault($props['network_hidden'], '0');
 
-$props = parseProperties(Constants::FILE_DISPLAY);
-$storedDriver = getOrDefault($props['driver'], 'hdmi');
-$storedRotation = getOrDefault($props['rotation'], '0');
-$storedScreensaver = getOrDefault($props['screensaver'], 'disabled');
-$storedDelay = getOrDefault($props['delay'], '1');
+// display
+$display_driver = getOrDefault($props['display_driver'], 'hdmi');
+$display_rotation = getOrDefault($props['display_rotation'], '0');
+$display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
+$display_screensaver_delay = getOrDefault($props['display_screensaver_delay'], '1');
 
-$storedSsIds = array();
+$ssids = array();
 $file = fopen(Constants::FILE_SSID, "r");
 while ($file && !feof($file)) {
     $item = fgets($file);
     if (!empty(trim($item))) {
-        $storedSsIds[] = $item;
+        $ssids[] = $item;
     }
 }
 closeFile($file);
-$storedSsIds = array_unique($storedSsIds);
+$ssids = array_unique($ssids);
 
 ?>
 
@@ -271,12 +271,12 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-globe-europe"></i>
                       </span>
                     </div>
-                    <select id="countryInput" name="country" class="form-control selectpicker" data-live-search="true"
+                    <select id="countryInput" name="localization_country" class="form-control selectpicker" data-live-search="true"
                             aria-describedby="countryInputHelp">
                         <?php
                         if (($handle = fopen("../resources/country_codes.csv", "r")) !== FALSE) {
                             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                                $selected = $data[1] == $storedCountry ? 'selected="selected"' : '';
+                                $selected = $data[1] == $localization_country ? 'selected="selected"' : '';
                                 $flag = "../resources/flags/" . (file_exists("../resources/flags/" . $data[1] . ".png") ? $data[1] : '_unknown') . ".png";
                                 echo '<option data-content="<img src=\'' . $flag . '\' height=\'24px\' class=\'mr-2\'>' . $data[0]
                                     . '" value="' . $data[1] . '" ' . $selected . '>' . $data[0] . '</option>';
@@ -304,14 +304,14 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-clock"></i>
                       </span>
                     </div>
-                    <select id="timeZoneInput" name="timezone" class="form-control selectpicker" data-live-search="true"
+                    <select id="timeZoneInput" name="localization_timezone" class="form-control selectpicker" data-live-search="true"
                             aria-describedby="timeZoneInputHelp">
                       <option value="UTC">UTC</option>
                         <?php
                         foreach (getGroupedTimeZones() as $group => $data) {
                             echo '<optgroup label="' . $group . '">';
                             foreach ($data as $key => $value) {
-                                $selected = $storedTimezone == $key ? 'selected="selected"' : '';
+                                $selected = $localization_timezone == $key ? 'selected="selected"' : '';
                                 echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                             }
                             echo '</optgroup>';
@@ -345,14 +345,14 @@ $storedSsIds = array_unique($storedSsIds);
                 <div class="font-weight-bold ml-2 mr-3">Mode:</div>
                 <div>
                     <?php
-                    if ($connectionMode == 'eth') {
+                    if ($network_mode == 'eth') {
                         echo '<span><i class="fas fa-network-wired"></i></span> Ethernet';
                     } else {
                         echo '<span><i class="fas fa-wifi"></i></span> Wireless';
                     }
                     ?>
                 </div>
-                <input type="hidden" id="networkModeInput" name="networkMode" value="<?php echo $connectionMode ?>">
+                <input type="hidden" id="networkModeInput" name="network_mode" value="<?php echo $network_mode ?>">
               </div>
               <div class="form-row mt-4">
                 <div class="col">
@@ -365,13 +365,13 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-wifi"></i>
                       </span>
                     </div>
-                    <input list="ssids" class="form-control" name="ssid" id="ssidInput"
-                           aria-describedby="ssidHelp" value="<?php echo $storedSsid ?>"
-                        <?php if ($connectionMode == 'eth') echo 'disabled' ?>
+                    <input list="ssids" class="form-control" name="network_ssid" id="ssidInput"
+                           aria-describedby="ssidHelp" value="<?php echo $network_ssid ?>"
+                        <?php if ($network_mode == 'eth') echo 'disabled' ?>
                     >
                     <datalist id="ssids">
                         <?php
-                        foreach ($storedSsIds as $ssid) {
+                        foreach ($ssids as $ssid) {
                             echo '<option value="' . $ssid . '">' . $ssid . '</option>';
                         }
                         ?>
@@ -394,9 +394,9 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-key"></i>
                       </span>
                     </div>
-                    <input type="password" name="pw" class="form-control" id="passwordInput"
-                           aria-describedby="pwHelp" value="<?php echo $storedPw ?>"
-                        <?php if ($connectionMode == 'eth') echo 'disabled' ?>
+                    <input type="password" name="network_pw" class="form-control" id="passwordInput"
+                           aria-describedby="pwHelp" value="<?php echo $network_pw ?>"
+                        <?php if ($network_mode == 'eth') echo 'disabled' ?>
                     >
                   </div>
                   <small id="pwHelp" class="form-text text-muted">
@@ -426,22 +426,22 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-lock"></i>
                       </span>
                       </div>
-                      <select id="wpaInput" name="wpa" class="form-control selectpicker" aria-describedby="wpaInputHelp"
-                          <?php if ($connectionMode == 'eth') echo 'disabled' ?>
+                      <select id="wpaInput" name="network_wpa" class="form-control selectpicker" aria-describedby="wpaInputHelp"
+                          <?php if ($network_mode == 'eth') echo 'disabled' ?>
                       >
-                        <option value="" <?php if (empty($storedWpa)) echo 'selected="selected"' ?>>
+                        <option value="" <?php if (empty($network_wpa)) echo 'selected="selected"' ?>>
                           Automatic
                         </option>
-                        <option value="2a" <?php if ($storedWpa == '2a') echo 'selected="selected"' ?>>
+                        <option value="2a" <?php if ($network_wpa == '2a') echo 'selected="selected"' ?>>
                           WPA2-PSK (AES)
                         </option>
-                        <option value="2t" <?php if ($storedWpa == '2t') echo 'selected="selected"' ?>>
+                        <option value="2t" <?php if ($network_wpa == '2t') echo 'selected="selected"' ?>>
                           WPA2-PSK (TKIP)
                         </option>
-                        <option value="1t" <?php if ($storedWpa == '1t') echo 'selected="selected"' ?>>
+                        <option value="1t" <?php if ($network_wpa == '1t') echo 'selected="selected"' ?>>
                           WPA-PSK (TKIP)
                         </option>
-                        <option value="n" <?php if ($storedWpa == 'n') echo 'selected="selected"' ?>>
+                        <option value="n" <?php if ($network_wpa == 'n') echo 'selected="selected"' ?>>
                           None (Unsecured network)
                         </option>
                       </select>
@@ -457,9 +457,9 @@ $storedSsIds = array_unique($storedSsIds);
                 <div class="form-row mt-3">
                   <div class="col">
                     <div class="form-check">
-                      <input type="checkbox" class="form-check-input" id="hiddenNetworkInput" name="hidden"
-                             aria-describedby="hiddenNetworkHelp" <?php if ($storedHidden == '1') echo 'checked' ?>
-                          <?php if ($connectionMode == 'eth') echo 'disabled' ?>
+                      <input type="checkbox" class="form-check-input" id="hiddenNetworkInput" name="network_hidden"
+                             aria-describedby="hiddenNetworkHelp" <?php if ($network_hidden == '1') echo 'checked' ?>
+                          <?php if ($network_mode == 'eth') echo 'disabled' ?>
                       >
                       <label class="form-check-label form-label" for="hiddenNetworkInput">
                         <span><i class="fas fa-ghost"></i></span> Hidden wireless network
@@ -491,15 +491,15 @@ $storedSsIds = array_unique($storedSsIds);
               <div class="form-row mt-4">
                 <div class="col">
                   <div class="form-check">
-                    <input class="form-check-input" type="radio" name="discovery" id="discovery1" value="auto"
-                        <?php if ($storedDiscoveryMode == 'auto') echo 'checked' ?>>
+                    <input class="form-check-input" type="radio" name="discovery_mode" id="discovery1" value="auto"
+                        <?php if ($discovery_mode == 'auto') echo 'checked' ?>>
                     <label class="form-check-label" for="discovery1">
                       Automatic discovery using network name
                     </label>
                   </div>
                   <div class="form-check">
-                    <input class="form-check-input" type="radio" name="discovery" id="discovery2" value="manual"
-                        <?php if ($storedDiscoveryMode == 'manual') echo 'checked' ?>>
+                    <input class="form-check-input" type="radio" name="discovery_mode" id="discovery2" value="manual"
+                        <?php if ($discovery_mode == 'manual') echo 'checked' ?>>
                     <label class="form-check-label" for="discovery2">
                       Manual IP address configuration
                     </label>
@@ -519,8 +519,8 @@ $storedSsIds = array_unique($storedSsIds);
                       </span>
                     </div>
                     <input class="multisteps-form__input form-control border-primary" id="connectionKeyInput"
-                           type="text" name="key"
-                           value="<?php echo $storedKey ?>"
+                           type="text" name="discovery_key"
+                           value="<?php echo $discovery_key ?>"
                            placeholder="mobro"
                            aria-describedby="connectionKeyHelp"
                     />
@@ -542,9 +542,9 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-at"></i>
                       </span>
                     </div>
-                    <input class="multisteps-form__input form-control" id="staticIpInput" type="text" name="ip"
+                    <input class="multisteps-form__input form-control" id="staticIpInput" type="text" name="discovery_ip"
                            aria-describedby="staticIpHelp" disabled
-                           value="<?php echo $storedIp ?>"
+                           value="<?php echo $discovery_ip ?>"
                     />
                   </div>
                   <small id="staticIpHelp" class="form-text text-muted">
@@ -578,22 +578,22 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-desktop"></i>
                       </span>
                     </div>
-                    <select id="driverInput" name="driver" class="form-control selectpicker" data-live-search="true"
+                    <select id="driverInput" name="display_driver" class="form-control selectpicker" data-live-search="true"
                             aria-describedby="driverInputHelp">
                         <?php
                         foreach (getOtherDriverOptions() as $key => $value) {
-                            $selected = $storedDriver == $key ? 'selected="selected"' : '';
+                            $selected = $display_driver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
                         echo '<optgroup label="GoodTFT">';
                         foreach (getGoodTFTDrivers() as $key => $value) {
-                            $selected = $storedDriver == $key ? 'selected="selected"' : '';
+                            $selected = $display_driver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
                         echo '</optgroup>';
                         echo '<optgroup label="WaveShare">';
                         foreach (getWaveshareDrivers() as $key => $value) {
-                            $selected = $storedDriver == $key ? 'selected="selected"' : '';
+                            $selected = $display_driver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
                         echo '</optgroup>';
@@ -617,12 +617,12 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-sync-alt"></i>
                       </span>
                     </div>
-                    <select id="rotationInput" name="rotation" class="form-control selectpicker"
+                    <select id="rotationInput" name="display_rotation" class="form-control selectpicker"
                             aria-describedby="rotationInputHelp">
-                      <option value="0" <?php echo $storedRotation == '0' ? 'selected' : '' ?>>0°</option>
-                      <option value="90" <?php echo $storedRotation == '90' ? 'selected' : '' ?>>90°</option>
-                      <option value="180" <?php echo $storedRotation == '180' ? 'selected' : '' ?>>180°</option>
-                      <option value="270" <?php echo $storedRotation == '270' ? 'selected' : '' ?>>270°</option>
+                      <option value="0" <?php echo $display_rotation == '0' ? 'selected' : '' ?>>0°</option>
+                      <option value="90" <?php echo $display_rotation == '90' ? 'selected' : '' ?>>90°</option>
+                      <option value="180" <?php echo $display_rotation == '180' ? 'selected' : '' ?>>180°</option>
+                      <option value="270" <?php echo $display_rotation == '270' ? 'selected' : '' ?>>270°</option>
                     </select>
                   </div>
                   <small id="rotationInputHelp" class="form-text text-muted">
@@ -645,11 +645,11 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-moon"></i>
                       </span>
                     </div>
-                    <select id="screensaverInput" name="screensaver" class="form-control selectpicker"
+                    <select id="screensaverInput" name="display_screensaver" class="form-control selectpicker"
                             aria-describedby="screensaverInputHelp">
                         <?php
                         foreach (getScreensavers() as $key => $value) {
-                            $selected = $storedScreensaver == $key ? 'selected="selected"' : '';
+                            $selected = $display_screensaver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
                         ?>
@@ -672,9 +672,9 @@ $storedSsIds = array_unique($storedSsIds);
                         <i class="fas fa-stopwatch"></i>
                       </span>
                     </div>
-                    <input class="form-control" type="number" name="screensaverDelay" value="<?php echo $storedDelay ?>"
+                    <input class="form-control" type="number" name="display_screensaver_delay" value="<?php echo $display_screensaver_delay ?>"
                            min="0" id="screensaverDelayInput"
-                        <?php if ($storedScreensaver == 'disabled') echo 'disabled' ?>
+                        <?php if ($display_screensaver == 'disabled') echo 'disabled' ?>
                            aria-describedby="screensaverDelayInputHelp"
                     >
                     <span class="mt-2 ml-1 mr-3">minute(s)</span>
@@ -685,7 +685,7 @@ $storedSsIds = array_unique($storedSsIds);
                 </div>
                 <div class="col-auto">
                   <button id="screensaverPreviewButton" class="btn btn-outline-primary mt-4" type="button"
-                      <?php if ($storedScreensaver == 'disabled') echo 'disabled' ?>
+                      <?php if ($display_screensaver == 'disabled') echo 'disabled' ?>
                           title="Preview">
                     Preview
                   </button>
@@ -727,35 +727,35 @@ $storedSsIds = array_unique($storedSsIds);
                 <div class="col-1"></div>
                 <div class="col-4 confirmation-title">Mode</div>
                 <div class="col" id="summaryNetworkMode">
-                    <?php echo $connectionMode == 'eth' ? 'Ethernet' : 'Wireless' ?>
+                    <?php echo $network_mode == 'eth' ? 'Ethernet' : 'Wireless' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
                 <div class="col-4 confirmation-title">SSID</div>
                 <div class="col" id="summarySSID">
-                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
+                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-key"></i></span></div>
                 <div class="col-4 confirmation-title">Password</div>
                 <div class="col" id="summaryPW">
-                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
+                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
                 <div class="col-4 confirmation-title">Standard</div>
                 <div class="col" id="summarySecurity">
-                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
+                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
                 <div class="col-4 confirmation-title">Hidden network</div>
                 <div class="col" id="summaryHiddenNet">
-                    <?php echo $connectionMode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
+                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
                 </div>
               </div>
               <hr>
@@ -924,7 +924,7 @@ $storedSsIds = array_unique($storedSsIds);
 
   // network
   <?php
-  if ($connectionMode == 'wifi') {
+  if ($network_mode == 'wifi') {
       echo "
             $('#summarySSID').html($('#ssidInput').val());
             $('#summaryPW').html(\"*\".repeat($('#passwordInput').val().length));

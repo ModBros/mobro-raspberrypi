@@ -6,11 +6,8 @@ class Constants
     private const BASE_PATH = '/home/modbros/mobro-raspberrypi';
 
     public const FILE_VERSION = self::BASE_PATH . '/data/version';
-    public const FILE_DISCOVERY = self::BASE_PATH . '/data/discovery';
     public const FILE_SSID = self::BASE_PATH . '/data/ssids';
-    public const FILE_NETWORK = self::BASE_PATH . '/data/network';
-    public const FILE_DISPLAY = self::BASE_PATH . '/data/display';
-    public const FILE_LOCALIZATION = self::BASE_PATH . '/data/localization';
+    public const FILE_MOBRO_CONFIG = self::BASE_PATH . '/data/mobro_config';
     public const FILE_TIMEZONES = self::BASE_PATH . '/web/resources/timezones.txt';
 
     public const DIR_LOG = self::BASE_PATH . '/log';

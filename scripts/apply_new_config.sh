@@ -31,9 +31,7 @@ WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
 BOOT_CONFIG="$CONF_DIR/config.txt"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 
-LOCALIZATION_FILE="$DATA_DIR/localization"
-DISPLAY_FILE="$DATA_DIR/display"
-NETWORK_FILE="$DATA_DIR/network"
+MOBRO_CONFIG_FILE="$DATA_DIR/mobro_config"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # ====================================================================================================================
@@ -67,7 +65,7 @@ add_wpa_setting() {
 
 timezone_config() {
     local timezone
-    timezone=$(prop 'timezone' $LOCALIZATION_FILE)
+    timezone=$(prop 'localization_timezone' $MOBRO_CONFIG_FILE)
     log "configuration" "setting timezone: $timezone"
     sudo timedatectl set-timezone "$timezone"
 }
@@ -75,7 +73,7 @@ timezone_config() {
 network_config() {
     log "configuration" "starting network configuration"
     local mode, ssid, pw, country, wpa, hidden
-    mode=$(prop 'mode' $NETWORK_FILE)
+    mode=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
 
     if [[ $mode == "eth" ]]; then
         # connected by ethernet => set standard wpa config and we're done
@@ -85,11 +83,11 @@ network_config() {
     fi
 
     log "configuration" "network mode: Wifi - creating new wpa_supplicant"
-    ssid=$(prop 'ssid' $NETWORK_FILE)
-    pw=$(prop 'pw' $NETWORK_FILE)
-    country=$(prop 'country' $LOCALIZATION_FILE)
-    wpa=$(prop 'wpa' $NETWORK_FILE)
-    hidden=$(prop 'hidden' $NETWORK_FILE)
+    ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
+    pw=$(prop 'network_pw' $MOBRO_CONFIG_FILE)
+    country=$(prop 'localization_country' $MOBRO_CONFIG_FILE)
+    wpa=$(prop 'network_wpa' $MOBRO_CONFIG_FILE)
+    hidden=$(prop 'network_hidden' $MOBRO_CONFIG_FILE)
 
     # start a new config file
     cp -f $WPA_CONFIG_EMPTY $WPA_CONFIG_TEMP
@@ -151,8 +149,8 @@ network_config() {
 
 display() {
     local driver, rotation
-    driver=$(prop 'driver' $DISPLAY_FILE)
-    rotation=$(prop 'rotation' $DISPLAY_FILE)
+    driver=$(prop 'display_driver' $MOBRO_CONFIG_FILE)
+    rotation=$(prop 'display_rotation' $MOBRO_CONFIG_FILE)
 
     case $driver in
     hdmi)
