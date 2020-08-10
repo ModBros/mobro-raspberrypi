@@ -56,11 +56,12 @@ AP_FAIL_WAIT=90               # how long to wait until AP creation/stopping is c
 STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (if wifi configured)
 
 # Global Vars
-LOOP_COUNTER=0  # counter variable for main loop iterations
-CURR_URL=''     # save current chromium Url
-CURR_IMAGE=''   # save currently displayed image
-NETWORK_MODE='' # save current network mode (eth|wifi)
-SCREENSAVER=0   # flag if screensaver is active
+LOOP_COUNTER=0             # counter variable for main loop iterations
+CURR_URL=''                # save current chromium Url
+CURR_IMAGE=''              # save currently displayed image
+NETWORK_MODE=''            # save current network mode (eth|wifi)
+SCREENSAVER=0              # flag if screensaver is active
+LAST_CONNECTED=$(date +%s) # timestamp (epoch seconds) of last successful connection check
 
 # ====================================================================================================================
 # Functions
@@ -175,6 +176,7 @@ show_mobro() {
     esac
     url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&device=pi&name=$name"
     SCREENSAVER=0
+    LAST_CONNECTED=$(date +%s)
     show_page_chrome "$url"
 }
 
@@ -408,6 +410,34 @@ service_discovery() {
     fi
 }
 
+check_screensaver() {
+    # check if screensaver is configured
+    local screensaver
+    screensaver=$(prop 'display_screensaver' $MOBRO_CONFIG_FILE)
+    if [[ -z $screensaver || $screensaver == "disabled" ]]; then
+        # no screensaver configured
+        return
+    fi
+
+    # screensaver configured -> check delay
+    local delay
+    delay=$(prop 'display_delay' $MOBRO_CONFIG_FILE)
+    if [[ -n $delay ]]; then
+        local diff, now
+        now=$(date +%s)
+        diff=$((now - LAST_CONNECTED))
+        delay=$((delay * 60))
+        log "screensaver" "delay: $diff/$delay"
+        if [[ $diff -gt $delay ]]; then
+            # delay reached -> show
+            show_screensaver "$screensaver"
+        fi
+    else
+        # no delay -> just show screensaver
+        show_screensaver "$screensaver"
+    fi
+}
+
 background_check() {
     # check if host is still reachable
     # if we made a successful connection the IP will be in the hosts file
@@ -415,6 +445,7 @@ background_check() {
     ip=$(sed -n 1p <$HOSTS_FILE)
     if [[ -z $ip ]]; then
         log "background_check" "no previous host found. starting discovery"
+        check_screensaver
         service_discovery
         return
     fi
@@ -430,16 +461,13 @@ background_check() {
     fi
 
     # we lost connection
-    log "background_check" "MoBro on $ip no longer reachable (code $response_code). starting discovery"
-    show_image $IMAGE_NOTFOUND 10
-
-    # check if screensaver is configured
-    local screensaver
-    screensaver=$(prop 'screensaver' $DISPLAY_FILE)
-    if [[ -n $screensaver && $screensaver != "disabled" ]]; then
-        # switch to screensaver
-        show_screensaver "$screensaver"
+    log "background_check" "MoBro on $ip no longer reachable (code $response_code)"
+    if [[ $SCREENSAVER == 0 ]]; then
+        show_image $IMAGE_NOTFOUND 10
     fi
+
+    # check if we need to show screensaver
+    check_screensaver
 
     # start searching again
     service_discovery

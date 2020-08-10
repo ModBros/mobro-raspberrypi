@@ -211,7 +211,7 @@ $network_hidden = getOrDefault($props['network_hidden'], '0');
 $display_driver = getOrDefault($props['display_driver'], 'hdmi');
 $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
-$display_screensaver_delay = getOrDefault($props['display_screensaver_delay'], '1');
+$display_delay = getOrDefault($props['display_delay'], '5');
 
 $ssids = array();
 $file = fopen(Constants::FILE_SSID, "r");
@@ -672,7 +672,7 @@ $ssids = array_unique($ssids);
                         <i class="fas fa-stopwatch"></i>
                       </span>
                     </div>
-                    <input class="form-control" type="number" name="display_screensaver_delay" value="<?php echo $display_screensaver_delay ?>"
+                    <input class="form-control" type="number" name="display_delay" value="<?php echo $display_delay ?>"
                            min="0" id="screensaverDelayInput"
                         <?php if ($display_screensaver == 'disabled') echo 'disabled' ?>
                            aria-describedby="screensaverDelayInputHelp"

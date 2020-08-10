@@ -57,7 +57,7 @@ $discovery_ip = getOrDefault('discovery_ip', '');
 $display_driver = getOrDefault('display_driver', '');
 $display_rotation = getOrDefault('display_rotation', '0');
 $display_screensaver = getOrDefault('display_screensaver', 'disabled');
-$display_screensaver_delay = getOrDefault('display_screensaver_delay', '1');
+$display_delay = getOrDefault('display_delay', '1');
 
 // write configuration file
 $configuration_file_contents =
@@ -74,7 +74,7 @@ $configuration_file_contents =
     "display_driver={$display_driver}\n" .
     "display_rotation={$display_rotation}\n" .
     "display_screensaver={$display_screensaver}\n" .
-    "display_screensaver_delay={$display_screensaver_delay}\n";
+    "display_delay={$display_delay}\n";
 file_put_contents(Constants::FILE_MOBRO_CONFIG, $configuration_file_contents, LOCK_EX);
 
 

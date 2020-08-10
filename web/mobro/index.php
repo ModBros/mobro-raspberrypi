@@ -118,7 +118,7 @@ $network_hidden = getOrDefault($props['network_hidden'], '0');
 $display_driver = getOrDefault($props['display_driver'], 'hdmi');
 $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
-$display_screensaver_delay = getOrDefault($props['display_screensaver_delay'], '1');
+$display_delay = getOrDefault($props['display_delay'], '1');
 
 $drivers = getAllDrivers();
 $screensavers = getScreensavers();
@@ -292,7 +292,7 @@ $screensavers = getScreensavers();
         <div class="col-1"><span><i class="fas fa-stopwatch"></i></span></div>
         <div class="col-4 confirmation-title">Screensaver delay</div>
         <div class="col">
-            <?php echo $display_screensaver == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $display_screensaver_delay . ' minute(s)' ?>
+            <?php echo $display_screensaver == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $display_delay . ' minute(s)' ?>
         </div>
       </div>
     </div>

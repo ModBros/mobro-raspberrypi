@@ -186,7 +186,8 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-log "configuration" "starting to apply new configuration"
+log "configuration" "starting to apply new configuration:"
+cat $MOBRO_CONFIG_FILE &>>$LOG_FILE
 
 # configure timezone
 timezone_config
