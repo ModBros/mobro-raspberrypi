@@ -17,4 +17,5 @@ class Constants
 
     public const SCRIPT_APPLY_CONFIG = self::BASE_PATH . '/scripts/apply_new_config.sh';
     public const SCRIPT_SHUTDOWN = self::BASE_PATH . '/scripts/shutdown.sh';
+    public const SCRIPT_SERVICE = self::BASE_PATH . '/scripts/service.sh';
 }

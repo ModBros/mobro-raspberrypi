@@ -28,15 +28,20 @@ GET  /api/temperature
 GET  /api/top
      returns: the output of the "top" command. i.e.: CPU/RAM Usage, Processes...
 
-POST /api/restart
+PUT /api/restart
      restarts the Raspberry Pi
      params (optional):
        delay: delay in minutes before restart (default = 0)
 
-POST /api/shutdown
+PUT /api/shutdown
      shuts down the Raspberry Pi
      params (optional):
        delay: delay in minutes before shutdown (default = 0)
+
+PUT /api/service
+    starts, stops or restart the MoBro service
+    params:
+      action: start | stop | restart (default)
 
 GET /api/configuration
     returns the current configuration
