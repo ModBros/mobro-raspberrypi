@@ -32,32 +32,32 @@ include '../constants.php';
 //echo '</table>';
 //exit();
 
-function getOrDefault($key, $default)
+function getPostValOrDefault($key, $default)
 {
     return isset($_POST[$key]) ? $_POST[$key] : $default;
 }
 
 // localization
-$localization_country = getOrDefault('localization_country', 'AT');
-$localization_timezone = getOrDefault('localization_timezone', 'UTC');
+$localization_country = getPostValOrDefault('localization_country', 'AT');
+$localization_timezone = getPostValOrDefault('localization_timezone', 'UTC');
 
 // network
-$network_mode = getOrDefault('network_mode', 'wifi');
-$network_ssid = getOrDefault('network_ssid', '');
-$network_pw = getOrDefault('network_pw', '');
-$network_wpa = getOrDefault('network_wpa', '');
+$network_mode = getPostValOrDefault('network_mode', 'wifi');
+$network_ssid = getPostValOrDefault('network_ssid', '');
+$network_pw = getPostValOrDefault('network_pw', '');
+$network_wpa = getPostValOrDefault('network_wpa', '');
 $network_hidden = empty($_POST['network_hidden']) ? '0' : '1';
 
 // discovery
-$discovery_mode = getOrDefault('discovery_mode', 'auto');
-$discovery_key = getOrDefault('discovery_key', 'mobro');
-$discovery_ip = getOrDefault('discovery_ip', '');
+$discovery_mode = getPostValOrDefault('discovery_mode', 'auto');
+$discovery_key = getPostValOrDefault('discovery_key', 'mobro');
+$discovery_ip = getPostValOrDefault('discovery_ip', '');
 
 // display
-$display_driver = getOrDefault('display_driver', '');
-$display_rotation = getOrDefault('display_rotation', '0');
-$display_screensaver = getOrDefault('display_screensaver', 'disabled');
-$display_delay = getOrDefault('display_delay', '5');
+$display_driver = getPostValOrDefault('display_driver', '');
+$display_rotation = getPostValOrDefault('display_rotation', '0');
+$display_screensaver = getPostValOrDefault('display_screensaver', 'disabled');
+$display_delay = getPostValOrDefault('display_delay', '5');
 
 // write configuration file
 $configuration_file_contents =

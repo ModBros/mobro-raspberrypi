@@ -20,9 +20,9 @@ function getFirstLine($filePath, $default)
     return $line;
 }
 
-function getOrDefault(&$var, $default)
+function getOrDefault($var, $default)
 {
-    return trim($var ?: $default);
+    return trim(!empty($var) || $var == "0" ? $var : $default);
 }
 
 function parseProperties($filePath)
