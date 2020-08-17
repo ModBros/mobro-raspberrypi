@@ -21,7 +21,6 @@
 
 # Directories
 LOG_DIR='/home/modbros/mobro-raspberrypi/log'
-DATA_DIR='/home/modbros/mobro-raspberrypi/data'
 CONF_DIR='/home/modbros/mobro-raspberrypi/config'
 
 # Files
@@ -31,7 +30,6 @@ WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
 BOOT_CONFIG="$CONF_DIR/config.txt"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 
-MOBRO_CONFIG_FILE="$DATA_DIR/mobro_config"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # ====================================================================================================================
@@ -65,94 +63,116 @@ add_wpa_setting() {
 
 timezone_config() {
     local timezone
-    timezone=$(prop 'localization_timezone' $MOBRO_CONFIG_FILE)
+    timezone=$(prop 'localization_timezone' "$1")
+    if [[ -z "$timezone" ]]; then
+        log "configuration" "no timezone set - keeping current configuration"
+        return
+    fi
+
     log "configuration" "setting timezone: $timezone"
     sudo timedatectl set-timezone "$timezone"
 }
 
 network_config() {
     log "configuration" "starting network configuration"
-    local mode, ssid, pw, country, wpa, hidden
-    mode=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
+    local mode
+    mode=$(prop 'network_mode' "$1")
 
-    if [[ $mode == "eth" ]]; then
+    case $mode in
+    "")
+        log "configuration" "no network mode set - keeping current configuration"
+        ;;
+    eth)
         # connected by ethernet => set standard wpa config and we're done
         log "configuration" "network mode: Ethernet - resetting wpa_supplicant"
         sudo cp -f $WPA_CONFIG_CLEAN /etc/wpa_supplicant/wpa_supplicant.conf
-        return
-    fi
-
-    log "configuration" "network mode: Wifi - creating new wpa_supplicant"
-    ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
-    pw=$(prop 'network_pw' $MOBRO_CONFIG_FILE)
-    country=$(prop 'localization_country' $MOBRO_CONFIG_FILE)
-    wpa=$(prop 'network_wpa' $MOBRO_CONFIG_FILE)
-    hidden=$(prop 'network_hidden' $MOBRO_CONFIG_FILE)
-
-    # start a new config file
-    cp -f $WPA_CONFIG_EMPTY $WPA_CONFIG_TEMP
-    # set the selected wifi country
-    log "configuration" "setting wifi country to: $country"
-    add_wpa_setting 'country' "$country"
-
-    # add a new network
-    add_wpa "network={"
-
-    # set ssid
-    log "configuration" "setting SSID to: $ssid"
-    add_wpa_setting 'ssid' "\"$ssid\""
-
-    # set scan_ssid if we're using a hidden network
-    log "configuration" "setting hidden SSID to: $hidden"
-    if [[ $hidden == "1" ]]; then
-        add_wpa_setting 'scan_ssid' "$hidden"
-    fi
-
-    # set password
-    add_wpa_setting 'psk' "\"$pw\""
-
-    # wpa version and encryption config
-    log "configuration" "setting WPA mode to: $wpa"
-    case $wpa in
-    2a)
-        add_wpa_setting "key_mgmt" "WPA-PSK"
-        add_wpa_setting "proto" "RSN"
-        add_wpa_setting "pairwise" "CCMP"
-        add_wpa_setting "auth_alg" "OPEN"
         ;;
-    2t)
-        add_wpa_setting "key_mgmt" "WPA-PSK"
-        add_wpa_setting "proto" "WPA"
-        add_wpa_setting "pairwise" "TKIP"
-        add_wpa_setting "auth_alg" "OPEN"
+
+    wifi)
+        log "configuration" "network mode: Wifi - creating new wpa_supplicant"
+        local ssid pw country wpa hidden
+        ssid=$(prop 'network_ssid' "$1")
+        pw=$(prop 'network_pw' "$1")
+        country=$(prop 'localization_country' "$1")
+        wpa=$(prop 'network_wpa' "$1")
+        hidden=$(prop 'network_hidden' "$1")
+
+        # start a new config file
+        cp -f $WPA_CONFIG_EMPTY $WPA_CONFIG_TEMP
+        # set the selected wifi country
+        log "configuration" "setting wifi country to: $country"
+        add_wpa_setting 'country' "$country"
+
+        # add a new network
+        add_wpa "network={"
+
+        # set ssid
+        log "configuration" "setting SSID to: $ssid"
+        add_wpa_setting 'ssid' "\"$ssid\""
+
+        # set scan_ssid if we're using a hidden network
+        log "configuration" "setting hidden SSID to: $hidden"
+        if [[ $hidden == "1" ]]; then
+            add_wpa_setting 'scan_ssid' "$hidden"
+        fi
+
+        # set password
+        add_wpa_setting 'psk' "\"$pw\""
+
+        # wpa version and encryption config
+        log "configuration" "setting WPA mode to: $wpa"
+        case $wpa in
+        2a)
+            add_wpa_setting "key_mgmt" "WPA-PSK"
+            add_wpa_setting "proto" "RSN"
+            add_wpa_setting "pairwise" "CCMP"
+            add_wpa_setting "auth_alg" "OPEN"
+            ;;
+        2t)
+            add_wpa_setting "key_mgmt" "WPA-PSK"
+            add_wpa_setting "proto" "WPA"
+            add_wpa_setting "pairwise" "TKIP"
+            add_wpa_setting "auth_alg" "OPEN"
+            ;;
+        1t)
+            add_wpa_setting "key_mgmt" "WPA-PSK"
+            add_wpa_setting "proto" "WPA"
+            add_wpa_setting "pairwise" "TKIP"
+            add_wpa_setting "auth_alg" "OPEN"
+            ;;
+        n)
+            add_wpa_setting "key_mgmt" "NONE"
+            ;;
+        *)
+            # default settings (automatic) => no need to add anything to config
+            ;;
+        esac
+
+        # close network section
+        add_wpa "}"
+
+        # set the new config
+        sudo mv -f $WPA_CONFIG_TEMP /etc/wpa_supplicant/wpa_supplicant.conf
         ;;
-    1t)
-        add_wpa_setting "key_mgmt" "WPA-PSK"
-        add_wpa_setting "proto" "WPA"
-        add_wpa_setting "pairwise" "TKIP"
-        add_wpa_setting "auth_alg" "OPEN"
-        ;;
-    n)
-        add_wpa_setting "key_mgmt" "NONE"
-        ;;
+
     *)
-        # default settings (automatic) => no need to add anything to config
+        log "configuration" "invalid network mode set - keeping current configuration"
         ;;
     esac
-
-    # close network section
-    add_wpa "}"
-
-    # set the new config
-    sudo mv -f $WPA_CONFIG_TEMP /etc/wpa_supplicant/wpa_supplicant.conf
 }
 
 display() {
-    local driver, rotation
-    driver=$(prop 'display_driver' $MOBRO_CONFIG_FILE)
-    rotation=$(prop 'display_rotation' $MOBRO_CONFIG_FILE)
+    local driver rotation
+    driver=$(prop 'display_driver' "$1")
+    rotation=$(prop 'display_rotation' "$1")
+    if [[ -z "$rotation" ]]; then
+        rotation=0
+    fi
 
-    case $driver in
+    case "$driver" in
+    "")
+        log "configuration" "no driver set - keeping current configuration"
+        ;;
     hdmi)
         log "configuration" "display driver: HDMI"
         cat "$BOOT_CONFIG" >/boot/config.txt
@@ -165,14 +185,14 @@ display() {
         log "configuration" "manual display driver installation (skipping)"
         ;;
     *)
-        if [[ -n "$driver" ]]; then
-            cd "$(dirname "$driver")" || exit
-            log "configuration" "installing new display driver: $driver"
-            log "configuration" "display rotation: $rotation"
-            sudo /bin/bash "$driver" "$rotation" >>$LOG_FILE
-        else
-            log "configuration" "skipping display driver installation"
+        if [[ ! -f "$driver" ]]; then
+            log "configuration" "configured driver file not found: $driver"
+            return
         fi
+        cd "$(dirname "$driver")" || exit
+        log "configuration" "installing new display driver: $driver"
+        log "configuration" "display rotation: $rotation"
+        sudo /bin/bash "$driver" "$rotation" >>$LOG_FILE
         ;;
     esac
 }
@@ -183,20 +203,39 @@ display() {
 
 if [[ $EUID -ne 0 ]]; then
     echo "This script requires root privileges"
+    log "configuration" "failed to apply new configuration: privileges"
+    exit 1
+fi
+
+if [[ "$#" -ne 1 ]]; then
+    echo "Illegal number of parameters"
+    log "configuration" "failed to apply new configuration: no config file given"
+    exit 1
+fi
+
+if [[ ! -f "$1" ]]; then
+    echo "config file '$1' does not exist"
+    log "configuration" "failed to apply new configuration: no config file given"
+    exit 1
+fi
+
+if [[ $(wc -l <$1) -lt 1 ]]; then
+    echo "config file '$1' is empty"
+    log "configuration" "failed to apply new configuration: config file was empty"
     exit 1
 fi
 
 log "configuration" "starting to apply new configuration:"
-cat $MOBRO_CONFIG_FILE &>>$LOG_FILE
+cat "$1" &>>$LOG_FILE
 
 # configure timezone
-timezone_config
+timezone_config "$1"
 
 # set new network configuration
-network_config
+network_config "$1"
 
 # handle display drivers
-display
+display "$1"
 
 # reboot the Pi
 log "configuration" "done - rebooting"

@@ -79,4 +79,4 @@ file_put_contents(Constants::FILE_MOBRO_CONFIG, $configuration_file_contents, LO
 
 
 // apply config and reboot the Pi
-shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG);
+shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG . ' "' . Constants::FILE_MOBRO_CONFIG . '"');
