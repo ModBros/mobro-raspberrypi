@@ -8,7 +8,17 @@
 
 **Official Raspberry Pi image of MoBro**
   
-![MoBro logo](./images/mobro_logo.png)
+![MoBro logo + header](./images/readme_header.png)
+
+### Table of Contents
+   * [What is MoBro?](#what-is-mobro)
+   * [Windows application](#windows-application)
+   * [Raspberry Pi image](#raspberry-pi-image)
+      * [What does this image do?](#what-does-this-image-do)
+      * [Download and install](#download-and-install)
+      * [Supported Raspberry Pi Models](#supported-raspberry-pi-models)
+   * [Planned features](#planned-features)
+   * [Developer documentation](#developer-documentation)
 
 ## What is MoBro?
 
@@ -27,6 +37,7 @@ __Defining features__:
 
 ## Windows application
 
+This Raspberry Pi project requires the running MoBro desktop application.  
 The running MoBro desktop application is required for this Raspberry Pi project.  
 Currently only available for Windows.
 
@@ -37,7 +48,7 @@ Currently only available for Windows.
 This Raspberry Pi image acts as a client device to the MoBro Windows application to which it connects.  
 It provides an easy and cost effective way to set up a wireless device displaying the PC's stats in realtime anywhere in the house.
 
-![MoBro logo](./images/mobro_software_example.png)
+[![Installation video](http://img.youtube.com/vi/iebBcQuBhYs/0.jpg)](http://www.youtube.com/watch?v=iebBcQuBhYs)
 
 ### What does this image do?
 
@@ -47,6 +58,12 @@ All the required configuration is done via an easy web based configuration wizar
 
 No coding skills or Linux experience required. 
 
+### Download and install
+
+Detailed instructions on how to download flash and setup the image can be found here:  
+[Download and flash](https://www.mod-bros.com/en/faq/mobro/raspberry/download), 
+[Setup](https://www.mod-bros.com/en/faq/mobro/raspberry/setup)
+
 ### Supported Raspberry Pi Models
 
 This image is ready to run on all Raspberry Pi models.  
@@ -54,39 +71,77 @@ For wireless operation a model with built-in Wifi is required.
 
 [Supported models and known limitations](https://www.mod-bros.com/en/faq/mobro/raspberry/supported-hardware)
 
-### Download and install
+## Planned features
 
-Detailed instructions on how to download flash and setup the image can be found here:  
-[Download and flash](https://www.mod-bros.com/en/faq/mobro/raspberry/download), 
-[Setup](https://www.mod-bros.com/en/faq/mobro/raspberry/setup)
+Ideas, feedback or feature suggestions are always welcome.  
+These are the major features that we planned so far:
 
-## Planned further development
-
-Major features planned for future development:
-
-### USB Gadget Mode  
-Make use of USB gadget mode and RNDIS on windows to enable the use of the Raspberry Pi via a single USB cable for power and data.  
-Would require no Wifi setup or ethernet cable.
-
-[GITHUB: USB gadget mode enabled in the image to allow single wire connection to machine](https://github.com/ModBros/mobro-raspberrypi/issues/1)  
-[FORUM: Using RNDIS/Ethernet to connect Raspberry Pi Zero to computer network](https://www.mod-bros.com/en/forum/t/using-rndis-ethernet-to-connect-raspberry-pi-zero-to-computer-network~926)
-
-### Screensaver / Turn off screen  
-If the Pi doesn't power down when the PC is shut down, the display stays on an the Pi periodically tries to reconnect ot the PC.  
-We could add a setting the display some sort of screensaver in this case.  
-Or turn off the display completely (if possible).
-
-[FORUM: New Feature Request - Screensaver/Powersave Mode](https://www.mod-bros.com/en/forum/t/new-feature-request-screensaver-powersave-mode~854)
-
-### Automatic updatability
-
-Updating currently requires the SD card to be flashed again with the new image. This is not ideal.
-Enable automatic update or at least manually triggered update via configuration page or rest endpoint.  
+- [ ] [USB Gadget Mode](https://github.com/ModBros/mobro-raspberrypi/issues/1)
+- [x] [Screensaver](https://github.com/ModBros/mobro-raspberrypi/issues/2)
+- [x] [Screen rotation / orientation](https://github.com/ModBros/mobro-raspberrypi/issues/3)
+- [ ] [Automatic updatability](https://github.com/ModBros/mobro-raspberrypi/issues/4)
+- [ ] [OverlayFS](https://github.com/ModBros/mobro-raspberrypi/issues/5)
 
 
-### OverlayFS  
-Make use of [OverlayFS](https://www.datalight.com/blog/2016/01/27/explaining-overlayfs-%E2%80%93-what-it-does-and-how-it-works/) 
-for the MoBro Raspberry Pi image to prevent SD card corruption.  
-Especially relevant if the Raspberry Pi isn't able to perform clean shutdowns.  
-E.g.: It is directly connected to and powered by the motherboard and therefore just looses power whenever the PC 
-is shut down.
+## Developer documentation
+
+### REST API
+
+For debug purposes the MoBro Raspberry Pi image exposes a very basic REST API.  
+This API is subject to change.
+
+|     | Route              | Description                                                                | Parameters |
+| --- | :----------------- | :------------------------------------------------------------------------- | :--------- |
+| GET | /version           | returns the current version number                                         | *lines*: only most recent n lines<br> *count*: log files of previous n boots (max = 10, default = 0) |
+| GET | /log               | returns the current logfile (from this boot)                               | - |
+| GET | /api               | returns the API documentation                                              | - |
+| GET | /api/temperature   | returns the current CPU temperature                                        | - |
+| GET | /api/top           | returns the output of the "top" command. i.e.: CPU/RAM Usage, Processes... | - |
+| PUT | /api/restart       | restarts the Raspberry Pi                                                  | *delay*: minutes before restart (default = 0) |
+| PUT | /api/shutdown      | shuts down the Raspberry Pi                                                | *delay*: minutes before shutdown (default = 0) |
+| PUT | /api/service       | starts, stops or restarts the MoBro service                                | *action*: start, stop, restart (default) |
+| GET | /api/configuration | returns the current configuration                                          | - |
+
+
+#### Configuration format
+
+The MoBro specific configuration is stored as a simple property file.  
+All current settings and their meaning:
+
+| Setting               | Description |
+| :-------------------- | :---------- |
+| localization_country  | [ISO 3166 country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes) |
+| localization_timezone | timezone name as listed in [TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) |
+| network_mode          | 'eth' or 'wifi' |  |
+| network_ssid          | the network SSID to connect to (only in wifi mode) |
+| network_pw            | the network password (only in wifi mode) |
+| network_wpa           | the WPA mode. one of: 2a, 2t, 1t, n (optional, only in wifi) |
+| network_hidden        | whether the network is hidden (only in wifi) |
+| discovery_mode        | 'auto' (default) or 'manual'|
+| discovery_key         | the discovery key as configured in the MoBro deskop application (default=mobro) |
+| discovery_ip          | the static IP address of the PC (only in 'manual' network mode) |
+| display_driver        | 'hdmi', 'manual' or path to the driver install executable |
+| display_rotation      | one of: 0 (default), 90, 180, 270 |
+| display_screensaver   | 'disabled' or screensaver file |
+| display_delay         | delay for the screensaver in minutes, default=5 |
+
+Just altering the values in the configuration file is NOT enough.  
+The configuration file has to be applied by executing the [apply_new_config.sh](./scripts/apply_new_config.sh) script and passing the config file as parameter.
+
+Example configuration:
+```
+localization_country=AT
+localization_timezone=Europe/Vienna
+network_mode=eth
+network_ssid=
+network_pw=
+network_wpa=
+network_hidden=0
+discovery_mode=auto
+discovery_key=mobro
+discovery_ip=
+display_driver=hdmi
+display_rotation=0
+display_screensaver=clock_date.php
+display_delay=0
+```

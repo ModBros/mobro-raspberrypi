@@ -11,16 +11,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * added readme
 * added changelog
 * support for display rotation
-* show flag in country selection
+* flags in country selection
 * configurable screensaver
 * timezone configuration
+* added API calls for configuration and service 
 
 ### Changed
 
-* reduced logging in background check
+* reduced recurring background logging
 * multiple connection attempts in background check  
 (to avoid disconnection after just one bad request)
 * better styling for select items
+* merged MoBro specific configurations into a single file
 
 ### Fixed
 
