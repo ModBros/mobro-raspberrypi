@@ -9,6 +9,7 @@ class Constants
     public const FILE_SSID = self::BASE_PATH . '/data/ssids';
     public const FILE_MOBRO_CONFIG = self::BASE_PATH . '/data/mobro_config';
     public const FILE_TIMEZONES = self::BASE_PATH . '/web/resources/timezones.txt';
+    public const FILE_REST_API = self::BASE_PATH . '/web/resources/rest_api_doc.txt';
 
     public const DIR_LOG = self::BASE_PATH . '/log';
     public const DIR_DRIVER_GOODTFT = self::HOME_DIR . '/display-drivers/GoodTFT';
