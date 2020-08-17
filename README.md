@@ -112,7 +112,7 @@ All current settings and their meaning:
 | :-------------------- | :---------- |
 | localization_country  | [ISO 3166 country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes) |
 | localization_timezone | timezone name as listed in [TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) |
-| network_mode          | 'eth' or 'wifi' |  |
+| network_mode          | 'eth' or 'wifi' |
 | network_ssid          | the network SSID to connect to (only in wifi mode) |
 | network_pw            | the network password (only in wifi mode) |
 | network_wpa           | the WPA mode. one of: 2a, 2t, 1t, n (optional, only in wifi) |
