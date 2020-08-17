@@ -118,7 +118,7 @@ $network_hidden = getOrDefault($props['network_hidden'], '0');
 $display_driver = getOrDefault($props['display_driver'], 'hdmi');
 $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
-$display_delay = getOrDefault($props['display_delay'], '1');
+$display_delay = getOrDefault($props['display_delay'], '5');
 
 $drivers = getAllDrivers();
 $screensavers = getScreensavers();

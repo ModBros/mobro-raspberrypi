@@ -57,7 +57,7 @@ $discovery_ip = getOrDefault('discovery_ip', '');
 $display_driver = getOrDefault('display_driver', '');
 $display_rotation = getOrDefault('display_rotation', '0');
 $display_screensaver = getOrDefault('display_screensaver', 'disabled');
-$display_delay = getOrDefault('display_delay', '1');
+$display_delay = getOrDefault('display_delay', '5');
 
 // write configuration file
 $configuration_file_contents =
