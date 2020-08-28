@@ -1,6 +1,6 @@
 localization_country=AT
 localization_timezone=Europe/Vienna
-network_mode=eth
+network_mode=wifi
 network_ssid=
 network_pw=
 network_wpa=
@@ -11,4 +11,4 @@ discovery_ip=
 display_driver=hdmi
 display_rotation=0
 display_screensaver=disabled
-display_delay=0
+display_delay=5
