@@ -85,6 +85,8 @@ These are the major features that we planned so far:
 
 ## Developer documentation
 
+Changelog can be found here: [Changelog](./CHANGELOG.md)
+
 ### REST API
 
 For debug purposes the MoBro Raspberry Pi image exposes a very basic REST API.  
@@ -92,8 +94,8 @@ This API is subject to change.
 
 |     | Route              | Description                                                                | Parameters |
 | --- | :----------------- | :------------------------------------------------------------------------- | :--------- |
-| GET | /version           | returns the current version number                                         | *lines*: only most recent n lines<br> *count*: log files of previous n boots (max = 10, default = 0) |
-| GET | /log               | returns the current logfile (from this boot)                               | - |
+| GET | /version           | returns the current version number                                         | - |
+| GET | /log               | returns the current logfile (from this boot)                               | *lines*: only most recent n lines<br> *count*: log files of previous n boots (max = 10, default = 0) |
 | GET | /api               | returns the API documentation                                              | - |
 | GET | /api/temperature   | returns the current CPU temperature                                        | - |
 | GET | /api/top           | returns the output of the "top" command. i.e.: CPU/RAM Usage, Processes... | - |

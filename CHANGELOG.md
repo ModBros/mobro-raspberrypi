@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## v11 - Unreleased
+## [v11](https://github.com/ModBros/mobro-raspberrypi/compare/v10...v11) - 2020-08-29
 
 ### Added
 
@@ -198,7 +198,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * various bugfixes
 
 
-## v0 - 2020-02-13
+## v0 - 2019-02-13
 
 ### Added
 
