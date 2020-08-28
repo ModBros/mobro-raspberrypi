@@ -226,7 +226,8 @@ if [[ $(wc -l <$1) -lt 1 ]]; then
 fi
 
 log "configuration" "starting to apply new configuration:"
-cat "$1" &>>$LOG_FILE
+# do not write the wifi password to log
+cat -n "$1" | sed '/network_pw/d' &>>$LOG_FILE
 
 # configure timezone
 timezone_config "$1"
