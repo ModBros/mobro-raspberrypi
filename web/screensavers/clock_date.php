@@ -25,7 +25,7 @@ include '../util.php';
     #date {
       color: lightgray;
       text-align: center;
-      font-size: 50px;
+      font-size: 44px;
       margin-top: 10%;
       font-family: sans-serif;
     }
@@ -33,7 +33,7 @@ include '../util.php';
     #clock {
       color: white;
       text-align: center;
-      font-size: 75px;
+      font-size: 60px;
       margin-top: 20px;
       font-weight: bold;
       font-family: sans-serif;
