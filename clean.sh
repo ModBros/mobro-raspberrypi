@@ -31,8 +31,7 @@ cp -f /home/modbros/mobro-raspberrypi/config/wpa_supplicant_clean.conf /etc/wpa_
 # reset data files
 : >/home/modbros/mobro-raspberrypi/data/hosts
 : >/home/modbros/mobro-raspberrypi/data/ssids
-: >/home/modbros/mobro-raspberrypi/data/mobro_config
-
+cat /home/modbros/mobro-raspberrypi/config/mobro_config_default.txt >/home/modbros/mobro-raspberrypi/data/mobro_config
 echo "0" >/home/modbros/mobro-raspberrypi/data/mobro_found
 
 # delete cache + bash history
