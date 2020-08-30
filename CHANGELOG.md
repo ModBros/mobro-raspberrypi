@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [v11.1](https://github.com/ModBros/mobro-raspberrypi/compare/v11...v11.1) - 2020-08-31
+
+### Fixed
+* default configuration for HDMI screens  
+(wrong resolution of 640x480 was set for all screens)
+
 ## [v11](https://github.com/ModBros/mobro-raspberrypi/compare/v10...v11) - 2020-08-29
 
 ### Added
