@@ -88,6 +88,12 @@ network_config() {
         sudo cp -f $WPA_CONFIG_CLEAN /etc/wpa_supplicant/wpa_supplicant.conf
         ;;
 
+    usb)
+        # connected by ethernet => set standard wpa config and we're done
+        log "configuration" "network mode: USB Ethernet - resetting wpa_supplicant"
+        sudo cp -f $WPA_CONFIG_CLEAN /etc/wpa_supplicant/wpa_supplicant.conf
+        ;;
+
     wifi)
         log "configuration" "network mode: Wifi - creating new wpa_supplicant"
         local ssid pw country wpa hidden

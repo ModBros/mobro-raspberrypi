@@ -132,9 +132,12 @@ echo -n "Applying configurations..."
 
 cat ./config/config.txt >/boot/config.txt
 sed ' 1 s/.*/& consoleblank=0/' /boot/cmdline.txt
+touch /boot/ssh
 
 cat ./config/hostname >/etc/hostname
 cat ./config/hosts >/etc/hosts
+
+cat ./config/usb0 >/etc/network/interfaces.d/usb0 # set static ip to usb0 interface
 
 echo " done"
 
@@ -169,6 +172,12 @@ echo " done"
 echo -n "Setting permission for display drivers..."
 chmod +x /home/modbros/display-drivers/GoodTFT/*show
 chmod +x /home/modbros/display-drivers/Waveshare/*show
+echo " done"
+
+echo -n "Copy custom configs for GoodTFT..."
+cp -f ./config/config-nomal.txt /home/modbros/display-drivers/GoodTFT/boot/
+cp -f ./config/config-noobs-nomal.txt /home/modbros/display-drivers/GoodTFT/boot/
+cp -f ./config/cmdline_goodtft.txt /home/modbros/display-drivers/GoodTFT/usr/cmdline.txt
 echo " done"
 
 # ==========================================================================

@@ -44,6 +44,7 @@ IMAGE_WIFIFAILED="$RESOURCES_DIR/wififailed.png"
 IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
 IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
 IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
+IMAGE_USBSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 
 # Ports
 MOBRO_PORT='42100'            # port of the MoBro desktop application
@@ -59,7 +60,7 @@ STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (
 LOOP_COUNTER=0             # counter variable for main loop iterations
 CURR_URL=''                # save current chromium Url
 CURR_IMAGE=''              # save currently displayed image
-NETWORK_MODE=''            # save current network mode (eth|wifi)
+NETWORK_MODE=''            # save current network mode (eth|wifi|usb)
 SCREENSAVER=0              # flag if screensaver is active
 LAST_CONNECTED=$(date +%s) # timestamp (epoch seconds) of last successful connection check
 
@@ -170,10 +171,7 @@ show_mobro() {
     name=$(cat /proc/device-tree/model)                                  # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
     version=$(sed -n 1p <$VERSION_FILE)                                  # service version number
     resolution=$(xdpyinfo | awk '/dimensions/{print $2}') # current display resolution
-    case $NETWORK_MODE in
-    "wifi") uuid=$(sed 's/://g' </sys/class/net/wlan0/address) ;; # unique ID of this pi
-    "eth") uuid=$(sed 's/://g' </sys/class/net/eth0/address) ;; # unique ID of this pi
-    esac
+    uuid=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2) # get pi serial number as unique ID
     url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&device=pi&name=$name"
     SCREENSAVER=0
     LAST_CONNECTED=$(date +%s)
@@ -303,6 +301,7 @@ service_discovery() {
     case $NETWORK_MODE in
     "wifi") interface='wlan0' ;;
     "eth") interface='eth0' ;;
+    "usb") interface='usb0' ;;
     esac
 
     # check if static ip is configured
@@ -563,7 +562,10 @@ log "startup" "disabling services: dnsmasq, hostapd"
 } &>>$LOG_FILE
 
 # determine and set network mode
-if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
+if [[ $(grep up /sys/class/net/*/operstate | grep usb0 -c) -gt 0 ]]; then
+    log "startup" "network mode set to USB ETHERNET"
+    NETWORK_MODE='usb'
+elif [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
     log "startup" "network mode set to ETHERNET"
     NETWORK_MODE='eth'
 else
@@ -638,6 +640,11 @@ case $NETWORK_MODE in
     # search network for application
     service_discovery
     ;;
+"usb")
+    show_image $IMAGE_USBSUCCESS 3
+    # search network for application
+    service_discovery
+    ;;
 esac
 
 # ====================================================================================================================
@@ -662,6 +669,9 @@ while true; do
         fi
         ;;
     "eth")
+        background_check
+        ;;
+    "usb")
         background_check
         ;;
     esac

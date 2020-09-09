@@ -73,6 +73,9 @@ include '../util.php';
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
+$usb = shell_exec('grep up /sys/class/net/*/operstate | grep usb0');
+$ethConnected = isset($usb) && trim($usb) !== '';
+
 $ssid = shell_exec('iwgetid wlan0 -r');
 $wlanConnected = isset($ssid) && trim($ssid) !== '';
 
