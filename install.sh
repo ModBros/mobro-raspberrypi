@@ -138,6 +138,7 @@ cat ./config/hostname >/etc/hostname
 cat ./config/hosts >/etc/hosts
 
 cat ./config/usb0 >/etc/network/interfaces.d/usb0 # set static ip to usb0 interface
+cat ./config/g_ether.conf >/etc/modprobe.d/g_ether.conf # set static MAC address to usb0 interface
 
 echo " done"
 
