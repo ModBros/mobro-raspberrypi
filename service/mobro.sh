@@ -475,10 +475,10 @@ background_check() {
 
 wifi_check() {
     # check if wifi is configured
-    # (skip if no network set - e.g. first boot)
-    local mode
-    mode=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
-    if [[ -z "$mode" ]]; then
+    # (skip if no ssid is set - e.g. first boot)
+    local ssid
+    ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
+    if [[ -z "$ssid" ]]; then
         log "startup" "no previous network configuration found"
         create_access_point
         return
@@ -488,10 +488,9 @@ wifi_check() {
     # check if configured network is in range
     log "startup" "scanning for wireless networks"
     search_ssids
-    local wait_wifi ssid
+    local wait_wifi
     wait_wifi=1
     if [[ $(wc -l <$SSIDS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
         if [[ $(grep "$ssid" -c <$SSIDS_FILE) -eq 0 ]]; then
             wait_wifi=0
         fi
