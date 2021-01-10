@@ -9,7 +9,7 @@ function getFile($file)
     return file_get_contents($file);
 }
 
-$count = $_GET['count'] ?: 0;
+$count = isset($_GET['count']) && $_GET['count'] ?: 0;
 $count = min($count, 10);
 
 $base = Constants::DIR_LOG . '/log';

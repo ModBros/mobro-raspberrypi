@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## v12 - Unreleased
+
+### Added
+* syslog debug endpoint
+
+### Fixed
+* wifi check on first boot
+
+
 ## [v11.1](https://github.com/ModBros/mobro-raspberrypi/compare/v11...v11.1) - 2020-08-31
 
 ### Fixed
