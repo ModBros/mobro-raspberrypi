@@ -71,7 +71,8 @@ log() {
     local temp date
     temp=$(sudo vcgencmd measure_temp)
     date=$(date "+%d.%m.%y %T")
-    echo "$date [$LOOP_COUNTER][${temp:5:-4}][$1] $2" >>$LOG_FILE
+    throttle=$(sudo vcgencmd get_throttled)
+    echo "$date [$LOOP_COUNTER][${temp:5:-4}][${throttle:10}][$1] $2" >>$LOG_FILE
 }
 
 prop() {
