@@ -167,6 +167,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     .bootstrap-select .dropdown-item:active {
       background-color: #f30;
     }
+
+    a {
+      color: #333
+    }
+
+    a:hover{
+      color: #f30;
+    }
   </style>
 
   <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
@@ -388,7 +396,7 @@ $ssids = array_unique($ssids);
                   <label class="form-check-label form-label" for="passwordInput">
                     Wireless network password
                   </label>
-                  <div class="input-group">
+                  <div class="input-group" id="passwordInputGroup">
                     <div class="input-group-prepend">
                       <span class="input-group-text">
                         <i class="fas fa-key"></i>
@@ -398,6 +406,11 @@ $ssids = array_unique($ssids);
                            aria-describedby="pwHelp" value="<?php echo $network_pw ?>"
                         <?php if ($network_mode == 'eth') echo 'disabled' ?>
                     >
+                    <div class="input-group-append">
+                      <span class="input-group-text">
+                        <a href=""><i class="fa fa-eye-slash" aria-hidden="true"></i></a>
+                      </span>
+                    </div>
                   </div>
                   <small id="pwHelp" class="form-text text-muted">
                     The password needed to connect to the selected wireless network.
@@ -1008,6 +1021,19 @@ $ssids = array_unique($ssids);
   $("#screensaverPreviewButton").on("click", function () {
     var val = $('#screensaverInput').val();
     window.open('../screensavers/' + val, '_blank');
+  });
+
+  $("#passwordInputGroup a").on('click', function(event) {
+    event.preventDefault();
+    if($('#passwordInputGroup input').attr("type") === "text"){
+      $('#passwordInputGroup input').attr('type', 'password');
+      $('#passwordInputGroup i').addClass( "fa-eye-slash" );
+      $('#passwordInputGroup i').removeClass( "fa-eye" );
+    }else if($('#passwordInputGroup input').attr("type") === "password"){
+      $('#passwordInputGroup input').attr('type', 'text');
+      $('#passwordInputGroup i').removeClass( "fa-eye-slash" );
+      $('#passwordInputGroup i').addClass( "fa-eye" );
+    }
   });
 
 </script>
