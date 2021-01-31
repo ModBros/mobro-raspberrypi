@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * syslog debug endpoint
 * log system throttled state
 * cleartext toggle for wifi password field
+* expand rootfs on first boot
 
 ### Fixed
 * wifi check on first boot

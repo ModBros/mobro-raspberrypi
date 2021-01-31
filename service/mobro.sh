@@ -30,6 +30,7 @@ HOSTS_FILE="$DATA_DIR/hosts"
 SSIDS_FILE="$DATA_DIR/ssids"
 VERSION_FILE="$DATA_DIR/version"
 MOBRO_FOUND_FLAG="$DATA_DIR/mobro_found"
+FIRST_BOOT_FLAG="$DATA_DIR/first_boot"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # Resources
@@ -532,6 +533,21 @@ wifi_check() {
     service_discovery
 }
 
+first_boot() {
+    if [[ $(cat $FIRST_BOOT_FLAG) -ne 1 ]]; then
+        # not first boot -> just return
+        log "first_boot" "skipping - already done"
+        return
+    fi
+
+    log "first_boot" "expanding rootfs"
+    sudo raspi-config --expand-rootfs &>>$LOG_FILE
+
+    log "first_boot" "first boot commands done - rebooting"
+    echo "0" >$FIRST_BOOT_FLAG
+    sudo shutdown -r now
+}
+
 # ====================================================================================================================
 # Startup Sequence
 # ====================================================================================================================
@@ -544,6 +560,9 @@ cp -f $LOG_FILE "$LOG_DIR/log_0.txt" 2>/dev/null
 
 # clear current log
 echo '' >$LOG_FILE
+
+# check if this is the first boot
+first_boot
 
 log "startup" "starting service"
 
