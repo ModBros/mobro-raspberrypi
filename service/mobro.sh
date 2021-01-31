@@ -2,7 +2,7 @@
 
 # ====================================================================================================================
 # Modbros Monitoring Service (MoBro) - Raspberry Pi image
-# Copyright (C) 2020 ModBros
+# Copyright (C) 2021 ModBros
 # Contact: mod-bros.com
 #
 # This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ FIRST_BOOT_FLAG="$DATA_DIR/first_boot"
 LOG_FILE="$LOG_DIR/log.txt"
 
 # Resources
-IMAGE_MOBRO="$RESOURCES_DIR/mobro.png"
+IMAGE_SPLASH="$RESOURCES_DIR/splashscreen.png"
 IMAGE_FOUND="$RESOURCES_DIR/found.png"
 IMAGE_NOTFOUND="$RESOURCES_DIR/notfound.png"
 IMAGE_CONNECTWIFI="$RESOURCES_DIR/connectwifi.png"
@@ -625,7 +625,7 @@ if [[ $NO_SCREEN_FOUND == 1 ]]; then
 fi
 
 # show background
-show_image $IMAGE_MOBRO 7
+show_image $IMAGE_SPLASH 7
 
 # disabling screen blanking
 log "startup" "disable blank screen"

@@ -26,3 +26,4 @@ feh
 bc
 rng-tools
 secure-delete
+fbi

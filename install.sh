@@ -2,7 +2,7 @@
 
 # ==========================================================================
 # Modbros Monitoring Service (MoBro) - Raspberry Pi image
-# Copyright (C) 2020 ModBros
+# Copyright (C) 2021 ModBros
 # Contact: mod-bros.com
 #
 # This program is free software: you can redistribute it and/or modify
@@ -54,7 +54,7 @@ echo -n "Setting script and file permissions..."
 chmod 755 ./scripts/*.sh
 chmod 755 ./service/mobro.sh
 
-chmod 644 ./service/mobro.service
+chmod 644 ./service/*.service
 chmod 666 ./data/*
 chmod 666 ./log/*
 chmod 666 ./config/*
@@ -131,8 +131,7 @@ echo " done"
 echo -n "Applying configurations..."
 
 cat ./config/config.txt >/boot/config.txt
-sed ' 1 s/.*/& consoleblank=0/' /boot/cmdline.txt
-
+cat ./config/cmdline.txt >/boot/cmdline.txt
 cat ./config/hostname >/etc/hostname
 cat ./config/hosts >/etc/hosts
 
@@ -197,13 +196,15 @@ apt-get clean -y >/dev/null
 echo " done"
 
 # ==========================================================================
-# Service
+# Services
 # ==========================================================================
 
-echo -n "Installing the ModBros service..."
+echo -n "Installing the Splashscreen + MoBro service..."
 
+ln -s /home/modbros/mobro-raspberrypi/service/splashscreen.service /lib/systemd/system/splashscreen.service
 ln -s /home/modbros/mobro-raspberrypi/service/mobro.service /lib/systemd/system/mobro.service
 systemctl daemon-reload
+systemctl enable splashscreen.service
 systemctl enable mobro.service
 systemctl stop mobro.service
 
