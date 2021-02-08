@@ -83,6 +83,13 @@ while read dep; do
 done <"./dependencies.txt"
 
 # ==========================================================================
+# remove packages
+# ==========================================================================
+
+apt purge -y logrotate
+apt purge -y rsyslog
+
+# ==========================================================================
 # Stop and disable access point services + bluetooth
 # ==========================================================================
 
@@ -151,7 +158,7 @@ echo -n "Turning off swap..."
 dphys-swapfile swapoff
 dphys-swapfile uninstall
 update-rc.d dphys-swapfile remove
-apt purge dphys-swapfile
+apt purge -y dphys-swapfile
 echo " done"
 
 # ==========================================================================

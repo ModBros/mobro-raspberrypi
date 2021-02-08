@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * log system throttled state
 * cleartext toggle for wifi password field
 * expand rootfs on first boot
+* MoBro splashscreen instead of console boot log
+
+### Changed
+* switched to busybox in-memory logger
 
 ### Fixed
 * wifi check on first boot
