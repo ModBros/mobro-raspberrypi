@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * cleartext toggle for wifi password field
 * expand rootfs on first boot
 * MoBro splashscreen instead of console boot log
+* new hardware stats rest api endpoint
 
 ### Changed
 * switched to busybox in-memory logger

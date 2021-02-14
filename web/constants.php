@@ -19,4 +19,7 @@ class Constants
     public const SCRIPT_SHUTDOWN = self::BASE_PATH . '/scripts/shutdown.sh';
     public const SCRIPT_SERVICE = self::BASE_PATH . '/scripts/service.sh';
     public const SCRIPT_SYSLOG = self::BASE_PATH . '/scripts/syslog.sh';
+    public const SCRIPT_CPU_STATS = self::BASE_PATH . '/scripts/cpu_stats.sh';
+    public const SCRIPT_MEMORY_STATS = self::BASE_PATH . '/scripts/memory_stats.sh';
+    public const SCRIPT_FILESYSTEM_STATS = self::BASE_PATH . '/scripts/fs_stats.sh';
 }
