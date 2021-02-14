@@ -6,37 +6,37 @@ GET /
 GET /mobro
     the MoBro configuration page
 
-GET /version
+------------------------------------------------------------------------------
+API endpoints:
+------------------------------------------------------------------------------
+
+GET /api
+    returns: this page
+
+GET /api/version
     returns: the current version number
 
-GET /log
+GET /api/log
     returns: the current logfile (from this boot)
     params (optional):
       lines: only return the most recent n lines
       count: include log files of previous n boots (max = 10, default = 0)
 
-------------------------------------------------------------------------------
-API endpoints:
-------------------------------------------------------------------------------
+GET /api/syslog
+    returns: the current syslog
 
-GET  /api
-     returns: this page
-
-GET  /api/temperature
-     returns: the current CPU temperature
-
-GET  /api/top
-     returns: the output of the "top" command. i.e.: CPU/RAM Usage, Processes...
+GET /api/top
+    returns: the output of the "top" command. i.e.: CPU/RAM Usage, Processes...
 
 PUT /api/restart
-     restarts the Raspberry Pi
-     params (optional):
-       delay: delay in minutes before restart (default = 0)
+    restarts the Raspberry Pi
+    params (optional):
+      delay: delay in minutes before restart (default = 0)
 
 PUT /api/shutdown
-     shuts down the Raspberry Pi
-     params (optional):
-       delay: delay in minutes before shutdown (default = 0)
+    shuts down the Raspberry Pi
+    params (optional):
+      delay: delay in minutes before shutdown (default = 0)
 
 PUT /api/service
     starts, stops or restart the MoBro service
@@ -45,3 +45,9 @@ PUT /api/service
 
 GET /api/configuration
     returns the current configuration
+
+GET /api/hwstats
+    return: stats of the selected hardware components
+            e.g. cpu usage, temperature, memory usage,...
+    params:
+      components: cpu,memory,filesystem (default=cpu,memory)
