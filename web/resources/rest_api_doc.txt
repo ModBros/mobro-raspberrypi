@@ -47,7 +47,7 @@ GET /api/configuration
     returns the current configuration
 
 GET /api/hwstats
-    return: stats of the selected hardware components
+    return: stats of hardware components
             e.g. cpu usage, temperature, memory usage,...
     params:
-      components: cpu,memory,filesystem (default=cpu,memory)
+      filter: cpu,memory,filesystem (default=cpu,memory)

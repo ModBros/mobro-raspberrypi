@@ -2,7 +2,8 @@
 
 print_usage() {
   cat <<-TEXT
-Usage: ${0##*/} [-h|-u|-f|-l] [boot|root|home]
+Usage: ${0##*/} [OPTION] [PARTITION]
+  options:
    -h, --help        This message
    -u, --used        Used space of given filesystem in MB
    -a, --available   Available space of given filesystem in MB
@@ -10,7 +11,9 @@ Usage: ${0##*/} [-h|-u|-f|-l] [boot|root|home]
    -m, --mount       The mount point of the fs
    -f, --filesystem  The filesystem
    -s, --status      Mounted RW or RO
+   -j, --json        all values in json format
 
+  partitions:
     r, root          the root fs
     b, boot          the boot partition
     h, home          the home partition
@@ -23,6 +26,43 @@ get_ro_now() {
 
 get_overlay_now() {
   grep -q "boot=overlay" /proc/cmdline
+}
+
+get_used() {
+  echo "$1" | awk 'NR == 1 {printf "%.2f", $3/1024}'
+}
+
+get_available() {
+  echo "$1" | awk 'NR == 1 {printf "%.2f", $4/1024}'
+}
+
+get_load() {
+  echo "$1" | awk 'NR == 1 {print $5}'
+}
+
+get_mount() {
+  echo "$1" | awk 'NR == 1 {print $6}'
+}
+
+get_fs() {
+  echo "$1" | awk 'NR == 1 {print $1}'
+}
+
+get_status() {
+  if [ "$1" = "/" ]; then
+    get_overlay_now
+    if get_overlay_now; then
+      echo -n "read-only"
+    else
+      echo -n "read-write"
+    fi
+  else
+    if get_ro_now "$1"; then
+      echo -n "read-only"
+    else
+      echo -n "read-write"
+    fi
+  fi
 }
 
 [ "$1" = "--help" -o "$1" = "-h" ] && {
@@ -48,35 +88,32 @@ esac
 
 case "$1" in
 --used | -u)
-  df | grep "$PARTITION" | awk 'NR == 1 {printf "%.2f", $3/1024}'
+  get_used "$(df | grep "$PARTITION")"
   ;;
 --available | -a)
-  df | grep "$PARTITION" | awk 'NR == 1 {printf "%.2f", $4/1024}'
+  get_available "$(df | grep "$PARTITION")"
   ;;
 --load | -l)
-  df | grep "$PARTITION" | awk 'NR == 1 {printf "%i", $5}'
+  get_load "$(df | grep "$PARTITION")"
   ;;
 --mount | -m)
-  df | grep "$PARTITION" | awk 'NR == 1 {printf "%s", $6}'
+  get_mount "$(df | grep "$PARTITION")"
   ;;
 --filesystem | -f)
-  df | grep "$PARTITION" | awk 'NR == 1 {printf "%s", $1}'
+  get_fs "$(df | grep "$PARTITION")"
   ;;
 --status | -s)
-  if [ "$PARTITION" = "/" ]; then
-    get_overlay_now
-    if get_overlay_now; then
-      echo -n "read-only"
-    else
-      echo -n "read-write"
-    fi
-  else
-    if get_ro_now $PARTITION; then
-      echo -n "read-only"
-    else
-      echo -n "read-write"
-    fi
-  fi
+  get_status "$PARTITION"
+  ;;
+--json | -j)
+  DF_RESPONSE=$(df | grep "$PARTITION")
+  printf '{"status":"%s","mounted":"%s","filesystem":"%s","used":%f,"available":%f,"usage":%i}\n' \
+    "$(get_status "$DF_RESPONSE")" \
+    "$(get_mount "$DF_RESPONSE")" \
+    "$(get_fs "$DF_RESPONSE")" \
+    "$(get_used "$DF_RESPONSE")" \
+    "$(get_available "$DF_RESPONSE")" \
+    "$(get_load "$DF_RESPONSE")"
   ;;
 *)
   print_usage

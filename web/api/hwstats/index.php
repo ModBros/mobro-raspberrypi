@@ -5,12 +5,12 @@ include '../../constants.php';
 $cache_file = '/tmp/php_cache_perf';
 $cache_seconds = 10;
 
-$categories = 'cpu,memory';
-if (isset($_GET['categories'])) {
-    $categories = strtolower($_GET['categories']);
+$filter = "";
+if (isset($_GET['filter'])) {
+    $filter = strtolower($_GET['filter']);
 }
 
-$cache_file = $cache_file . $categories;
+$cache_file = $cache_file . $filter;
 if (file_exists($cache_file) && (filemtime($cache_file) > (time() - $cache_seconds))) {
     header("Content-Type: application/json");
     echo file_get_contents($cache_file);
@@ -21,34 +21,17 @@ if (file_exists($cache_file) && (filemtime($cache_file) > (time() - $cache_secon
 $arr = array(
     "ts" => time()
 );
-if (strpos($categories, 'cpu') !== false) {
-    $arr['cpu'] = array(
-        "cores" => intval(shell_exec(Constants::SCRIPT_CPU_STATS . ' --processors')),
-        "temperature" => floatval(shell_exec(Constants::SCRIPT_CPU_STATS . ' --temperature')),
-        "usage" => floatval(shell_exec(Constants::SCRIPT_CPU_STATS . ' --load')),
-        "clock" => intval(shell_exec(Constants::SCRIPT_CPU_STATS . ' --clock'))
-    );
+if (empty($filter) || strpos($filter, 'cpu') !== false) {
+    $arr['cpu'] = json_decode(shell_exec(Constants::SCRIPT_CPU_STATS . " --json"));
 }
-if (strpos($categories, 'memory') !== false) {
-    $arr['memory'] = array(
-        "total" => floatval(shell_exec(Constants::SCRIPT_MEMORY_STATS . ' --total')),
-        "used" => floatval(shell_exec(Constants::SCRIPT_MEMORY_STATS . ' --used')),
-        "free" => floatval(shell_exec(Constants::SCRIPT_MEMORY_STATS . ' --free')),
-        "usage" => floatval(shell_exec(Constants::SCRIPT_MEMORY_STATS . ' --load'))
-    );
+if (empty($filter) || strpos($filter, 'memory') !== false) {
+    $arr['memory'] =json_decode(shell_exec(Constants::SCRIPT_MEMORY_STATS . " --json"));
 }
-if (strpos($categories, 'filesystem') !== false) {
+if (empty($filter)|| strpos($filter, 'filesystem') !== false) {
     $filesystems = array('root', 'home', 'boot');
     $fsArray = array();
     foreach ($filesystems as $fs) {
-        $fsArray[$fs] = array(
-            "status" => shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --status $fs"),
-            "mounted" => shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --mount $fs"),
-            "filesystem" => shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --filesystem $fs"),
-            "used" => floatval(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --used $fs")),
-            "free" => floatval(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --available $fs")),
-            "usage" => floatval(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --load $fs"))
-        );
+        $fsArray[$fs] = json_decode(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --json $fs"));
     }
     $arr['filesystem'] = $fsArray;
 }
