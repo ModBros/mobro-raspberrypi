@@ -63,6 +63,7 @@ CURR_IMAGE=''              # save currently displayed image
 NETWORK_MODE=''            # save current network mode (eth|wifi)
 SCREENSAVER=0              # flag if screensaver is active
 LAST_CONNECTED=$(date +%s) # timestamp (epoch seconds) of last successful connection check
+NO_SCREEN=0                # flag whether a screen has been found
 
 # ====================================================================================================================
 # Functions
@@ -119,7 +120,16 @@ sleep_pi() {
     fi
 }
 
+wait_endless() {
+    while true; do
+        sleep 60
+    done
+}
+
 show_image() {
+    if [[ $NO_SCREEN == 1 ]]; then
+        return
+    fi
     if [[ $(pgrep -fc chromium) -gt 0 ]]; then
         stop_chrome
         sleep_pi 1 2
@@ -146,6 +156,9 @@ show_image() {
 }
 
 show_page_chrome() {
+    if [[ $NO_SCREEN == 1 ]]; then
+        return
+    fi
     if [[ $(pgrep -fc chromium) -gt 0 ]]; then
         if [[ $CURR_URL == "$1" ]]; then
             # already showing requested page
@@ -197,7 +210,7 @@ search_ssids() {
     cat $SSIDS_FILE &>>$LOG_FILE
 }
 
-create_access_point() {
+access_point() {
     log "create_access_point" "creating access point"
 
     show_image $IMAGE_HOTSPOTCREATION
@@ -230,6 +243,10 @@ create_access_point() {
 
     log "create_access_point" "access point up"
     show_image $IMAGE_HOTSPOT
+
+    # wait for user to configure the pi
+    # on configuration apply the pi will be rebooted automatically
+    wait_endless
 }
 
 create_access_point_call() {
@@ -247,11 +264,7 @@ create_access_point_call() {
 }
 
 is_access_point_open() {
-    if [[ $(create_ap --list-running | grep wlan0 -c) -gt 0 ]]; then
-        return 0
-    else
-        return 1
-    fi
+    create_ap --list-running | grep wlan0 -q
 }
 
 set_mobro_found() {
@@ -475,62 +488,25 @@ background_check() {
     service_discovery
 }
 
-wifi_check() {
-    # check if wifi is configured
-    # (skip if no ssid is set - e.g. first boot)
-    local ssid
-    ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
-    if [[ -z "$ssid" ]]; then
-        log "startup" "no previous network configuration found"
-        create_access_point
-        return
-    fi
-
-    show_image $IMAGE_CONNECTWIFI
-    # check if configured network is in range
-    log "startup" "scanning for wireless networks"
-    search_ssids
-    local wait_wifi
-    wait_wifi=1
-    if [[ $(wc -l <$SSIDS_FILE) -ge 1 ]]; then # check if scan returned anything first
-        if [[ $(grep "$ssid" -c <$SSIDS_FILE) -eq 0 ]]; then
-            wait_wifi=0
-        fi
-    fi
-
-    if [[ $wait_wifi -ne 1 ]]; then
-        # previous wifi not reachable
-        log "startup" "configured wifi network '$ssid' not in range"
-        show_image $IMAGE_WIFIFAILED 10
-        create_access_point
-        return
-    fi
-
-    log "startup" "waiting for wifi connection to network '$ssid'..."
-    local wifi_connected wifi_connect_count
-    wifi_connected=0
-    wifi_connect_count=0
-    until [[ $wifi_connect_count -ge $STARTUP_WIFI_WAIT ]]; do
+wait_wifi_connection() {
+    local try_seconds=0
+    until [[ $try_seconds -ge $1 ]]; do
         if [[ $(iwgetid wlan0 --raw) ]]; then
-            wifi_connected=1
-            break
+            # wifi connected
+            return 0
         fi
         sleep 5
-        wifi_connect_count=$((wifi_connect_count + 5))
+        try_seconds=$((try_seconds + 5))
     done
-
-    if [[ $wifi_connected -ne 1 ]]; then
-        log "startup" "couldn't connect to wifi network '$ssid'"
-        show_image $IMAGE_WIFIFAILED 10
-        create_access_point
-        return
+}
     fi
 
-    log "startup" "connected to wifi network '$ssid'"
-    show_image $IMAGE_WIFISUCCESS 3
+    fi
 
-    # search network for application
-    service_discovery
+
+    fi
+
+
 }
 
 first_boot() {
@@ -599,11 +575,10 @@ sudo xinit \
 
 # wait for x server
 sleep 2
-NO_SCREEN_FOUND=0
 while ! xset q &>/dev/null; do
     log "startup" "waiting for X.."
     if [[ $(grep -c "no screens found" $LOG_FILE) -gt 0 ]]; then
-        NO_SCREEN_FOUND=1
+        NO_SCREEN=1
         stop_process "xinit"
         break
     fi
@@ -612,16 +587,12 @@ done
 sleep_pi 2 5
 
 # handle case if no connected display is found
-if [[ $NO_SCREEN_FOUND == 1 ]]; then
-    log "startup" "no screen found. skipping X and waiting for display configuration"
+if [[ $NO_SCREEN == 1 ]]; then
+    log "startup" "no screen found - waiting for configuration"
     if [[ $NETWORK_MODE == "wifi" ]]; then
-        search_ssids
-        log "startup" "creating access point"
-        create_access_point_call
+        access_point
     fi
-    while true; do
-        sleep 60
-    done
+    wait_endless
 fi
 
 # show background
@@ -641,16 +612,47 @@ case $NETWORK_MODE in
     if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
         log "startup" "no wifi interface detected, aborting"
         show_image $IMAGE_NOWIFIINTERFACE
-        while true; do
-            sleep 60
-        done
+        wait_endless
     fi
     # unblock the wifi interface
     log "startup" "unblocking wifi interface"
     sudo rfkill unblock 0 &>>$LOG_FILE
     # try to connect to wifi (if previously configured)
     # and try to connect to mobro
-    wifi_check
+
+    # check if wifi is configured
+    # (skip if no ssid is set - e.g. first boot)
+    ssid=$(prop 'network_ssid' $MOBRO_CONFIG_FILE)
+    if [[ -z "$ssid" ]]; then
+        log "startup" "no previous network configuration found"
+        access_point
+    fi
+
+    show_image $IMAGE_CONNECTWIFI
+
+    # check if configured network is in range
+    log "startup" "scanning for wireless networks"
+    search_ssids
+
+    if ! grep -q "$ssid" "$SSIDS_FILE"; then
+        # previous wifi not reachable
+        log "startup" "configured wifi network '$ssid' not in range"
+        show_image $IMAGE_WIFIFAILED 10
+        access_point
+    fi
+
+    log "startup" "waiting for wifi connection to '$ssid'..."
+    if ! wait_wifi_connection $STARTUP_WIFI_WAIT; then
+        log "startup" "couldn't connect to wifi network '$ssid'"
+        show_image $IMAGE_WIFIFAILED 10
+        access_point
+    fi
+
+    log "startup" "connected to wifi network '$ssid'"
+    show_image $IMAGE_WIFISUCCESS 3
+
+    # now search the network for the MoBro desktop application
+    service_discovery
     ;;
 "eth")
     show_image $IMAGE_ETHSUCCESS 3
@@ -670,15 +672,10 @@ while true; do
 
     case $NETWORK_MODE in
     "wifi")
-        if ! is_access_point_open; then
-            # no hotspot running
-            if ! [[ $(iwgetid wlan0 --raw) ]]; then
-                create_access_point
-            else
-                # we're connected - keep checking in background if the PC is still available
-                background_check
-            fi
-        fi
+        while ! wait_wifi_connection 15; do
+          show_image $IMAGE_CONNECTWIFI
+        done
+        background_check
         ;;
     "eth")
         background_check
