@@ -1,6 +1,6 @@
 <!--
 Modbros Monitoring Service (MoBro) - Raspberry Pi image
-Copyright (C) 2020 ModBros
+Copyright (C) 2021 ModBros
 Contact: mod-bros.com
 
 This program is free software: you can redistribute it and/or modify
@@ -97,7 +97,7 @@ function getSecurityMode($mode)
 
 $version = getFirstLine(Constants::FILE_VERSION, 'Unknown');
 
-$props = parseProperties(Constants::FILE_MOBRO_CONFIG);
+$props = parseProperties(Constants::FILE_MOBRO_CONFIG_READ);
 // localization
 $localization_country = getOrDefault($props['localization_country'], 'AT');
 $localization_timezone = getOrDefault($props['localization_timezone'], 'UTC');

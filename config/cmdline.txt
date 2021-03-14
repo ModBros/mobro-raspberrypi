@@ -1,1 +1,1 @@
-console=tty3 root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline rootwait consoleblank=0 logo.nologo quiet
+console=tty3 root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline rootwait consoleblank=0 logo.nologo quiet fastboot noswap

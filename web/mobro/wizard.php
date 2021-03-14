@@ -198,7 +198,7 @@ $wlanConnected = isset($ssid) && trim($ssid) !== '';
 
 $connected = $ethConnected || $wlanConnected;
 
-$props = parseProperties(Constants::FILE_MOBRO_CONFIG);
+$props = parseProperties(Constants::FILE_MOBRO_CONFIG_READ);
 // localization
 $localization_country = getOrDefault($props['localization_country'], 'AT');
 $localization_timezone = getOrDefault($props['localization_timezone'], 'UTC');

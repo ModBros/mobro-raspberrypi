@@ -2,7 +2,7 @@
 
 # ====================================================================================================================
 # Modbros Monitoring Service (MoBro) - Raspberry Pi image
-# Copyright (C) 2020 ModBros
+# Copyright (C) 2021 ModBros
 # Contact: mod-bros.com
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,6 @@
 # ====================================================================================================================
 
 # Directories
-LOG_DIR='/home/modbros/mobro-raspberrypi/log'
 CONF_DIR='/home/modbros/mobro-raspberrypi/config'
 
 # Files
@@ -29,8 +28,10 @@ WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
 WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
 BOOT_CONFIG="$CONF_DIR/config.txt"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
+MOBRO_CONFIG="$CONF_DIR/mobro_config"
+MOBRO_CONFIG_BOOT="$CONF_DIR/mobro_config_boot"
 
-LOG_FILE="$LOG_DIR/log.txt"
+LOG_FILE="/tmp/mobro_log"
 
 # ====================================================================================================================
 # Helper Functions
@@ -54,6 +55,29 @@ add_wpa() {
 add_wpa_setting() {
     if [[ -n "$2" ]]; then
         echo "$1=$2" >>"$WPA_CONFIG_TEMP"
+    fi
+}
+
+get_overlay_now() {
+    grep -q "boot=overlay" /proc/cmdline
+}
+
+get_bootro_now() {
+    findmnt /boot | grep -q " ro,"
+}
+
+get_homero_now() {
+    findmnt /boot | grep -q " ro,"
+}
+
+prop_changed() {
+    local prop1 prop2
+    prop1=$(prop "$1" "$2")
+    prop2=$(prop "$1" "$3")
+    if [ "$prop1" != "$prop2" ]; then
+        return 0;
+    else
+        return 1;
     fi
 }
 
@@ -161,7 +185,7 @@ network_config() {
     esac
 }
 
-display() {
+display_config() {
     local driver rotation
     driver=$(prop 'display_driver' "$1")
     rotation=$(prop 'display_rotation' "$1")
@@ -225,9 +249,44 @@ if [[ $(wc -l <$1) -lt 1 ]]; then
     exit 1
 fi
 
+if cmp -s "$1" "$MOBRO_CONFIG"; then
+    log "configuration" "The new configuration is identical to the existing one:"
+    cat -n "$1" | sed '/network_pw/d' &>>$LOG_FILE
+    exit 0
+fi
+
+
+# mount the home partition as writable if it isn't already
+if get_homero_now; then
+    log "configuration" "remounting /home as writable"
+    sudo fsmount --rw home &>>$LOG_FILE
+fi
+
+# if overlayFS is currently active: save configuration and apply on reboot
+if get_overlay_now; then
+    log "configuration" "disabling OverlayFS"
+    sudo fsmount --rw root &>>$LOG_FILE
+
+    log "configuration" "persisting configuration for next boot"
+    cp -f "$1" "$MOBRO_CONFIG_BOOT"
+
+    log "configuration" "rebooting"
+    sudo shutdown -r now
+    exit 0;
+fi
+
+# mount the boot partition as writable if it isn't already
+if get_bootro_now; then
+    log "configuration" "remounting /boot as writable"
+    sudo fsmount --rw boot &>>$LOG_FILE
+fi
+
 log "configuration" "starting to apply new configuration:"
 # do not write the wifi password to log
 cat -n "$1" | sed '/network_pw/d' &>>$LOG_FILE
+
+log "configuration" "persisting new configuration"
+cp -f "$1" "$MOBRO_CONFIG"
 
 # configure timezone
 timezone_config "$1"
@@ -236,8 +295,15 @@ timezone_config "$1"
 network_config "$1"
 
 # handle display drivers
-display "$1"
+display_config "$1"
 
-# reboot the Pi
+if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
+    # resetting config boot file
+    : >"$MOBRO_CONFIG_BOOT"
+fi
+
+log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
+sudo fsmount --ro all &>>$LOG_FILE
+
 log "configuration" "done - rebooting"
 sudo shutdown -r now

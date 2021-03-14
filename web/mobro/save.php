@@ -1,6 +1,6 @@
 <!--
 Modbros Monitoring Service (MoBro) - Raspberry Pi image
-Copyright (C) 2020 ModBros
+Copyright (C) 2021 ModBros
 Contact: mod-bros.com
 
 This program is free software: you can redistribute it and/or modify
@@ -75,8 +75,9 @@ $configuration_file_contents =
     "display_rotation={$display_rotation}\n" .
     "display_screensaver={$display_screensaver}\n" .
     "display_delay={$display_delay}\n";
-file_put_contents(Constants::FILE_MOBRO_CONFIG, $configuration_file_contents, LOCK_EX);
+file_put_contents(Constants::FILE_MOBRO_CONFIG_WRITE, $configuration_file_contents, LOCK_EX);
 
 
 // apply config and reboot the Pi
-shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG . ' "' . Constants::FILE_MOBRO_CONFIG . '"');
+shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG . ' "' . Constants::FILE_MOBRO_CONFIG_WRITE . '"');
+

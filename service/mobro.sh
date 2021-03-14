@@ -20,18 +20,26 @@
 # ====================================================================================================================
 
 # Directories
-LOG_DIR='/home/modbros/mobro-raspberrypi/log'
+TMP_DIR='/tmp'
 RESOURCES_DIR='/home/modbros/mobro-raspberrypi/resources'
-DATA_DIR='/home/modbros/mobro-raspberrypi/data'
+CONFIG_DIR='/home/modbros/mobro-raspberrypi/config'
+SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scrips'
 
 # Files
-MOBRO_CONFIG_FILE="$DATA_DIR/mobro_config"
-HOSTS_FILE="$DATA_DIR/hosts"
-SSIDS_FILE="$DATA_DIR/ssids"
-VERSION_FILE="$DATA_DIR/version"
-MOBRO_FOUND_FLAG="$DATA_DIR/mobro_found"
-FIRST_BOOT_FLAG="$DATA_DIR/first_boot"
-LOG_FILE="$LOG_DIR/log.txt"
+MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
+MOBRO_CONFIG_BOOT_FILE="$CONFIG_DIR/mobro_config_boot"
+VERSION_FILE="$CONFIG_DIR/version"
+FIRST_BOOT_FLAG="$CONFIG_DIR/first_boot"
+
+# TMP files
+CONNECTED_HOST="$TMP_DIR/mobro_connected_host"
+MOBRO_FOUND_FLAG="$TMP_DIR/mobro_found"
+LOG_FILE="$TMP_DIR/mobro_log"
+HOSTS_FILE="$TMP_DIR/mobro_hosts"
+SSIDS_FILE="$TMP_DIR/mobro_ssids"
+
+# Scripts
+APPLY_CONFIG_SCRIPT="$SCRIPT_DIR/apply_new_config.sh"
 
 # Resources
 IMAGE_SPLASH="$RESOURCES_DIR/splashscreen.png"
@@ -45,6 +53,7 @@ IMAGE_WIFIFAILED="$RESOURCES_DIR/wififailed.png"
 IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
 IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
 IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
+IMAGE_CONFIGURATION="$RESOURCES_DIR/applyconfig.png"
 
 # Ports
 MOBRO_PORT='42100'            # port of the MoBro desktop application
@@ -176,14 +185,17 @@ show_page_chrome() {
         --incognito \
         --check-for-update-interval=2592000 \
         --kiosk \
+        --disk-cache-dir=/tmp/chromecache \
+        --disk-cache-size=1000\
+        --user-data-dir=/tmp/chromeconfig \
         &>>$LOG_FILE &
     wait_window "chromium"
 }
 
 show_mobro() {
     local name version uuid resolution url
-    name=$(cat /proc/device-tree/model)                                  # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-    version=$(sed -n 1p <$VERSION_FILE)                                  # service version number
+    name=$(cat /proc/device-tree/model)                   # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
+    version=$(sed -n 1p <$VERSION_FILE)                   # service version number
     resolution=$(xdpyinfo | awk '/dimensions/{print $2}') # current display resolution
     case $NETWORK_MODE in
     "wifi") uuid=$(sed 's/://g' </sys/class/net/wlan0/address) ;; # unique ID of this pi
@@ -269,7 +281,7 @@ is_access_point_open() {
 
 set_mobro_found() {
     echo "1" >$MOBRO_FOUND_FLAG
-    echo "$1" >$HOSTS_FILE
+    echo "$1" >$CONNECTED_HOST
 }
 
 is_mobro_found() {
@@ -339,7 +351,7 @@ service_discovery() {
 
     log "service_discovery" "configured to automatic discovery using connection key"
     # check previous host if configured
-    ip=$(sed -n 1p <$HOSTS_FILE) # get 1st host if present (from last successful connection)
+    ip=$(sed -n 1p <$CONNECTED_HOST)
     if ! [[ -z $ip || -z $key ]]; then
         log "service_discovery" "checking previous host on $ip with key '$key'"
         try_ip "$ip" "$key"
@@ -414,7 +426,7 @@ service_discovery() {
         # found MoBro application
         log "service_discovery" "MoBro application found on IP $ip"
         show_image $IMAGE_FOUND 5
-        show_mobro "$(sed -n 1p <$HOSTS_FILE)"
+        show_mobro "$(sed -n 1p <$CONNECTED_HOST)"
     else
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
@@ -438,7 +450,7 @@ check_screensaver() {
     local delay
     delay=$(prop 'display_delay' $MOBRO_CONFIG_FILE)
     if [[ -n $delay ]]; then
-        local diff, now
+        local diff now
         now=$(date +%s)
         diff=$((now - LAST_CONNECTED))
         delay=$((delay * 60))
@@ -455,9 +467,8 @@ check_screensaver() {
 
 background_check() {
     # check if host is still reachable
-    # if we made a successful connection the IP will be in the hosts file
     local ip
-    ip=$(sed -n 1p <$HOSTS_FILE)
+    ip=$(sed -n 1p <$CONNECTED_HOST)
     if [[ -z $ip ]]; then
         log "background_check" "no previous host found. starting discovery"
         check_screensaver
@@ -499,14 +510,29 @@ wait_wifi_connection() {
         try_seconds=$((try_seconds + 5))
     done
 }
+
+get_overlay_now() {
+    grep -q "boot=overlay" /proc/cmdline
+}
+
+config_boot() {
+    if ! [ -s "$MOBRO_CONFIG_BOOT_FILE" ]; then
+       log "config_boot" "skipping - no config to apply"
+       return
     fi
 
+    if get_overlay_now; then
+        log "config_boot" "OverlayFS still active. disabling and rebooting"
+        {
+          sudo fsmount --rw root
+          sudo shutdown -r now
+        } &>>$LOG_FILE
     fi
 
-
-    fi
-
-
+    show_image $IMAGE_CONFIGURATION
+    log "config_boot" "applying new configuration"
+    # note: applying the configuration will trigger a reboot
+    sudo /bin/bash "$APPLY_CONFIG_SCRIPT" "$MOBRO_CONFIG_BOOT_FILE"
 }
 
 first_boot() {
@@ -516,11 +542,30 @@ first_boot() {
         return
     fi
 
+    if get_overlay_now; then
+        log "config_boot" "OverlayFS still active. disabling and rebooting"
+        {
+            sudo fsmount --rw root
+            sudo shutdown -r now
+        } &>>$LOG_FILE
+    fi
+
+    log "configuration" "remounting /home and /boot as read-write"
+    {
+        sudo fsmount --rw boot
+        sudo fsmount --rw home
+    } &>>$LOG_FILE
+
     log "first_boot" "expanding rootfs"
     sudo raspi-config --expand-rootfs &>>$LOG_FILE
 
-    log "first_boot" "first boot commands done - rebooting"
+    log "first_boot" "first boot commands done"
     echo "0" >$FIRST_BOOT_FLAG
+
+    log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
+    sudo fsmount --ro all  &>>$LOG_FILE
+
+    log "first_boot" "rebooting"
     sudo shutdown -r now
 }
 
@@ -528,19 +573,35 @@ first_boot() {
 # Startup Sequence
 # ====================================================================================================================
 
-# copy log files to preserve the previous 10 starts
-for i in {8..0}; do
-    mv -f "$LOG_DIR/log_$i.txt" "$LOG_DIR/log_$((i + 1)).txt" 2>/dev/null
+# create temporary files
+for arg in LOG_FILE MOBRO_FOUND_FLAG SSIDS_FILE HOSTS_FILE CONNECTED_HOST; do
+  eval value=\$$arg
+  sudo touch "$value"
+  sudo chown modbros "$value"
 done
-cp -f $LOG_FILE "$LOG_DIR/log_0.txt" 2>/dev/null
 
-# clear current log
-echo '' >$LOG_FILE
+log "startup" "starting service"
 
 # check if this is the first boot
 first_boot
 
-log "startup" "starting service"
+# check if we need to apply config
+config_boot
+
+if ! get_overlay_now; then
+    log "config_boot" "OverlayFS not active. enabling and rebooting"
+    sudo shutdown -r now
+    {
+        sudo fsmount --ro root
+        sudo shutdown -r now
+    } &>>$LOG_FILE
+fi
+
+log "configuration" "remounting /home and /boot as read-only"
+{
+    sudo fsmount --ro boot
+    sudo fsmount --ro home
+} &>>$LOG_FILE
 
 # env vars
 export DISPLAY=:0
