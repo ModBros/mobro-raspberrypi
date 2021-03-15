@@ -66,13 +66,15 @@ AP_FAIL_WAIT=90               # how long to wait until AP creation/stopping is c
 STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (if wifi configured)
 
 # Global Vars
-LOOP_COUNTER=0             # counter variable for main loop iterations
-CURR_URL=''                # save current chromium Url
-CURR_IMAGE=''              # save currently displayed image
-NETWORK_MODE=''            # save current network mode (eth|wifi)
-SCREENSAVER=0              # flag if screensaver is active
-LAST_CONNECTED=$(date +%s) # timestamp (epoch seconds) of last successful connection check
-NO_SCREEN=0                # flag whether a screen has been found
+LOOP_COUNTER=0                          # counter variable for main loop iterations
+CURR_URL=''                             # save current chromium Url
+CURR_IMAGE=''                           # save currently displayed image
+NETWORK_MODE=''                         # save current network mode (eth|wifi)
+SCREENSAVER=0                           # flag if screensaver is active
+LAST_CONNECTED=$(date +%s)              # timestamp (epoch seconds) of last successful connection check
+NO_SCREEN=0                             # flag whether a screen has been found
+PI_MODEL=$(cat /proc/device-tree/model) # the Raspberry Pi model (full string)
+VERSION=$(cat $VERSION_FILE)            # the current version of this image
 
 # ====================================================================================================================
 # Functions
@@ -193,15 +195,13 @@ show_page_chrome() {
 }
 
 show_mobro() {
-    local name version uuid resolution url
-    name=$(cat /proc/device-tree/model)                   # pi version name (e.g. Raspberry Pi 3 Model B Plus Rev 1.3)
-    version=$(sed -n 1p <$VERSION_FILE)                   # service version number
+    local uuid resolution url
     resolution=$(xdpyinfo | awk '/dimensions/{print $2}') # current display resolution
     case $NETWORK_MODE in
     "wifi") uuid=$(sed 's/://g' </sys/class/net/wlan0/address) ;; # unique ID of this pi
     "eth") uuid=$(sed 's/://g' </sys/class/net/eth0/address) ;; # unique ID of this pi
     esac
-    url="http://$1:$MOBRO_PORT?version=$version&uuid=$uuid&resolution=$resolution&device=pi&name=$name"
+    url="http://$1:$MOBRO_PORT?version=$VERSION&uuid=$uuid&resolution=$resolution&device=pi&name=$PI_MODEL"
     SCREENSAVER=0
     LAST_CONNECTED=$(date +%s)
     show_page_chrome "$url"
@@ -573,6 +573,8 @@ first_boot() {
 # Startup Sequence
 # ====================================================================================================================
 
+log "startup" "starting service"
+
 # create temporary files
 for arg in LOG_FILE MOBRO_FOUND_FLAG SSIDS_FILE HOSTS_FILE CONNECTED_HOST; do
   eval value=\$$arg
@@ -580,7 +582,8 @@ for arg in LOG_FILE MOBRO_FOUND_FLAG SSIDS_FILE HOSTS_FILE CONNECTED_HOST; do
   sudo chown modbros "$value"
 done
 
-log "startup" "starting service"
+log "startup" "Pi Model: $PI_MODEL"
+log "startup" "Version: $VERSION"
 
 # check if this is the first boot
 first_boot
