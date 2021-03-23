@@ -1,6 +1,6 @@
 <?php
 
-function getIfNotEof($file, $default)
+function getIfNotEof($file, $default): string
 {
     return $file && !feof($file) ? trim(fgets($file)) : $default;
 }
@@ -12,7 +12,7 @@ function closeFile($file)
     }
 }
 
-function getFirstLine($filePath, $default)
+function getFirstLine($filePath, $default): string
 {
     $file = fopen($filePath, "r");
     $line = getIfNotEof($file, $default);
@@ -20,12 +20,12 @@ function getFirstLine($filePath, $default)
     return $line;
 }
 
-function getOrDefault($var, $default)
+function getOrDefault($var, $default): string
 {
     return trim(!empty($var) || $var == "0" ? $var : $default);
 }
 
-function parseProperties($filePath)
+function parseProperties($filePath): array
 {
     $fileContent = file_get_contents($filePath);
     $result = [];
@@ -56,7 +56,7 @@ function parseProperties($filePath)
     return $result;
 }
 
-function getDriverScripts($dir, $prefix)
+function getDriverScripts($dir, $prefix): array
 {
     $result = array();
     foreach (scandir($dir) as $key => $value) {
@@ -74,7 +74,7 @@ function getDriverScripts($dir, $prefix)
     return $result;
 }
 
-function getGroupedTimeZones()
+function getGroupedTimeZones(): array
 {
     $result = array();
     if (($handle = fopen(Constants::FILE_TIMEZONES, "r")) !== FALSE) {
@@ -89,17 +89,17 @@ function getGroupedTimeZones()
     return $result;
 }
 
-function getGoodTFTDrivers()
+function getGoodTFTDrivers(): array
 {
     return getDriverScripts(Constants::DIR_DRIVER_GOODTFT, null);
 }
 
-function getWaveshareDrivers()
+function getWaveshareDrivers(): array
 {
     return getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, null);
 }
 
-function getOtherDriverOptions()
+function getOtherDriverOptions(): array
 {
     return [
         'hdmi' => 'HDMI',
@@ -107,7 +107,7 @@ function getOtherDriverOptions()
     ];
 }
 
-function getAllDrivers()
+function getAllDrivers(): array
 {
     return array_merge(
         getOtherDriverOptions(),
@@ -116,7 +116,7 @@ function getAllDrivers()
     );
 }
 
-function getScreensavers()
+function getScreensavers(): array
 {
     return [
         'disabled' => 'Disabled',
@@ -130,4 +130,50 @@ function getScreensavers()
         'clock_date.php' => 'Date + Clock',
         'pong.php' => 'Pong Clock'
     ];
+}
+
+function getOverClocks(): array
+{
+    if (isPiZero()) {
+        return array(
+            'none' => 'None',
+            'high' => 'High: 1050MHz ARM, 450MHz core, 450MHz SDRAM, 6 overvolt',
+            'turbo' => 'Turbo: 1100MHz ARM, 500MHz core, 500MHz SDRAM, 6 overvolt'
+        );
+    }
+    if (isPiOne()) {
+        return array(
+            'none' => 'None',
+            'modest' => 'Modest: 800MHz ARM, 250MHz core, 400MHz SDRAM, 0 overvolt',
+            'medium' => 'Medium: 900MHz ARM, 250MHz core, 450MHz SDRAM, 2 overvolt',
+            'high' => 'High: 950MHz ARM, 250MHz core, 450MHz SDRAM, 6 overvolt',
+            'turbo' => 'Turbo: 1000MHz ARM, 500MHz core, 600MHz SDRAM, 6 overvolt'
+        );
+    }
+    if (isPiTwo()) {
+        return array(
+            'none' => 'None',
+            'high' => 'High: 1000MHz ARM, 500MHz core, 500MHz SDRAM, 2 overvolt',
+        );
+    }
+    return array(
+        'none' => 'None'
+    );
+}
+
+function isPiZero(): bool
+{
+    return shell_exec('grep -c "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[9cC][0-9a-fA-F]$" /proc/cpuinfo') > 0;
+}
+
+function isPiOne(): bool
+{
+    $isPiOne = shell_exec('grep -c "^Revision\s*:\s*00[0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo') > 0;
+    $isPiOne |= shell_exec('grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[0-36][0-9a-fA-F]$" /proc/cpuinfo') > 0;
+    return $isPiOne;
+}
+
+function isPiTwo(): bool
+{
+    return shell_exec('grep -c "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]04[0-9a-fA-F]$" /proc/cpuinfo') > 0;
 }

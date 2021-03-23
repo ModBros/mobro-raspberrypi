@@ -59,6 +59,11 @@ $display_rotation = getPostValOrDefault('display_rotation', '0');
 $display_screensaver = getPostValOrDefault('display_screensaver', 'disabled');
 $display_delay = getPostValOrDefault('display_delay', '5');
 
+// advanced
+$advanced_overclock = getPostValOrDefault('advanced_overclock', 'none');
+$advanced_configtxt = getPostValOrDefault('advanced_configtxt', '');
+$advanced_configtxt = preg_replace('~\R~u', "\n", $advanced_configtxt);
+
 // write configuration file
 $configuration_file_contents =
     "localization_country={$localization_country}\n" .
@@ -74,10 +79,12 @@ $configuration_file_contents =
     "display_driver={$display_driver}\n" .
     "display_rotation={$display_rotation}\n" .
     "display_screensaver={$display_screensaver}\n" .
-    "display_delay={$display_delay}\n";
-file_put_contents(Constants::FILE_MOBRO_CONFIG_WRITE, $configuration_file_contents, LOCK_EX);
+    "display_delay={$display_delay}\n" .
+    "advanced_overclock={$advanced_overclock}\n";
 
+file_put_contents(Constants::FILE_MOBRO_CONFIG_WRITE, $configuration_file_contents, LOCK_EX);
+file_put_contents(Constants::FILE_MOBRO_CONFIGTXT_WRITE, $advanced_configtxt, LOCK_EX);
 
 // apply config and reboot the Pi
-shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG . ' "' . Constants::FILE_MOBRO_CONFIG_WRITE . '"');
+shell_exec('sudo ' . Constants::SCRIPT_APPLY_CONFIG . ' "' . Constants::FILE_MOBRO_CONFIG_WRITE . '"  "' . Constants::FILE_MOBRO_CONFIGTXT_WRITE . '"');
 

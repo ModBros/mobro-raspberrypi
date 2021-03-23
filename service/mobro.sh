@@ -28,6 +28,7 @@ SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scrips'
 # Files
 MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
 MOBRO_CONFIG_BOOT_FILE="$CONFIG_DIR/mobro_config_boot"
+MOBRO_CONFIGTXT_BOOT_FILE="$CONFIG_DIR/mobro_configtxt_boot"
 VERSION_FILE="$CONFIG_DIR/version"
 FIRST_BOOT_FLAG="$CONFIG_DIR/first_boot"
 
@@ -81,7 +82,7 @@ VERSION=$(cat $VERSION_FILE)            # the current version of this image
 # ====================================================================================================================
 
 log() {
-    local temp date
+    local temp date throttle
     temp=$(sudo vcgencmd measure_temp)
     date=$(date "+%d.%m.%y %T")
     throttle=$(sudo vcgencmd get_throttled)
@@ -532,7 +533,7 @@ config_boot() {
     show_image $IMAGE_CONFIGURATION
     log "config_boot" "applying new configuration"
     # note: applying the configuration will trigger a reboot
-    sudo /bin/bash "$APPLY_CONFIG_SCRIPT" "$MOBRO_CONFIG_BOOT_FILE"
+    sudo /bin/bash "$APPLY_CONFIG_SCRIPT" "$MOBRO_CONFIG_BOOT_FILE" "$MOBRO_CONFIGTXT_BOOT_FILE"
 }
 
 first_boot() {

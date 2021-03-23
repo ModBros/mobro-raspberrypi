@@ -1,6 +1,6 @@
 <!--
 Modbros Monitoring Service (MoBro) - Raspberry Pi image
-Copyright (C) 2020 ModBros
+Copyright (C) 2021 ModBros
 Contact: mod-bros.com
 
 This program is free software: you can redistribute it and/or modify
@@ -32,149 +32,163 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   <style>
 
-    .form-label {
-      font-weight: bold;
-    }
-
-    .confirmation-header {
-      font-weight: bold;
-      margin-bottom: 0.5em;
-    }
-
-    .confirmation-title {
-      color: dimgrey;
-    }
-
-    .multisteps-form__progress {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    }
-
-    .multisteps-form__progress-btn {
-      position: relative;
-      padding-top: 20px;
-      color: rgba(108, 117, 125, 0.7);
-      text-indent: -9999px;
-      border: none;
-      background-color: transparent;
-      outline: none !important;
-      cursor: pointer;
-    }
-
-    @media (min-width: 500px) {
-      .multisteps-form__progress-btn {
-        text-indent: 0;
+      .form-label {
+          font-weight: bold;
       }
-    }
 
-    .multisteps-form__progress-btn:before {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      display: block;
-      width: 13px;
-      height: 13px;
-      content: '';
-      -webkit-transform: translateX(-50%);
-      transform: translateX(-50%);
-      border: 2px solid currentColor;
-      border-radius: 50%;
-      background-color: #fff;
-      box-sizing: border-box;
-      z-index: 3;
-    }
+      .confirmation-header {
+          font-weight: bold;
+          margin-bottom: 0.5em;
+      }
 
-    .multisteps-form__progress-btn:after {
-      position: absolute;
-      top: 5px;
-      left: calc(-50% - 13px / 2);
-      display: block;
-      width: 100%;
-      height: 2px;
-      content: '';
-      background-color: currentColor;
-      z-index: 1;
-    }
+      .confirmation-title {
+          color: dimgrey;
+      }
 
-    .multisteps-form__progress-btn:first-child:after {
-      display: none;
-    }
+      .multisteps-form__progress {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      }
 
-    .multisteps-form__progress-btn.js-active {
-      color: #f30;
-    }
+      .multisteps-form__progress-btn {
+          position: relative;
+          padding-top: 20px;
+          color: rgba(108, 117, 125, 0.7);
+          text-indent: -9999px;
+          border: none;
+          background-color: transparent;
+          outline: none !important;
+          cursor: pointer;
+      }
 
-    .multisteps-form__progress-btn.js-active:before {
-      -webkit-transform: translateX(-50%) scale(1.2);
-      transform: translateX(-50%) scale(1.2);
-      background-color: currentColor;
-    }
+      @media (min-width: 500px) {
+          .multisteps-form__progress-btn {
+              text-indent: 0;
+          }
+      }
 
-    .multisteps-form__form {
-      position: relative;
-    }
+      .multisteps-form__progress-btn:before {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          display: block;
+          width: 13px;
+          height: 13px;
+          content: '';
+          -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+          border: 2px solid currentColor;
+          border-radius: 50%;
+          background-color: #fff;
+          box-sizing: border-box;
+          z-index: 3;
+      }
 
-    .multisteps-form__panel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 0;
-      opacity: 0;
-      visibility: hidden;
-    }
+      .multisteps-form__progress-btn:after {
+          position: absolute;
+          top: 5px;
+          left: calc(-50% - 13px / 2);
+          display: block;
+          width: 100%;
+          height: 2px;
+          content: '';
+          background-color: currentColor;
+          z-index: 1;
+      }
 
-    .multisteps-form__panel.js-active {
-      height: auto;
-      opacity: 1;
-      visibility: visible;
-    }
+      .multisteps-form__progress-btn:first-child:after {
+          display: none;
+      }
 
-    .btn-primary,
-    .btn-primary:active,
-    .btn-primary:visited {
-      color: white;
-      background-color: #f30;
-      border-color: #f30;
-    }
+      .multisteps-form__progress-btn.js-active {
+          color: #f30;
+      }
 
-    .btn-primary:hover {
-      background-color: #e13300;
-      border-color: #e13300;
-      color: white;
-    }
+      .multisteps-form__progress-btn.js-active:before {
+          -webkit-transform: translateX(-50%) scale(1.2);
+          transform: translateX(-50%) scale(1.2);
+          background-color: currentColor;
+      }
 
-    .btn-outline-primary,
-    .btn-outline-primary:active,
-    .btn-outline-primary:disabled,
-    .btn-outline-primary:visited {
-      color: #f30;
-      background-color: white;
-      border-color: #f30;
-    }
+      .multisteps-form__form {
+          position: relative;
+      }
 
-    .btn-outline-primary:hover {
-      background-color: #f30;
-      border-color: #f30;
-      color: white;
-    }
+      .multisteps-form__panel {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 0;
+          opacity: 0;
+          visibility: hidden;
+      }
 
-    .bootstrap-select .btn {
-      border: 1px solid #ced4da;
-    }
+      .multisteps-form__panel.js-active {
+          height: auto;
+          opacity: 1;
+          visibility: visible;
+      }
 
-    .bootstrap-select .dropdown-item.active,
-    .bootstrap-select .dropdown-item:active {
-      background-color: #f30;
-    }
+      .btn-primary,
+      .btn-primary:active,
+      .btn-primary:visited {
+          color: white;
+          background-color: #f30;
+          border-color: #f30;
+      }
 
-    a {
-      color: #333
-    }
+      .btn-primary:hover {
+          background-color: #e13300;
+          border-color: #e13300;
+          color: white;
+      }
 
-    a:hover{
-      color: #f30;
-    }
+      .btn-outline-primary,
+      .btn-outline-primary:active,
+      .btn-outline-primary:disabled,
+      .btn-outline-primary:visited {
+          color: #f30;
+          background-color: white;
+          border-color: #f30;
+      }
+
+      .btn-outline-primary:hover {
+          background-color: #f30;
+          border-color: #f30;
+          color: white;
+      }
+
+      .bootstrap-select .btn {
+          border: 1px solid #ced4da;
+      }
+
+      .bootstrap-select .dropdown-item.active,
+      .bootstrap-select .dropdown-item:active {
+          background-color: #f30;
+      }
+
+      a {
+          color: #333
+      }
+
+      a:hover {
+          color: #f30;
+      }
+
+      .btn-link {
+          color: #f30;
+          font-weight: bold;
+      }
+
+      .btn-link:hover {
+          color: #e13300;
+      }
+
+      .card-body {
+          padding: 0.5em 0.5em 1em 0.5em;
+      }
+
   </style>
 
   <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
@@ -221,6 +235,9 @@ $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
 $display_delay = getOrDefault($props['display_delay'], '5');
 
+// advanced
+$advanced_overclock = getOrDefault($props['advanced_overclock'], 'none');
+
 $ssids = array();
 $file = fopen(Constants::FILE_SSID, "r");
 while ($file && !feof($file)) {
@@ -252,6 +269,9 @@ $ssids = array_unique($ssids);
           <button class="multisteps-form__progress-btn" type="button" title="Screen">
             <span><i class="fas fa-desktop"></i></span>
           </button>
+          <button class="multisteps-form__progress-btn" type="button" title="Advanced Customization">
+            <span><i class="fas fa-cogs"></i></span>
+          </button>
           <button class="multisteps-form__progress-btn" type="button" title="Summary">
             <span><i class="fas fa-check-double"></i></span>
           </button>
@@ -264,7 +284,7 @@ $ssids = array_unique($ssids);
         <form id="configForm" class="multisteps-form__form" action="save.php" method="POST">
 
           <!-- LOCALIZATION SETUP -->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white js-active">
+          <div class="multisteps-form__panel shadow p-3 rounded bg-white js-active">
             <h3 class="multisteps-form__title text-center">Localization</h3>
             <div class="multisteps-form__content">
 
@@ -279,8 +299,8 @@ $ssids = array_unique($ssids);
                         <i class="fas fa-globe-europe"></i>
                       </span>
                     </div>
-                    <select id="countryInput" name="localization_country" class="form-control selectpicker" data-live-search="true"
-                            aria-describedby="countryInputHelp">
+                    <select id="countryInput" name="localization_country" class="form-control selectpicker"
+                            data-live-search="true" aria-describedby="countryInputHelp">
                         <?php
                         if (($handle = fopen("../resources/country_codes.csv", "r")) !== FALSE) {
                             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
@@ -312,8 +332,8 @@ $ssids = array_unique($ssids);
                         <i class="fas fa-clock"></i>
                       </span>
                     </div>
-                    <select id="timeZoneInput" name="localization_timezone" class="form-control selectpicker" data-live-search="true"
-                            aria-describedby="timeZoneInputHelp">
+                    <select id="timeZoneInput" name="localization_timezone" class="form-control selectpicker"
+                            data-live-search="true" aria-describedby="timeZoneInputHelp">
                       <option value="UTC">UTC</option>
                         <?php
                         foreach (getGroupedTimeZones() as $group => $data) {
@@ -498,24 +518,23 @@ $ssids = array_unique($ssids);
           </div>
 
           <!-- PC CONNECTION SETUP -->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white">
+          <div class="multisteps-form__panel shadow p-3 rounded bg-white">
             <h3 class="multisteps-form__title text-center">PC connection</h3>
             <div class="multisteps-form__content">
               <div class="form-row mt-4">
                 <div class="col">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="discovery_mode" id="discovery1" value="auto"
-                        <?php if ($discovery_mode == 'auto') echo 'checked' ?>>
-                    <label class="form-check-label" for="discovery1">
-                      Automatic discovery using network name
-                    </label>
+                  <div class="custom-control custom-radio">
+                    <input type="radio" id="discovery1" name="discovery_mode" value="auto" class="custom-control-input"
+                        <?php if ($discovery_mode == 'auto') echo 'checked' ?>
+                    >
+                    <label class="custom-control-label" for="discovery1">Automatic discovery using network name</label>
                   </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="discovery_mode" id="discovery2" value="manual"
-                        <?php if ($discovery_mode == 'manual') echo 'checked' ?>>
-                    <label class="form-check-label" for="discovery2">
-                      Manual IP address configuration
-                    </label>
+                  <div class="custom-control custom-radio">
+                    <input type="radio" id="discovery2" name="discovery_mode" value="manual"
+                           class="custom-control-input"
+                        <?php if ($discovery_mode == 'manual') echo 'checked' ?>
+                    >
+                    <label class="custom-control-label" for="discovery2">Manual IP address configuration</label>
                   </div>
                 </div>
               </div>
@@ -555,8 +574,8 @@ $ssids = array_unique($ssids);
                         <i class="fas fa-at"></i>
                       </span>
                     </div>
-                    <input class="multisteps-form__input form-control" id="staticIpInput" type="text" name="discovery_ip"
-                           aria-describedby="staticIpHelp" disabled
+                    <input class="multisteps-form__input form-control" id="staticIpInput" type="text"
+                           name="discovery_ip" aria-describedby="staticIpHelp" disabled
                            value="<?php echo $discovery_ip ?>"
                     />
                   </div>
@@ -580,6 +599,8 @@ $ssids = array_unique($ssids);
           <div class="multisteps-form__panel shadow p-4 rounded bg-white">
             <h3 class="multisteps-form__title text-center">Screen setup</h3>
             <div class="multisteps-form__content">
+
+              <!-- Display driver + rotation -->
               <div class="form-row mt-2">
                 <div class="col">
                   <label class="form-check-label form-label" for="driverInput">
@@ -591,8 +612,8 @@ $ssids = array_unique($ssids);
                         <i class="fas fa-desktop"></i>
                       </span>
                     </div>
-                    <select id="driverInput" name="display_driver" class="form-control selectpicker" data-live-search="true"
-                            aria-describedby="driverInputHelp">
+                    <select id="driverInput" name="display_driver" class="form-control selectpicker"
+                            data-live-search="true" aria-describedby="driverInputHelp">
                         <?php
                         foreach (getOtherDriverOptions() as $key => $value) {
                             $selected = $display_driver == $key ? 'selected="selected"' : '';
@@ -669,7 +690,7 @@ $ssids = array_unique($ssids);
                     </select>
                   </div>
                   <small id="screensaverInputHelp" class="form-text text-muted">
-                    The screensaver to display in case the Raspberry Pi looses connection to the monitored PC
+                    Shown in case the Raspberry Pi looses connection to the monitored PC
                   </small>
                 </div>
               </div>
@@ -702,6 +723,135 @@ $ssids = array_unique($ssids);
                           title="Preview">
                     Preview
                   </button>
+                </div>
+              </div>
+
+              <div class="button-row d-flex mt-4">
+                <button class="btn btn-primary js-btn-prev" type="button" title="Prev">
+                  <span><i class="fas fa-chevron-circle-left"></i></span> Prev
+                </button>
+                <button class="btn btn-primary ml-auto js-btn-next" type="button" title="Next">
+                  Next <span><i class="fas fa-chevron-circle-right"></i></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CUSTOMIZATION -->
+          <div class="multisteps-form__panel shadow p-3 rounded bg-white">
+            <h3 class="multisteps-form__title text-center">Advanced customization</h3>
+            <div class="multisteps-form__content">
+
+              <div class="mt-4 alert alert-info font-weight-normal">
+                These are very specific and technical customization options geared towards advanced users.
+                <b>You normally don't need to touch these</b>.
+              </div>
+
+              <div id="accordionCustom">
+
+                <!-- Overclock -->
+                <div class="card">
+                  <div class="card-header m-0 p-0" id="headingCustomTwo">
+                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
+                            data-target="#collapseCustomTwo"
+                            aria-expanded="false" aria-controls="collapseCustomTwo">
+                      <span><i class="fas fa-bolt mr-3"></i></span>overclock
+                    </button>
+                  </div>
+
+                  <div id="collapseCustomTwo" class="collapse" aria-labelledby="headingCustomTwo"
+                       data-parent="#accordionCustom">
+                    <div class="card-body">
+                      <div class="form-row mt-2">
+                        <div class="col">
+                          <div class="mt-2 alert alert-warning font-weight-normal">
+                            Overclocking is <b>completely at your own risk</b> and we do not take any responsibility for
+                            any damages caused!<br>
+                            Overclocking may reduce the lifetime of your Raspberry Pi and can cause system instability.
+                          </div>
+                          <label class="form-check-label form-label" for="overclockInput">
+                            Overclock
+                          </label>
+                          <div class="input-group">
+                            <div class="input-group-prepend">
+                              <span class="input-group-text">
+                                <i class="fas fa-bolt"></i>
+                              </span>
+                            </div>
+                            <select id="overclockInput" name="advanced_overclock" class="form-control selectpicker"
+                                    aria-describedby="overclockHelp">
+                                <?php
+                                foreach (getOverClocks() as $key => $value) {
+                                    $selected = $advanced_overclock == $key ? 'selected="selected"' : '';
+                                    echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                                }
+                                ?>
+                            </select>
+                          </div>
+                          <small id="overclockHelp" class="form-text text-muted">
+                            <p>
+                              Currently only supported for the Raspberry Pi 1, 2 and Zero (W).
+                              These older and lower powered models do benefit the most from an overclock.
+                            </p>
+                            <p>
+                              You can still overclock the Pi 3 and 4 if you need to by manually setting the appropriate
+                              values in the config.txt above. However the performance gains for MoBro will be modest and
+                              most likely not worth the additional heat output.
+                            </p>
+                            <p class="font-weight-bold">
+                              We do recommend to use at least a heatsink for additional cooling and to ensure good
+                              airflow to the Raspberry Pi.
+                            </p>
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- config.txt -->
+                <div class="card">
+                  <div class="card-header m-0 p-0" id="headingCustomOne">
+                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
+                            data-target="#collapseCustomOne"
+                            aria-expanded="false" aria-controls="collapseCustomOne">
+                      <span><i class="fas fa-file-alt mr-3"></i></span>config.txt
+                    </button>
+                  </div>
+
+                  <div id="collapseCustomOne" class="collapse" aria-labelledby="headingCustomOne"
+                       data-parent="#accordionCustom">
+                    <div class="card-body">
+                      <div class="form-row mt-2">
+                        <div class="col">
+                          <label class="form-check-label form-label" for="configTxtCurrent">Current</label>
+                          <textarea class="form-control" id="configTxtCurrent" disabled
+                                    rows="5"><?php echo file_get_contents(Constants::FILE_CONFIGTXT) ?></textarea>
+                        </div>
+                      </div>
+                      <div class="form-row mt-2">
+                        <div class="col">
+                          <label class="form-check-label form-label" for="configTxtInput">Overrides / Additions</label>
+                          <textarea class="form-control" id="configTxtInput" name="advanced_configtxt"
+                                    rows="3"><?php echo file_get_contents(Constants::FILE_MOBRO_CONFIGTXT_READ) ?></textarea>
+                          <small id="configTxtInputHelp" class="form-text text-muted">
+                            <p>Manually override or add values to the config.txt file above</p>
+                            <p>
+                              <b>NOTE:</b> In case a display driver is selected, the config.txt file might be altered by
+                              the driver installation before these overrides are applied
+                            </p>
+                            Order of application:
+                            <ol>
+                              <li>config.txt file (as shown above)</li>
+                              <li>display driver installation</li>
+                              <li>overclock</li>
+                              <li>manual overrides</li>
+                            </ol>
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -810,11 +960,36 @@ $ssids = array_unique($ssids);
                 <div class="col-4 confirmation-title">Screensaver delay</div>
                 <div class="col" id="summaryScreensaverDelay"></div>
               </div>
+              <hr>
+              <div class="form-row">
+                <button class="btn btn-link ml-auto" type="button" data-toggle="collapse"
+                        data-target="#summaryAdvancedConfigCollapse"
+                        aria-expanded="false" aria-controls="summaryAdvancedConfigCollapse">
+                  Advanced customization
+                </button>
+              </div>
+              <div class="collapse p-1" id="summaryAdvancedConfigCollapse">
+                <div class="form-row">
+                  <div class="col-1"><span><i class="fas fa-bolt"></i></span></div>
+                  <div class="col-4 confirmation-title">Overclock</div>
+                  <div class="col" id="summaryOverclock"></div>
+                </div>
+                <div class="form-row">
+                  <div class="col-1"><span><i class="fas fa-file-alt"></i></span></div>
+                  <div class="col-4 confirmation-title">config.txt</div>
+                  <div class="col"></div>
+                </div>
+                <div class="form-row">
+                  <textarea class="form-control mt-1 mb-1" id="summaryConfigTxt" disabled rows="2">Test</textarea>
+                </div>
+                <hr>
+              </div>
 
-              <div class="row mt-4 alert alert-info font-weight-normal">
+              <div class="mt-4 alert alert-info font-weight-normal">
                 <p class="m-0">
                   <span><i class="fas fa-exclamation-circle mr-2"></i></span>
-                  After applying the new configuration the Raspberry Pi will reboot.
+                  The Raspberry Pi needs to <b>reboot up to twice</b> to apply the configuration, which might take some
+                  time.
                 </p>
               </div>
               <div class="button-row d-flex mt-4">
@@ -957,12 +1132,17 @@ $ssids = array_unique($ssids);
   summaryScreensaver.html($('#screensaverInput option:selected').text())
   summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val())
 
+
+  $('#summaryOverclock').html($('#overclockInput option:selected').text());
+  $('#summaryConfigTxt').html($('#configTxtInput').val());
   $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
   $('#timeZoneInput').on('change', _ => $('#summaryTimezone').html($('#timeZoneInput option:selected').text()));
   $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
   $('#passwordInput').on('change', _ => $('#summaryPW').html("*".repeat($('#passwordInput').val().length)));
   $('#wpaInput').on('change', _ => $('#summarySecurity').html($('#wpaInput option:selected').text()));
   $('#hiddenNetworkInput').on('change', _ => $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No'));
+  $('#overclockInput').on('change', _ => $('#summaryOverclock').html($('#overclockInput option:selected').text()));
+  $('#configTxtInput').on('change', _ => $('#summaryConfigTxt').html($('#configTxtInput').val()));
 
   // PC config toggle
   let ipInput = $('#staticIpInput');
@@ -1023,16 +1203,16 @@ $ssids = array_unique($ssids);
     window.open('../screensavers/' + val, '_blank');
   });
 
-  $("#passwordInputGroup a").on('click', function(event) {
+  $("#passwordInputGroup a").on('click', function (event) {
     event.preventDefault();
-    if($('#passwordInputGroup input').attr("type") === "text"){
+    if ($('#passwordInputGroup input').attr("type") === "text") {
       $('#passwordInputGroup input').attr('type', 'password');
-      $('#passwordInputGroup i').addClass( "fa-eye-slash" );
-      $('#passwordInputGroup i').removeClass( "fa-eye" );
-    }else if($('#passwordInputGroup input').attr("type") === "password"){
+      $('#passwordInputGroup i').addClass("fa-eye-slash");
+      $('#passwordInputGroup i').removeClass("fa-eye");
+    } else if ($('#passwordInputGroup input').attr("type") === "password") {
       $('#passwordInputGroup input').attr('type', 'text');
-      $('#passwordInputGroup i').removeClass( "fa-eye-slash" );
-      $('#passwordInputGroup i').addClass( "fa-eye" );
+      $('#passwordInputGroup i').removeClass("fa-eye-slash");
+      $('#passwordInputGroup i').addClass("fa-eye");
     }
   });
 

@@ -30,6 +30,9 @@ BOOT_CONFIG="$CONF_DIR/config.txt"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 MOBRO_CONFIG="$CONF_DIR/mobro_config"
 MOBRO_CONFIG_BOOT="$CONF_DIR/mobro_config_boot"
+MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
+MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_config_boot"
+CONFIG_TXT="/boot/config.txt"
 
 LOG_FILE="/tmp/mobro_log"
 
@@ -38,14 +41,15 @@ LOG_FILE="/tmp/mobro_log"
 # ====================================================================================================================
 
 log() {
-    local temp date
+    local temp date throttle
     temp=$(sudo vcgencmd measure_temp)
     date=$(date "+%d.%m.%y %T")
-    echo "$date | ${temp:5} : [$1] $2" >>$LOG_FILE
+    throttle=$(sudo vcgencmd get_throttled)
+    echo "$date [${temp:5:-4}][${throttle:10}][$1] $2" >>$LOG_FILE
 }
 
 prop() {
-    grep "$1" "$2" | cut -d '=' -f2
+    grep "$1" "$2" | cut -d '=' -f2 | sed 's/ //g'
 }
 
 add_wpa() {
@@ -81,11 +85,145 @@ prop_changed() {
     fi
 }
 
+is_pione() {
+    if grep -q "^Revision\s*:\s*00[0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo; then
+        return 0
+    elif grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[0-36][0-9a-fA-F]$" /proc/cpuinfo ; then
+        return 0
+    fi
+    return 1
+}
+
+is_pitwo() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]04[0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+is_pizero() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[9cC][0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+set_config_var() {
+  log "configuration" "setting $1 to $2"
+  lua - "$1" "$2" "$3" <<EOF > "$3.bak"
+local key=assert(arg[1])
+local value=assert(arg[2])
+local fn=assert(arg[3])
+local file=assert(io.open(fn))
+local made_change=false
+for line in file:lines() do
+  if line:match("^#?%s*"..key.."=.*$") then
+    line=key.."="..value
+    made_change=true
+  end
+  print(line)
+end
+if not made_change then
+  print(key.."="..value)
+end
+EOF
+mv "$3.bak" "$3"
+}
+
+clear_config_var() {
+  log "configuration" "clearing '$1'"
+  lua - "$1" "$2" <<EOF > "$2.bak"
+local key=assert(arg[1])
+local fn=assert(arg[2])
+local file=assert(io.open(fn))
+for line in file:lines() do
+  if line:match("^%s*"..key.."=.*$") then
+    line="#"..line
+  end
+  print(line)
+end
+EOF
+mv "$2.bak" "$2"
+}
+
+set_overclock() {
+    set_config_var arm_freq "$1" "$CONFIG_TXT"
+    set_config_var core_freq "$2" "$CONFIG_TXT"
+    set_config_var sdram_freq "$3" "$CONFIG_TXT"
+    set_config_var over_voltage "$4" "$CONFIG_TXT"
+}
+
+clear_overclock() {
+    clear_config_var arm_freq "$CONFIG_TXT"
+    clear_config_var core_freq "$CONFIG_TXT"
+    clear_config_var sdram_freq "$CONFIG_TXT"
+    clear_config_var over_voltage "$CONFIG_TXT"
+}
+
 # ====================================================================================================================
 # Configuration Functions
 # ====================================================================================================================
 
+configtxt_manual() {
+    log "configuration" "starting manual config.txt configuration"
+    if [[ ! -f "$2" ]]; then
+        log "configuration" "given manual config.txt file '$2' does not exist - skipping"
+        return
+    fi
+    local line key val
+    while read -r line; do
+        log "configuration" "processing config.txt line '$line'"
+        key=$( echo "$line" | cut -d '=' -f1 | sed 's/ //g')
+        val=$( echo "$line" | cut -d '=' -f2 | sed 's/ //g')
+        if [[ -n "$key" && -n "$val" ]]; then
+            set_config_var "$key" "$val" "$CONFIG_TXT"
+        fi
+    done < "$manual_config_file"
+}
+
+overclock() {
+    log "configuration" "starting overclock"
+    local overclock
+    overclock=$(prop 'advanced_overclock' "$1");
+    case "$overclock" in
+        modest)
+            if is_pione; then
+                log "configuration" "applying 'Modest' overclock on Pi 1"
+                set_overclock 800 250 400 0
+            fi
+            ;;
+        medium)
+            if is_pione; then
+                log "configuration" "applying 'Medium' overclock on Pi 1"
+                set_overclock 900 250 450 2
+            fi
+            ;;
+        high)
+            if is_pizero; then
+                log "configuration" "applying 'High' overclock on Pi Zero"
+                set_overclock 1050 450 450 6
+            elif is_pione; then
+                log "configuration" "applying 'High' overclock on Pi 1"
+                set_overclock 950 250 450 6
+            elif is_pitwo; then
+                log "configuration" "applying 'High' overclock on Pi 2"
+                set_overclock 1000 500 500 2
+            fi
+            ;;
+        turbo)
+            if is_pizero; then
+                log "configuration" "applying 'Turbo' overclock on Pi Zero"
+                set_overclock 1100 500 500 6
+            elif is_pione; then
+                log "configuration" "applying 'Turbo' overclock on Pi 1"
+                set_overclock 1000 500 600 6
+            fi
+            ;;
+        *)
+            log "configuration" "no overclock selected - clearing"
+            clear_overclock
+            ;;
+    esac
+}
+
 timezone_config() {
+    log "configuration" "starting timezone configuration"
     local timezone
     timezone=$(prop 'localization_timezone' "$1")
     if [[ -z "$timezone" ]]; then
@@ -186,6 +324,7 @@ network_config() {
 }
 
 display_config() {
+    log "configuration" "starting display driver configuration"
     local driver rotation
     driver=$(prop 'display_driver' "$1")
     rotation=$(prop 'display_rotation' "$1")
@@ -231,7 +370,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-if [[ "$#" -ne 1 ]]; then
+if [[ "$#" -lt 1 ]]; then
     echo "Illegal number of parameters"
     log "configuration" "failed to apply new configuration: no config file given"
     exit 1
@@ -239,14 +378,22 @@ fi
 
 if [[ ! -f "$1" ]]; then
     echo "config file '$1' does not exist"
-    log "configuration" "failed to apply new configuration: no config file given"
+    log "configuration" "failed to apply new configuration: invalid config file given"
     exit 1
 fi
 
-if [[ $(wc -l <$1) -lt 1 ]]; then
+if [[ ! -s "$1" ]]; then
     echo "config file '$1' is empty"
     log "configuration" "failed to apply new configuration: config file was empty"
     exit 1
+fi
+
+if [[ -n "$2" ]]; then
+    if [[ ! -f "$2" ]]; then
+        echo "config file '$2' does not exist"
+        log "configuration" "failed to apply new configuration: invalid config.txt file given"
+        exit 1
+    fi
 fi
 
 if cmp -s "$1" "$MOBRO_CONFIG"; then
@@ -269,6 +416,9 @@ if get_overlay_now; then
 
     log "configuration" "persisting configuration for next boot"
     cp -f "$1" "$MOBRO_CONFIG_BOOT"
+    if [[ -n "$2" ]]; then
+        cp -f "$2" "$MOBRO_CONFIG_TXT_BOOT"
+    fi
 
     log "configuration" "rebooting"
     sudo shutdown -r now
@@ -287,6 +437,9 @@ cat -n "$1" | sed '/network_pw/d' &>>$LOG_FILE
 
 log "configuration" "persisting new configuration"
 cp -f "$1" "$MOBRO_CONFIG"
+if [[ -n "$2" ]]; then
+    cp -f "$2" "$MOBRO_CONFIG_TXT"
+fi
 
 # configure timezone
 timezone_config "$1"
@@ -296,6 +449,14 @@ network_config "$1"
 
 # handle display drivers
 display_config "$1"
+
+# handle overlock
+overclock "$1"
+
+# handle manual config txt
+if [[ -n "$2" ]]; then
+    configtxt_manual "$2"
+fi
 
 if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
     # resetting config boot file

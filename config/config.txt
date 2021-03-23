@@ -1,26 +1,8 @@
-# Rasperry Configuration
-
-[pi3]
-arm_freq_min=100
-initial_turbo=10
-
-[pi3+]
-temp_soft_limit=60
-
-[pi4]
-arm_freq=1200
-max_framebuffers=2
-
-[pi0w]
-initial_turbo=30
-
-[all]
-gpu_mem=64
 temp_limit=75
 start_x=0
 dtoverlay=disable-bt
+disable_splash=1
 disable_overscan=1
 hdmi_group=0
 hdmi_drive=1
 hdmi_force_hotplug=1
-disable_splash=1
