@@ -30,7 +30,6 @@ MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
 MOBRO_CONFIG_BOOT_FILE="$CONFIG_DIR/mobro_config_boot"
 MOBRO_CONFIGTXT_BOOT_FILE="$CONFIG_DIR/mobro_configtxt_boot"
 VERSION_FILE="$CONFIG_DIR/version"
-FIRST_BOOT_FLAG="$CONFIG_DIR/first_boot"
 
 # TMP files
 CONNECTED_HOST="$TMP_DIR/mobro_connected_host"
@@ -536,40 +535,6 @@ config_boot() {
     sudo /bin/bash "$APPLY_CONFIG_SCRIPT" "$MOBRO_CONFIG_BOOT_FILE" "$MOBRO_CONFIGTXT_BOOT_FILE"
 }
 
-first_boot() {
-    if [[ $(cat $FIRST_BOOT_FLAG) -ne 1 ]]; then
-        # not first boot -> just return
-        log "first_boot" "skipping - already done"
-        return
-    fi
-
-    if get_overlay_now; then
-        log "config_boot" "OverlayFS still active. disabling and rebooting"
-        {
-            sudo fsmount --rw root
-            sudo shutdown -r now
-        } &>>$LOG_FILE
-    fi
-
-    log "configuration" "remounting /home and /boot as read-write"
-    {
-        sudo fsmount --rw boot
-        sudo fsmount --rw home
-    } &>>$LOG_FILE
-
-    log "first_boot" "expanding rootfs"
-    sudo raspi-config --expand-rootfs &>>$LOG_FILE
-
-    log "first_boot" "first boot commands done"
-    echo "0" >$FIRST_BOOT_FLAG
-
-    log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
-    sudo fsmount --ro all  &>>$LOG_FILE
-
-    log "first_boot" "rebooting"
-    sudo shutdown -r now
-}
-
 # ====================================================================================================================
 # Startup Sequence
 # ====================================================================================================================
@@ -585,9 +550,6 @@ done
 
 log "startup" "Pi Model: $PI_MODEL"
 log "startup" "Version: $VERSION"
-
-# check if this is the first boot
-first_boot
 
 # check if we need to apply config
 config_boot
