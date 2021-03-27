@@ -108,7 +108,7 @@ $discovery_key = getOrDefault($props['discovery_key'], 'mobro');
 $discovery_ip = getOrDefault($props['discovery_ip'], '');
 
 // network
-$network_mode = getOrDefault($props['network_mode'], 'wifi');
+$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : 'wifi');
 $network_ssid = getOrDefault($props['network_ssid'], '');
 $network_pw = getOrDefault($props['network_pw'], '');
 $network_wpa = getOrDefault($props['network_wpa'], '');
@@ -191,17 +191,11 @@ $screensavers = getScreensavers();
         <div class="col-10">Network Configuration</div>
       </div>
       <div class="row">
-        <div class="col-1"></div>
+        <div class="col-1"><span><i class="fas fa-network-wired"></i></span></div>
         <div class="col-4 confirmation-title">Mode</div>
         <div class="col">
-            <?php echo $ethConnected ? 'Ethernet' : 'Wireless' ?>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-1"></div>
-        <div class="col-4 confirmation-title">Connected</div>
-        <div class="col">
-            <?php echo $connected ? 'Connected' : 'Not connected' ?>
+            <?php echo $network_mode == 'eth' ? 'Ethernet' : 'Wireless' ?>
+            <?php echo $connected ? ' (Connected)' : '(Not connected)' ?>
         </div>
       </div>
       <div class="row">

@@ -585,13 +585,16 @@ log "startup" "disabling services: dnsmasq, hostapd"
 } &>>$LOG_FILE
 
 # determine and set network mode
-if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
-    log "startup" "network mode set to ETHERNET"
-    NETWORK_MODE='eth'
-else
-    log "startup" "network mode set to WIFI"
-    NETWORK_MODE='wifi'
+NETWORK_MODE=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
+if [[ -z "$NETWORK_MODE" ]]; then
+    log "startup" "no network mode in config, trying to determine connection"
+    if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
+        NETWORK_MODE='eth'
+    else
+        NETWORK_MODE='wifi'
+    fi
 fi
+log "startup" "network mode set to $NETWORK_MODE"
 
 # start x
 log "startup" "starting x server"

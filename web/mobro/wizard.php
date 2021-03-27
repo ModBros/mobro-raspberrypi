@@ -207,11 +207,6 @@ include '../util.php';
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
-$ssid = shell_exec('iwgetid wlan0 -r');
-$wlanConnected = isset($ssid) && trim($ssid) !== '';
-
-$connected = $ethConnected || $wlanConnected;
-
 $props = parseProperties(Constants::FILE_MOBRO_CONFIG_READ);
 // localization
 $localization_country = getOrDefault($props['localization_country'], 'AT');
@@ -223,7 +218,7 @@ $discovery_key = getOrDefault($props['discovery_key'], 'mobro');
 $discovery_ip = getOrDefault($props['discovery_ip'], '');
 
 // network
-$network_mode = $ethConnected ? 'eth' : 'wifi';
+$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : 'wifi');
 $network_ssid = getOrDefault($props['network_ssid'], '');
 $network_pw = getOrDefault($props['network_pw'], '');
 $network_wpa = getOrDefault($props['network_wpa'], '');
@@ -261,7 +256,7 @@ $ssids = array_unique($ssids);
             <span><i class="fas fa-globe-europe"></i></span>
           </button>
           <button class="multisteps-form__progress-btn" type="button" title="Network">
-            <span><i class="fas fa-network-wired"></i></span> / <span><i class="fas fa-wifi"></i></span>
+            <span><i class="fas fa-network-wired"></i></span>
           </button>
           <button class="multisteps-form__progress-btn" type="button" title="PC connection">
             <span><i class="fas fa-laptop-house"></i></span>
@@ -366,23 +361,41 @@ $ssids = array_unique($ssids);
           </div>
 
           <!-- NETWORK SETUP -->
-          <div class="multisteps-form__panel shadow p-4 rounded bg-white">
+          <div class="multisteps-form__panel shadow p-3 rounded bg-white">
             <h3 class="multisteps-form__title text-center">Network setup</h3>
             <div class="multisteps-form__content">
-              <div class="form-row mt-4">
-                <div class="font-weight-bold ml-2 mr-3">Mode:</div>
-                <div>
-                    <?php
-                    if ($network_mode == 'eth') {
-                        echo '<span><i class="fas fa-network-wired"></i></span> Ethernet';
-                    } else {
-                        echo '<span><i class="fas fa-wifi"></i></span> Wireless';
-                    }
-                    ?>
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="networkModeInput">
+                    Network mode
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-network-wired"></i>
+                      </span>
+                    </div>
+                    <select id="networkModeInput" name="network_mode" class="form-control selectpicker"
+                            aria-describedby="networkModeHelp">
+                      <option data-content="<span><i class='fas fa-ethernet mr-2'></i></span> Ethernet" value="eth"
+                          <?php if ($network_mode == 'eth') echo 'selected="selected"' ?>
+                      >Ethernet
+                      </option>
+                      <option data-content="<span><i class='fas fa-wifi mr-2'></i></span> Wireless" value="wifi"
+                          <?php if ($network_mode == 'wifi') echo 'selected="selected"' ?>
+                      >Wireless
+                      </option>
+                    </select>
+                  </div>
+                  <small id="networkModeHelp" class="form-text text-muted">
+                    Type of network connection to use.<br>
+                    The PC doesn't have to be connected via the same type, just to the same network.
+                  </small>
                 </div>
-                <input type="hidden" id="networkModeInput" name="network_mode" value="<?php echo $network_mode ?>">
               </div>
-              <div class="form-row mt-4">
+              <hr>
+              <div class="form-row mt-2">
                 <div class="col">
                   <label class="form-check-label form-label" for="ssidInput">
                     Wireless network name (SSID)
@@ -395,7 +408,7 @@ $ssids = array_unique($ssids);
                     </div>
                     <input list="ssids" class="form-control" name="network_ssid" id="ssidInput"
                            aria-describedby="ssidHelp" value="<?php echo $network_ssid ?>"
-                        <?php if ($network_mode == 'eth') echo 'disabled' ?>
+                        <?php if ($network_mode != 'wifi') echo 'disabled' ?>
                     >
                     <datalist id="ssids">
                         <?php
@@ -424,7 +437,7 @@ $ssids = array_unique($ssids);
                     </div>
                     <input type="password" name="network_pw" class="form-control" id="passwordInput"
                            aria-describedby="pwHelp" value="<?php echo $network_pw ?>"
-                        <?php if ($network_mode == 'eth') echo 'disabled' ?>
+                        <?php if ($network_mode != 'wifi') echo 'disabled' ?>
                     >
                     <div class="input-group-append">
                       <span class="input-group-text">
@@ -459,8 +472,9 @@ $ssids = array_unique($ssids);
                         <i class="fas fa-lock"></i>
                       </span>
                       </div>
-                      <select id="wpaInput" name="network_wpa" class="form-control selectpicker" aria-describedby="wpaInputHelp"
-                          <?php if ($network_mode == 'eth') echo 'disabled' ?>
+                      <select id="wpaInput" name="network_wpa" class="form-control selectpicker"
+                              aria-describedby="wpaInputHelp"
+                          <?php if ($network_mode != 'wifi') echo 'disabled' ?>
                       >
                         <option value="" <?php if (empty($network_wpa)) echo 'selected="selected"' ?>>
                           Automatic
@@ -492,7 +506,7 @@ $ssids = array_unique($ssids);
                     <div class="form-check">
                       <input type="checkbox" class="form-check-input" id="hiddenNetworkInput" name="network_hidden"
                              aria-describedby="hiddenNetworkHelp" <?php if ($network_hidden == '1') echo 'checked' ?>
-                          <?php if ($network_mode == 'eth') echo 'disabled' ?>
+                          <?php if ($network_mode != 'wifi') echo 'disabled' ?>
                       >
                       <label class="form-check-label form-label" for="hiddenNetworkInput">
                         <span><i class="fas fa-ghost"></i></span> Hidden wireless network
@@ -885,41 +899,31 @@ $ssids = array_unique($ssids);
                 </div>
               </div>
               <hr>
-              <div class="form-row mt-4 confirmation-header">Network</div>
+              <div class="form-row mt-2 confirmation-header">Network</div>
               <div class="form-row">
-                <div class="col-1"></div>
+                <div class="col-1"><span><i class="fas fa-network-wired"></i></span></div>
                 <div class="col-4 confirmation-title">Mode</div>
-                <div class="col" id="summaryNetworkMode">
-                    <?php echo $network_mode == 'eth' ? 'Ethernet' : 'Wireless' ?>
-                </div>
+                <div class="col" id="summaryNetworkMode"></div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
                 <div class="col-4 confirmation-title">SSID</div>
-                <div class="col" id="summarySSID">
-                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
-                </div>
+                <div class="col" id="summarySSID"></div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-key"></i></span></div>
                 <div class="col-4 confirmation-title">Password</div>
-                <div class="col" id="summaryPW">
-                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
-                </div>
+                <div class="col" id="summaryPW"></div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
                 <div class="col-4 confirmation-title">Standard</div>
-                <div class="col" id="summarySecurity">
-                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
-                </div>
+                <div class="col" id="summarySecurity"></div>
               </div>
               <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
                 <div class="col-4 confirmation-title">Hidden network</div>
-                <div class="col" id="summaryHiddenNet">
-                    <?php echo $network_mode == 'eth' ? '<span><i class="fas fa-times"></i></span>' : '' ?>
-                </div>
+                <div class="col" id="summaryHiddenNet"></div>
               </div>
               <hr>
               <div class="form-row mt-2 confirmation-header">PC Connection</div>
@@ -1110,18 +1114,6 @@ $ssids = array_unique($ssids);
   const summaryScreensaver = $('#summaryScreensaver');
   const summaryScreensaverDelay = $('#summaryScreensaverDelay');
 
-  // network
-  <?php
-  if ($network_mode == 'wifi') {
-      echo "
-            $('#summarySSID').html($('#ssidInput').val());
-            $('#summaryPW').html(\"*\".repeat($('#passwordInput').val().length));
-            $('#summarySecurity').html($('#wpaInput option:selected').text());
-            $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No');
-        ";
-  }
-  ?>
-
   $('#summaryCountry').html($('#countryInput option:selected').text());
   $('#summaryTimezone').html($('#timeZoneInput option:selected').text());
   summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
@@ -1133,8 +1125,36 @@ $ssids = array_unique($ssids);
   summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val())
 
 
+  $('#summaryNetworkMode').html($('#networkModeInput option:selected').text());
+  let isWifi = $('#summaryNetworkMode').val() === 'wifi';
+  $('#summarySSID').html(isWifi ? $('#ssidInput').val() : '<span><i class="fas fa-times"></i></span>');
+  $('#summaryPW').html(isWifi ? "*".repeat($('#passwordInput').val().length) : '<span><i class="fas fa-times"></i></span>');
+  $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
+  $('#summaryHiddenNet').html(isWifi ? $('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No' : '<span><i class="fas fa-times"></i></span>');
   $('#summaryOverclock').html($('#overclockInput option:selected').text());
   $('#summaryConfigTxt').html($('#configTxtInput').val());
+
+  $('#networkModeInput').on('change', _ => {
+    $('#summaryNetworkMode').html($('#networkModeInput option:selected').text());
+
+    let isWifi = $('#networkModeInput').val() === 'wifi';
+    $('#summarySSID').html(isWifi ? $('#ssidInput').val() : '<span><i class="fas fa-times"></i></span>');
+    $('#summaryPW').html(isWifi ? "*".repeat($('#passwordInput').val().length) : '<span><i class="fas fa-times"></i></span>');
+    $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
+    $('#summaryHiddenNet').html(isWifi ? $('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No' : '<span><i class="fas fa-times"></i></span>');
+
+    if (isWifi) {
+      $('#ssidInput').removeAttr('disabled');
+      $('#passwordInput').removeAttr('disabled');
+      $('#wpaInput').removeAttr('disabled');
+      $('#hiddenNetworkInput').removeAttr('disabled');
+    } else {
+      $('#ssidInput').attr('disabled', 'disabled');
+      $('#passwordInput').attr('disabled', 'disabled');
+      $('#wpaInput').attr('disabled', 'disabled');
+      $('#hiddenNetworkInput').attr('disabled', 'disabled');
+    }
+  });
   $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
   $('#timeZoneInput').on('change', _ => $('#summaryTimezone').html($('#timeZoneInput option:selected').text()));
   $('#ssidInput').on('change', _ => $('#summarySSID').html($('#ssidInput').val()));
