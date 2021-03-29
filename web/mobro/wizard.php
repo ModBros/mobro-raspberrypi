@@ -633,6 +633,11 @@ $ssids = array_unique($ssids);
                             $selected = $display_driver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
+                        echo '<optgroup label="Raspberry Pi">';
+                        foreach (getOfficialRaspberryPiDrivers() as $key => $value) {
+                            $selected = $display_driver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
                         echo '<optgroup label="GoodTFT">';
                         foreach (getGoodTFTDrivers() as $key => $value) {
                             $selected = $display_driver == $key ? 'selected="selected"' : '';

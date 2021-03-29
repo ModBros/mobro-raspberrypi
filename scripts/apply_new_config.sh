@@ -347,6 +347,17 @@ display_config() {
     manual)
         log "configuration" "manual display driver installation (skipping)"
         ;;
+    pi7)
+        log "configuration" "display driver: pi 7"
+        cat "$BOOT_CONFIG" >/boot/config.txt
+        log "configuration" "display rotation: $rotation"
+        local rotation_value=$((rotation / 90))
+        if [[ $rotation_value == 0 || $rotation_value == 2 ]]; then
+            echo -e "\nlcd_rotate=$rotation_value" >>/boot/config.txt
+        else
+            echo -e "\ndisplay_rotate=$rotation_value" >>/boot/config.txt
+        fi
+        ;;
     *)
         if [[ ! -f "$driver" ]]; then
             log "configuration" "configured driver file not found: $driver"

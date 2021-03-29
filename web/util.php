@@ -99,6 +99,13 @@ function getWaveshareDrivers(): array
     return getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, null);
 }
 
+function getOfficialRaspberryPiDrivers(): array
+{
+    return [
+        'pi7' => 'Official 7" touchscreen display'
+    ];
+}
+
 function getOtherDriverOptions(): array
 {
     return [
@@ -111,6 +118,7 @@ function getAllDrivers(): array
 {
     return array_merge(
         getOtherDriverOptions(),
+        getOfficialRaspberryPiDrivers(),
         getDriverScripts(Constants::DIR_DRIVER_GOODTFT, 'GoodTFT'),
         getDriverScripts(Constants::DIR_DRIVER_WAVESHARE, 'WaveShare')
     );
