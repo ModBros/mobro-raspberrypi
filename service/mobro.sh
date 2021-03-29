@@ -23,7 +23,7 @@
 TMP_DIR='/tmp'
 RESOURCES_DIR='/home/modbros/mobro-raspberrypi/resources'
 CONFIG_DIR='/home/modbros/mobro-raspberrypi/config'
-SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scrips'
+SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
 
 # Files
 MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
@@ -40,6 +40,7 @@ SSIDS_FILE="$TMP_DIR/mobro_ssids"
 
 # Scripts
 APPLY_CONFIG_SCRIPT="$SCRIPT_DIR/apply_new_config.sh"
+FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
 
 # Resources
 IMAGE_SPLASH="$RESOURCES_DIR/splashscreen.png"
@@ -471,7 +472,6 @@ background_check() {
     ip=$(sed -n 1p <$CONNECTED_HOST)
     if [[ -z $ip ]]; then
         log "background_check" "no previous host found. starting discovery"
-        check_screensaver
         service_discovery
         return
     fi
@@ -524,7 +524,7 @@ config_boot() {
     if get_overlay_now; then
         log "config_boot" "OverlayFS still active. disabling and rebooting"
         {
-          sudo fsmount --rw root
+          sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw root
           sudo shutdown -r now
         } &>>$LOG_FILE
     fi
@@ -558,15 +558,15 @@ if ! get_overlay_now; then
     log "config_boot" "OverlayFS not active. enabling and rebooting"
     sudo shutdown -r now
     {
-        sudo fsmount --ro root
+        sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
         sudo shutdown -r now
     } &>>$LOG_FILE
 fi
 
 log "configuration" "remounting /home and /boot as read-only"
 {
-    sudo fsmount --ro boot
-    sudo fsmount --ro home
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro boot
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro home
 } &>>$LOG_FILE
 
 # env vars

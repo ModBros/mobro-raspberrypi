@@ -21,6 +21,10 @@
 
 # Directories
 CONF_DIR='/home/modbros/mobro-raspberrypi/config'
+SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
+
+# Scripts
+FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
 
 # Files
 WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"
@@ -417,13 +421,13 @@ fi
 # mount the home partition as writable if it isn't already
 if get_homero_now; then
     log "configuration" "remounting /home as writable"
-    sudo fsmount --rw home &>>$LOG_FILE
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw home &>>$LOG_FILE
 fi
 
 # if overlayFS is currently active: save configuration and apply on reboot
 if get_overlay_now; then
     log "configuration" "disabling OverlayFS"
-    sudo fsmount --rw root &>>$LOG_FILE
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw root &>>$LOG_FILE
 
     log "configuration" "persisting configuration for next boot"
     cp -f "$1" "$MOBRO_CONFIG_BOOT"
@@ -439,7 +443,7 @@ fi
 # mount the boot partition as writable if it isn't already
 if get_bootro_now; then
     log "configuration" "remounting /boot as writable"
-    sudo fsmount --rw boot &>>$LOG_FILE
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw boot &>>$LOG_FILE
 fi
 
 log "configuration" "starting to apply new configuration:"
@@ -475,7 +479,7 @@ if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
 fi
 
 log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
-sudo fsmount --ro all &>>$LOG_FILE
+sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro all &>>$LOG_FILE
 
 log "configuration" "done - rebooting"
 sudo shutdown -r now
