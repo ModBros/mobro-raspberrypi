@@ -1,0 +1,11 @@
+[Unit]
+Description=Preserve log on shutdown
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/true
+ExecStop=/home/modbros/mobro-raspberrypi/service/shutdownlog.sh
+
+[Install]
+WantedBy=multi-user.target
