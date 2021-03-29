@@ -4,21 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## v12 - Unreleased
+## v12 - WIP / Unreleased
 
 ### Added
 * syslog debug endpoint
 * log system throttled state
 * cleartext toggle for wifi password field
-* expand rootfs on first boot
 * MoBro splashscreen instead of console boot log
 * new hardware stats rest api endpoint
+* OverlayFS to avoid SD card corruption
+* read-only /boot and /home partition to avoid SD card corruption
+* overclocking of Pi 1, 2 and Zero from configuration wizard
+* custom additions or overrides of config.txt from configuration wizard
 
 ### Changed
 * switched to busybox in-memory logger
+* wait for reconnect on wifi connection loss instead of opening configuration hotspot again
+* minor styling adjustments
 
 ### Fixed
 * wifi check on first boot
+* Raspberry Pi acting as DHCP server in connected wifi under rare condition
 
 
 ## [v11.1](https://github.com/ModBros/mobro-raspberrypi/compare/v11...v11.1) - 2020-08-31
