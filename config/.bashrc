@@ -24,23 +24,12 @@ set_bash_prompt() {
     home_color="\[\e[0;32m\]"
   fi
 
-  local cpuTemp0=$(cat /sys/class/thermal/thermal_zone0/temp)
-  local temp=$(($cpuTemp0 / 1000))
-  local cpu_color
-  if [ $temp -gt 70 ]; then
-    cpu_color="\[\e[0;31m\]"
-  elif [ $temp -gt 60 ]; then
-    cpu_color="\[\e[0;33m\]"
-  else
-    cpu_color="\[\e[0;32m\]"
-  fi
-
   local orange="\[\033[38;5;166m\]"
   local path="\[\033[38;5;6m\]"
   local white="\[\033[00m\]"
   local grey="\[\033[38;5;8m\]"
 
-  export PS1="${orange}\u@\h${white}[${cpu_color}${temp}'C${white}][${ofs_color}${ofs_mode}${white}|${boot_color}${boot_mode}${white}|${home_color}${home_mode}${white}]:${path}\w${white}\$ "
+  export PS1="${orange}\u@\h${white}[${ofs_color}${ofs_mode}${white}|${boot_color}${boot_mode}${white}|${home_color}${home_mode}${white}]:${path}\w${white}\$ "
 }
 
 alias fsmount='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh'

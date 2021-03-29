@@ -3,8 +3,6 @@
 LOG_DIR='/home/modbros/mobro-raspberrypi/log'
 LOG_FILE='/tmp/mobro_log'
 
-touch "$LOG_DIR/test123"
-
 # first remount the /home partition writable
 mount -o remount,rw /home
 

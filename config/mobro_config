@@ -1,6 +1,6 @@
 localization_country=AT
 localization_timezone=Europe/Vienna
-network_mode=wifi
+network_mode=
 network_ssid=
 network_pw=
 network_wpa=

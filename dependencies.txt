@@ -23,7 +23,6 @@ dnsmasq
 git
 make
 feh
-bc
 rng-tools
 secure-delete
 fbi
