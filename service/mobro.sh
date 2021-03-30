@@ -551,24 +551,6 @@ done
 log "startup" "Pi Model: $PI_MODEL"
 log "startup" "Version: $VERSION"
 
-# check if we need to apply config
-config_boot
-
-if ! get_overlay_now; then
-    log "config_boot" "OverlayFS not active. enabling and rebooting"
-    sudo shutdown -r now
-    {
-        sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
-        sudo shutdown -r now
-    } &>>$LOG_FILE
-fi
-
-log "configuration" "remounting /home and /boot as read-only"
-{
-    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro boot
-    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro home
-} &>>$LOG_FILE
-
 # env vars
 export DISPLAY=:0
 
@@ -578,23 +560,11 @@ echo "0" >$MOBRO_FOUND_FLAG
 # disable dnsmasq and hostapd
 log "startup" "disabling services: dnsmasq, hostapd"
 {
-    sudo systemctl stop
+    sudo systemctl stop dnsmasq
     sudo systemctl disable dnsmasq.service
     sudo systemctl stop hostapd
     sudo systemctl disable hostapd.service
 } &>>$LOG_FILE
-
-# determine and set network mode
-NETWORK_MODE=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
-if [[ -z "$NETWORK_MODE" ]]; then
-    log "startup" "no network mode in config, trying to determine connection"
-    if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
-        NETWORK_MODE='eth'
-    else
-        NETWORK_MODE='wifi'
-    fi
-fi
-log "startup" "network mode set to $NETWORK_MODE"
 
 # start x
 log "startup" "starting x server"
@@ -616,6 +586,23 @@ while ! xset q &>/dev/null; do
 done
 sleep_pi 2 5
 
+# check if we need to apply config
+config_boot
+
+if ! get_overlay_now; then
+    log "config_boot" "OverlayFS not active. enabling and rebooting"
+    {
+        sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
+        sudo shutdown -r now
+    } &>>$LOG_FILE
+fi
+
+log "configuration" "remounting /home and /boot as read-only"
+{
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro boot
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro home
+} &>>$LOG_FILE
+
 # handle case if no connected display is found
 if [[ $NO_SCREEN == 1 ]]; then
     log "startup" "no screen found - waiting for configuration"
@@ -625,9 +612,6 @@ if [[ $NO_SCREEN == 1 ]]; then
     wait_endless
 fi
 
-# show background
-show_image $IMAGE_SPLASH 7
-
 # disabling screen blanking
 log "startup" "disable blank screen"
 {
@@ -635,6 +619,21 @@ log "startup" "disable blank screen"
     sudo xset -dpms
     sudo xset s noblank
 } &>>$LOG_FILE
+
+# show background
+show_image $IMAGE_SPLASH 7
+
+# determine and set network mode
+NETWORK_MODE=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
+if [[ -z "$NETWORK_MODE" ]]; then
+    log "startup" "no network mode in config, trying to determine connection"
+    if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
+        NETWORK_MODE='eth'
+    else
+        NETWORK_MODE='wifi'
+    fi
+fi
+log "startup" "network mode set to $NETWORK_MODE"
 
 case $NETWORK_MODE in
 "wifi")
