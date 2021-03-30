@@ -30,6 +30,7 @@ MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
 MOBRO_CONFIG_BOOT_FILE="$CONFIG_DIR/mobro_config_boot"
 MOBRO_CONFIGTXT_BOOT_FILE="$CONFIG_DIR/mobro_configtxt_boot"
 VERSION_FILE="$CONFIG_DIR/version"
+SKIP_FLAG="/boot/.skip_mobro"
 
 # TMP files
 CONNECTED_HOST="$TMP_DIR/mobro_connected_host"
@@ -539,13 +540,18 @@ config_boot() {
 # Startup Sequence
 # ====================================================================================================================
 
+if [[ -f "$SKIP_FLAG" ]]; then
+    # do not process if the service skip flag is present
+    wait_endless
+fi
+
 log "startup" "starting service"
 
 # create temporary files
 for arg in LOG_FILE MOBRO_FOUND_FLAG SSIDS_FILE HOSTS_FILE CONNECTED_HOST; do
-  eval value=\$$arg
-  sudo touch "$value"
-  sudo chown modbros "$value"
+    eval value=\$$arg
+    sudo touch "$value"
+    sudo chown modbros "$value"
 done
 
 log "startup" "Pi Model: $PI_MODEL"
