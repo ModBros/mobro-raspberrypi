@@ -35,7 +35,7 @@ FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 MOBRO_CONFIG="$CONF_DIR/mobro_config"
 MOBRO_CONFIG_BOOT="$CONF_DIR/mobro_config_boot"
 MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
-MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_config_boot"
+MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_configtxt_boot"
 CONFIG_TXT="/boot/config.txt"
 
 LOG_FILE="/tmp/mobro_log"
@@ -166,19 +166,23 @@ clear_overclock() {
 
 configtxt_manual() {
     log "configuration" "starting manual config.txt configuration"
-    if [[ ! -f "$2" ]]; then
-        log "configuration" "given manual config.txt file '$2' does not exist - skipping"
+    cat -n "$1" &>> $LOG_FILE
+    if [[ ! -f "$1" ]]; then
+        log "configuration" "given manual config.txt file '$1' does not exist - skipping"
         return
     fi
     local line key val
     while read -r line; do
         log "configuration" "processing config.txt line '$line'"
+        if [[ -z "$line" ]]; then
+          continue
+        fi
         key=$( echo "$line" | cut -d '=' -f1 | sed 's/ //g')
         val=$( echo "$line" | cut -d '=' -f2 | sed 's/ //g')
         if [[ -n "$key" && -n "$val" ]]; then
             set_config_var "$key" "$val" "$CONFIG_TXT"
         fi
-    done < "$manual_config_file"
+    done <"$1"
 }
 
 overclock() {

@@ -63,6 +63,7 @@ $display_delay = getPostValOrDefault('display_delay', '5');
 $advanced_overclock = getPostValOrDefault('advanced_overclock', 'none');
 $advanced_configtxt = getPostValOrDefault('advanced_configtxt', '');
 $advanced_configtxt = preg_replace('~\R~u', "\n", $advanced_configtxt);
+$advanced_configtxt = $advanced_configtxt . "\n";
 
 // write configuration file
 $configuration_file_contents =
