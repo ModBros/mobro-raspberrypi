@@ -2,26 +2,26 @@ set_bash_prompt() {
   local ofs_mode ofs_color
   if $(grep -q "boot=overlay" /proc/cmdline); then
     ofs_mode="ro"
-    ofs_color="\[\e[0;31m\]"
+    ofs_color="\[\033[38;5;1m\]"
   else
     ofs_mode="rw"
-    ofs_color="\[\e[0;32m\]"
+    ofs_color="\[\033[38;5;2m\]"
   fi
 
   local boot_mode=$(mount | sed -n -e "s/^\/dev\/.* on \/boot .*(\(r[w|o]\).*/\1/p")
   local boot_color
   if [ "$boot_mode" = "ro" ]; then
-    boot_color="\[\e[0;31m\]"
+    boot_color="\[\033[38;5;1m\]"
   else
-    boot_color="\[\e[0;32m\]"
+    boot_color="\[\033[38;5;2m\]"
   fi
 
   local home_mode=$(mount | sed -n -e "s/^\/dev\/.* on \/home .*(\(r[w|o]\).*/\1/p")
   local home_color
   if [ "$home_mode" = "ro" ]; then
-    home_color="\[\e[0;31m\]"
+    home_color="\[\033[38;5;1m\]"
   else
-    home_color="\[\e[0;32m\]"
+    home_color="\[\033[38;5;2m\]"
   fi
 
   local orange="\[\033[38;5;166m\]"
@@ -37,32 +37,35 @@ alias fsmount='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh'
 PROMPT_COMMAND=set_bash_prompt
 
 # welcome message
-echo -en "\033[38;5;166m"
-cat <<-TEXT
+echo -e ''
+echo -e '\033[38;5;160m ######      ######     #######'
+echo -e '\033[38;5;160m #######    #######   ##########  \033[00m @@@@@@@@@@     @@@@@@@@@@@      @@@@@@@@'
+echo -e '\033[38;5;160m ########  ########  ######   ### \033[00m @@@@@@@@@@@@   @@@@@@@@@@@@    @@@@@@@@@@'
+echo -e '\033[38;5;160m ##################  #####     ### \033[00m @@@@    @@@@  @@@@   @@@@    @@@@    @@@@'
+echo -e '\033[38;5;160m ###### #### ######  #####     #### \033[00m @@@@@@@@@    @@@@@@@@@@@@   @@@@    @@@@'
+echo -e '\033[38;5;160m ######      ######  #####     ##### \033[00m @@    @@@@  @@@@    @@@@@  @@@@    @@@@'
+echo -e '\033[38;5;160m ######      ######  ######   ######  \033[00m @@@@@@@@@  @@@@    @@@@@   @@@@@@@@@@'
+echo -e '\033[38;5;160m ######      ######   #############    \033[00m @@@@@@    @@@@    @@@@@    @@@@@@@@'
+echo -e '\033[38;5;160m ######      ######    ###########'
 
- __  __         ____
-|  \\/  |       |  _ \\
-| \\  / |  ___  | |_) | _ __  ___
-| |\\/| | / _ \\ |  _ < | '__|/ _ \\
-| |  | || (_) || |_) || |  | (_) |
-|_|  |_| \\___/ |____/ |_|   \\___/
-TEXT
 echo -en "\033[00m"
 cat <<-TEXT
-                        by ModBros
+                                                                  by ModBros
+ * Website/Forum : http://mod-bros.com
+ * GitHub        : http://github.com/modbros
+ * YouTube       : http://youtube.com/modbros
 
-* Website/Forum : http://mod-bros.com
-* GitHub        : http://github.com/modbros
-* YouTube       : http://youtube.com/modbros
-
-! CAUTION !
-this image uses OverlayFS on /, while /boot and /home are mounted read-only
-all applied changes in this mode will be lost after reboot!
-
-the current mount status is visible directly from the command prompt
-to toggle between mounting modes execute 'fsmount'
 
 TEXT
+
+echo -e '\033[38;5;160m! CAUTION !'
+echo -e '\033[00mThis image uses OverlayFS on \033[38;5;6m/\033[00m, while \033[38;5;6m/boot\033[00m and \033[38;5;6m/home\033[00m are mounted read-only'
+echo -e '\033[00mAll applied changes in this mode will be lost after reboot!'
+echo ''
+echo -e '\033[00mThe current mount status is visible directly from the command prompt'
+echo -e '\033[00mto toggle between mounting modes execute \033[38;5;6mfsmount'
+echo ''
+
 printf "\e[0;32m%s\033[00m%s\n" "rw" " = mounted with write permission"
 printf "\e[0;31m%s\033[00m%s\n" "ro" " = OverlayFs enabled or mounted read-only (changes will be lost!)"
 echo -en "\033[38;5;6m"
