@@ -56,6 +56,7 @@ IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
 IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
 IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 IMAGE_CONFIGURATION="$RESOURCES_DIR/applyconfig.png"
+IMAGE_USBSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 
 # Ports
 MOBRO_PORT='42100'            # port of the MoBro desktop application
@@ -71,7 +72,7 @@ STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (
 LOOP_COUNTER=0                          # counter variable for main loop iterations
 CURR_URL=''                             # save current chromium Url
 CURR_IMAGE=''                           # save currently displayed image
-NETWORK_MODE=''                         # save current network mode (eth|wifi)
+NETWORK_MODE=''                         # save current network mode (eth|wifi|usb)
 SCREENSAVER=0                           # flag if screensaver is active
 LAST_CONNECTED=$(date +%s)              # timestamp (epoch seconds) of last successful connection check
 NO_SCREEN=0                             # flag whether a screen has been found
@@ -199,10 +200,7 @@ show_page_chrome() {
 show_mobro() {
     local uuid resolution url
     resolution=$(xdpyinfo | awk '/dimensions/{print $2}') # current display resolution
-    case $NETWORK_MODE in
-    "wifi") uuid=$(sed 's/://g' </sys/class/net/wlan0/address) ;; # unique ID of this pi
-    "eth") uuid=$(sed 's/://g' </sys/class/net/eth0/address) ;; # unique ID of this pi
-    esac
+    uuid=$(grep Serial /proc/cpuinfo | cut -d ' ' -f 2) # get pi serial number as unique ID
     url="http://$1:$MOBRO_PORT?version=$VERSION&uuid=$uuid&resolution=$resolution&device=pi&name=$PI_MODEL"
     SCREENSAVER=0
     LAST_CONNECTED=$(date +%s)
@@ -332,6 +330,7 @@ service_discovery() {
     case $NETWORK_MODE in
     "wifi") interface='wlan0' ;;
     "eth") interface='eth0' ;;
+    "usb") interface='usb0' ;;
     esac
 
     # check if static ip is configured
@@ -694,6 +693,11 @@ case $NETWORK_MODE in
     # search network for application
     service_discovery
     ;;
+"usb")
+    show_image $IMAGE_USBSUCCESS 3
+    # search network for application
+    service_discovery
+    ;;
 esac
 
 # ====================================================================================================================
@@ -713,6 +717,9 @@ while true; do
         background_check
         ;;
     "eth")
+        background_check
+        ;;
+    "usb")
         background_check
         ;;
     esac

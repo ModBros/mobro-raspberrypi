@@ -207,6 +207,9 @@ include '../util.php';
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
+$usb = shell_exec('grep up /sys/class/net/*/operstate | grep usb0');
+$usbConnected = isset($usb) && trim($usb) !== '';
+
 $props = parseProperties(Constants::FILE_MOBRO_CONFIG_READ);
 // localization
 $localization_country = getOrDefault($props['localization_country'], 'AT');
@@ -218,7 +221,7 @@ $discovery_key = getOrDefault($props['discovery_key'], 'mobro');
 $discovery_ip = getOrDefault($props['discovery_ip'], '');
 
 // network
-$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : 'wifi');
+$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : $usbConnected ? 'usb' : 'wifi');
 $network_ssid = getOrDefault($props['network_ssid'], '');
 $network_pw = getOrDefault($props['network_pw'], '');
 $network_wpa = getOrDefault($props['network_wpa'], '');
@@ -386,6 +389,13 @@ $ssids = array_unique($ssids);
                           <?php if ($network_mode == 'wifi') echo 'selected="selected"' ?>
                       >Wireless
                       </option>
+                        <?php
+                        if (isPiZero()) {
+                            echo '<option data-content="<span><i class=\'fab fa-usb mr-2\'></i></span> USB" value="usb"';
+                            if ($network_mode == 'usb') echo 'selected="selected"';
+                            echo '>USB</option>';
+                        }
+                        ?>
                     </select>
                   </div>
                   <small id="networkModeHelp" class="form-text text-muted">

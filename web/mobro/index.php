@@ -73,10 +73,13 @@ include '../util.php';
 $eth = shell_exec('grep up /sys/class/net/*/operstate | grep eth0');
 $ethConnected = isset($eth) && trim($eth) !== '';
 
+$usb = shell_exec('grep up /sys/class/net/*/operstate | grep usb0');
+$usbConnected = isset($usb) && trim($usb) !== '';
+
 $ssid = shell_exec('iwgetid wlan0 -r');
 $wlanConnected = isset($ssid) && trim($ssid) !== '';
 
-$connected = $ethConnected || $wlanConnected;
+$connected = $ethConnected || $usbConnected || $wlanConnected;
 
 function getSecurityMode($mode)
 {
@@ -108,7 +111,7 @@ $discovery_key = getOrDefault($props['discovery_key'], 'mobro');
 $discovery_ip = getOrDefault($props['discovery_ip'], '');
 
 // network
-$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : 'wifi');
+$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : $usbConnected ? 'usb' : 'wifi');
 $network_ssid = getOrDefault($props['network_ssid'], '');
 $network_pw = getOrDefault($props['network_pw'], '');
 $network_wpa = getOrDefault($props['network_wpa'], '');

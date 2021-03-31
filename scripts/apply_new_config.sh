@@ -30,13 +30,14 @@ FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
 WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"
 WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
 WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
-BOOT_CONFIG="$CONF_DIR/config.txt"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 MOBRO_CONFIG="$CONF_DIR/mobro_config"
 MOBRO_CONFIG_BOOT="$CONF_DIR/mobro_config_boot"
 MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
 MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_configtxt_boot"
+MOBRO_CONFIG_TXT_DEFAULT="$CONF_DIR/config.txt"
 CONFIG_TXT="/boot/config.txt"
+CMDLINE_TXT="/boot/cmdline.txt"
 
 LOG_FILE="/tmp/mobro_log"
 
@@ -160,6 +161,12 @@ clear_overclock() {
     clear_config_var over_voltage "$CONFIG_TXT"
 }
 
+add_cmdline() {
+    if ! grep -q "$1" "$CMDLINE_TXT" ; then
+        sed -i "$CMDLINE_TXT" -e "s/^/$1 /"
+    fi
+}
+
 # ====================================================================================================================
 # Configuration Functions
 # ====================================================================================================================
@@ -258,6 +265,14 @@ network_config() {
         sudo cp -f $WPA_CONFIG_CLEAN /etc/wpa_supplicant/wpa_supplicant.conf
         ;;
 
+    usb)
+        # connected by usb
+        log "configuration" "network mode: USB Ethernet - resetting wpa_supplicant"
+        sudo cp -f $WPA_CONFIG_CLEAN /etc/wpa_supplicant/wpa_supplicant.conf
+        echo -e "\ndtoverlay=dwc2" >>"$CONFIG_TXT"
+        add_cmdline "modules-load=dwc2,g_ether"
+        ;;
+
     wifi)
         log "configuration" "network mode: Wifi - creating new wpa_supplicant"
         local ssid pw country wpa hidden
@@ -346,9 +361,8 @@ display_config() {
         ;;
     hdmi)
         log "configuration" "display driver: HDMI"
-        cat "$BOOT_CONFIG" >/boot/config.txt
         log "configuration" "display rotation: $rotation"
-        echo -e "\ndisplay_rotate=$((rotation / 90))" >>/boot/config.txt
+        echo -e "\ndisplay_rotate=$((rotation / 90))" >>"$CONFIG_TXT"
         cat "$FBTURBO_CONFIG" >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
         sudo rm -f /etc/X11/xorg.conf.d/*
         ;;
@@ -357,13 +371,12 @@ display_config() {
         ;;
     pi7)
         log "configuration" "display driver: pi 7"
-        cat "$BOOT_CONFIG" >/boot/config.txt
         log "configuration" "display rotation: $rotation"
         local rotation_value=$((rotation / 90))
         if [[ $rotation_value == 0 || $rotation_value == 2 ]]; then
-            echo -e "\nlcd_rotate=$rotation_value" >>/boot/config.txt
+            echo -e "\nlcd_rotate=$rotation_value" >>"$CONFIG_TXT"
         else
-            echo -e "\ndisplay_rotate=$rotation_value" >>/boot/config.txt
+            echo -e "\ndisplay_rotate=$rotation_value" >>"$CONFIG_TXT"
         fi
         ;;
     *)
@@ -452,6 +465,9 @@ cp -f "$1" "$MOBRO_CONFIG"
 if [[ -n "$2" ]]; then
     cp -f "$2" "$MOBRO_CONFIG_TXT"
 fi
+
+log "configuration" "resetting config.txt"
+cat "$MOBRO_CONFIG_TXT_DEFAULT" >"$CONFIG_TXT"
 
 # configure timezone
 timezone_config "$1"
