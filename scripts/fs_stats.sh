@@ -88,25 +88,25 @@ esac
 
 case "$1" in
 --used | -u)
-  get_used "$(df | grep "$PARTITION")"
+  get_used "$(df | grep "$PARTITION$")"
   ;;
 --available | -a)
-  get_available "$(df | grep "$PARTITION")"
+  get_available "$(df | grep "$PARTITION$")"
   ;;
 --load | -l)
-  get_load "$(df | grep "$PARTITION")"
+  get_load "$(df | grep "$PARTITION$")"
   ;;
 --mount | -m)
-  get_mount "$(df | grep "$PARTITION")"
+  get_mount "$(df | grep "$PARTITION$")"
   ;;
 --filesystem | -f)
-  get_fs "$(df | grep "$PARTITION")"
+  get_fs "$(df | grep "$PARTITION$")"
   ;;
 --status | -s)
-  get_status "$PARTITION"
+  get_status "$PARTITION$"
   ;;
 --json | -j)
-  DF_RESPONSE=$(df | grep "$PARTITION")
+  DF_RESPONSE=$(df | grep "$PARTITION$")
   printf '{"status":"%s","mounted":"%s","filesystem":"%s","used":%f,"available":%f,"usage":%i}\n' \
     "$(get_status "$DF_RESPONSE")" \
     "$(get_mount "$DF_RESPONSE")" \
