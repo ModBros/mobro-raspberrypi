@@ -415,13 +415,6 @@ if [[ -n "$2" ]]; then
     fi
 fi
 
-if cmp -s "$1" "$MOBRO_CONFIG"; then
-    log "configuration" "The new configuration is identical to the existing one:"
-    cat -n "$1" | sed '/network_pw/d' &>>$LOG_FILE
-    exit 0
-fi
-
-
 # mount the home partition as writable if it isn't already
 if get_homero_now; then
     log "configuration" "remounting /home as writable"
