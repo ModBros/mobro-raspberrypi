@@ -109,8 +109,7 @@ function getOfficialRaspberryPiDrivers(): array
 function getOtherDriverOptions(): array
 {
     return [
-        'hdmi' => 'HDMI',
-        'manual' => 'Manual installation'
+        'default' => 'Default (HDMI, flat ribbon cable, ...)',
     ];
 }
 

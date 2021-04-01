@@ -357,17 +357,14 @@ display_config() {
 
     case "$driver" in
     "")
-        log "configuration" "no driver set - keeping current configuration"
+        log "configuration" "no driver set"
         ;;
-    hdmi)
-        log "configuration" "display driver: HDMI"
+    default)
+        log "configuration" "display driver: default"
         log "configuration" "display rotation: $rotation"
         echo -e "\ndisplay_rotate=$((rotation / 90))" >>"$CONFIG_TXT"
         cat "$FBTURBO_CONFIG" >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
         sudo rm -f /etc/X11/xorg.conf.d/*
-        ;;
-    manual)
-        log "configuration" "manual display driver installation (skipping)"
         ;;
     pi7)
         log "configuration" "display driver: pi 7"
