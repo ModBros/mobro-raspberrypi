@@ -77,7 +77,7 @@ get_bootro_now() {
 }
 
 get_homero_now() {
-    findmnt /boot | grep -q " ro,"
+    findmnt /home | grep -q " ro,"
 }
 
 prop_changed() {
@@ -476,11 +476,11 @@ cat "$MOBRO_CMDLINE_DEFAULT" >"$CMDLINE_TXT"
 # configure timezone
 timezone_config "$1"
 
-# set new network configuration
-network_config "$1"
-
 # handle display drivers
 display_config "$1"
+
+# set new network configuration
+network_config "$1"
 
 # handle overclock
 overclock "$1"
