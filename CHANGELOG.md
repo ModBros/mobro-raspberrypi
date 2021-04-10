@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * read-only /boot and /home partition to avoid SD card corruption
 * overclocking of Pi 1, 2 and Zero from configuration wizard
 * custom additions or overrides of config.txt from configuration wizard
+* support for USB gadget mode for Pi Zero
 
 ### Changed
 * switched to busybox in-memory logger

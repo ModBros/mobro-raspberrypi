@@ -37,6 +37,8 @@ MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
 MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_configtxt_boot"
 MOBRO_CONFIG_TXT_DEFAULT="$CONF_DIR/config.txt"
 MOBRO_CMDLINE_DEFAULT="$CONF_DIR/cmdline.txt"
+GETHER_CONFIG="$CONF_DIR/g_ether.conf"
+USB0_CONFIG="$CONF_DIR/usb0"
 CONFIG_TXT="/boot/config.txt"
 CMDLINE_TXT="/boot/cmdline.txt"
 
@@ -277,6 +279,8 @@ network_config() {
         sudo cp -f $WPA_CONFIG_CLEAN /etc/wpa_supplicant/wpa_supplicant.conf
         echo -e "\ndtoverlay=dwc2" >>"$CONFIG_TXT"
         add_cmdline "modules-load=dwc2,g_ether"
+        sudo cp -f $USB0_CONFIG /etc/network/interfaces.d/usb0
+        sudo cp -f $GETHER_CONFIG /etc/modprobe.d/g_ether.conf
         ;;
 
     wifi)

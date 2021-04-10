@@ -204,8 +204,6 @@ cat ./config/hostname > /etc/hostname
 cat ./config/hosts > /etc/hosts
 cat ./config/.bashrc >> /home/modbros/.bashrc
 cat ./config/99-fbturbo.conf > /usr/share/X11/xorg.conf.d/99-fbturbo.conf
-cat ./config/usb0 >/etc/network/interfaces.d/usb0
-cat ./config/g_ether.conf >/etc/modprobe.d/g_ether.conf
 ```
 
 ### Set up display drivers
