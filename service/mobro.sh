@@ -664,17 +664,6 @@ case $NETWORK_MODE in
 
     show_image $IMAGE_CONNECTWIFI
 
-    # check if configured network is in range
-    log "startup" "scanning for wireless networks"
-    search_ssids
-
-    if ! grep -q "$ssid" "$SSIDS_FILE"; then
-        # previous wifi not reachable
-        log "startup" "configured wifi network '$ssid' not in range"
-        show_image $IMAGE_WIFIFAILED 10
-        access_point
-    fi
-
     log "startup" "waiting for wifi connection to '$ssid'..."
     if ! wait_wifi_connection $STARTUP_WIFI_WAIT; then
         log "startup" "couldn't connect to wifi network '$ssid'"
