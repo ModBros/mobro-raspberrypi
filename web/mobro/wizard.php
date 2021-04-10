@@ -1171,8 +1171,8 @@ $ssids = array_unique($ssids);
 
 
   $('#summaryNetworkMode').html($('#networkModeInput option:selected').text());
-  let isWifi = $('#summaryNetworkMode').val() === 'wifi';
-  let isUsb = $('#summaryNetworkMode').val() === 'usb';
+  let isWifi = $('#networkModeInput').val() === 'wifi';
+  let isUsb = $('#networkModeInput').val() === 'usb';
   $('#summarySSID').html(isWifi ? $('#ssidInput').val() : '<span><i class="fas fa-times"></i></span>');
   $('#summaryPW').html(isWifi ? "*".repeat($('#passwordInput').val().length) : '<span><i class="fas fa-times"></i></span>');
   $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');

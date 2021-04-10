@@ -135,7 +135,7 @@ $screensavers = getScreensavers();
       <div class="row">
         <div class="col">
           <img src="../resources/mobro_logo_dark.svg" width="300">
-          <h4 class="text-uppercase my-3">The custom monitoring solution without stupid cables</h4>
+          <h4 class="text-uppercase my-3">The custom monitoring solution</h4>
         </div>
         <div class="col-auto">
           <img src="../resources/MoBroSoftware.png" width="275">
@@ -146,11 +146,11 @@ $screensavers = getScreensavers();
       <h5 class="card-title">Hi there Bro! &#x1F60E;</h5>
       <div class="card-text">
         <p>
-          Your setup of the ModBros Monitor Bro (MoBro) is almost complete.
+          Your setup of MoBro, the Monitoring Bro by ModBros, is almost complete.
         </p>
         <p>
           Thanks for giving our software a shot!<br/>
-          We're trying hard to constantly improve the MoBro.<br/>
+          We're trying hard to constantly improve MoBro.<br/>
           Your feedback as well as suggestions for additional features and improvements are very welcome.
         </p>
         <p>
@@ -205,28 +205,28 @@ $screensavers = getScreensavers();
         <div class="col-1"><span><i class="fas fa-wifi"></i></span></div>
         <div class="col-4 confirmation-title">SSID</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : $network_ssid ?>
+            <?php echo $network_mode == 'wifi' ? $network_ssid : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-key"></i></span></div>
         <div class="col-4 confirmation-title">Password</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : str_repeat("*", strlen($network_pw)) ?>
+            <?php echo $network_mode == 'wifi' ? str_repeat("*", strlen($network_pw)) : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-lock"></i></span></div>
         <div class="col-4 confirmation-title">Standard</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : getSecurityMode($network_wpa) ?>
+            <?php echo $network_mode == 'wifi' ? getSecurityMode($network_wpa) : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
       <div class="row">
         <div class="col-1"><span><i class="fas fa-ghost"></i></span></div>
         <div class="col-4 confirmation-title">Hidden network</div>
         <div class="col">
-            <?php echo $ethConnected ? '<span><i class="fas fa-times"></i></span>' : ($network_hidden == '0' ? "No" : "Yes") ?>
+            <?php echo $network_mode == 'wifi' ? ($network_hidden == '0' ? "No" : "Yes") : '<span><i class="fas fa-times"></i></span>' ?>
         </div>
       </div>
 
