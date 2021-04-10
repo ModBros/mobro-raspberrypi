@@ -221,7 +221,7 @@ $discovery_key = getOrDefault($props['discovery_key'], 'mobro');
 $discovery_ip = getOrDefault($props['discovery_ip'], '');
 
 // network
-$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : $usbConnected ? 'usb' : 'wifi');
+$network_mode = getOrDefault($props['network_mode'], $ethConnected ? 'eth' : ($usbConnected ? 'usb' : 'wifi'));
 $network_ssid = getOrDefault($props['network_ssid'], '');
 $network_pw = getOrDefault($props['network_pw'], '');
 $network_wpa = getOrDefault($props['network_wpa'], '');
@@ -404,6 +404,13 @@ $ssids = array_unique($ssids);
                     The PC doesn't have to be connected via the same type, just to the same network.
                   </small>
                 </div>
+              </div>
+              <div class="alert alert-info font-weight-normal" id="networkModeUsbInfo">
+                <p class="m-0">
+                  <span><i class="fas fa-exclamation-circle mr-2"></i></span>
+                  This mode requires further configuration of the 'USB Ethernet/RNDIS Gadget' adapter in Windows! Check
+                  out our FAQ for more information.
+                </p>
               </div>
               <hr>
               <div class="form-row mt-2">
@@ -1165,17 +1172,24 @@ $ssids = array_unique($ssids);
 
   $('#summaryNetworkMode').html($('#networkModeInput option:selected').text());
   let isWifi = $('#summaryNetworkMode').val() === 'wifi';
+  let isUsb = $('#summaryNetworkMode').val() === 'usb';
   $('#summarySSID').html(isWifi ? $('#ssidInput').val() : '<span><i class="fas fa-times"></i></span>');
   $('#summaryPW').html(isWifi ? "*".repeat($('#passwordInput').val().length) : '<span><i class="fas fa-times"></i></span>');
   $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
   $('#summaryHiddenNet').html(isWifi ? $('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No' : '<span><i class="fas fa-times"></i></span>');
   $('#summaryOverclock').html($('#overclockInput option:selected').text());
   $('#summaryConfigTxt').html($('#configTxtInput').val());
+  if (isUsb) {
+    $('#networkModeUsbInfo').show();
+  } else {
+    $('#networkModeUsbInfo').hide();
+  }
 
   $('#networkModeInput').on('change', _ => {
     $('#summaryNetworkMode').html($('#networkModeInput option:selected').text());
 
     let isWifi = $('#networkModeInput').val() === 'wifi';
+    let isUsb = $('#networkModeInput').val() === 'usb';
     $('#summarySSID').html(isWifi ? $('#ssidInput').val() : '<span><i class="fas fa-times"></i></span>');
     $('#summaryPW').html(isWifi ? "*".repeat($('#passwordInput').val().length) : '<span><i class="fas fa-times"></i></span>');
     $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
@@ -1191,6 +1205,11 @@ $ssids = array_unique($ssids);
       $('#passwordInput').attr('disabled', 'disabled');
       $('#wpaInput').attr('disabled', 'disabled');
       $('#hiddenNetworkInput').attr('disabled', 'disabled');
+    }
+    if (isUsb) {
+      $('#networkModeUsbInfo').show();
+    } else {
+      $('#networkModeUsbInfo').hide();
     }
   });
   $('#countryInput').on('change', _ => $('#summaryCountry').html($('#countryInput option:selected').text()));
