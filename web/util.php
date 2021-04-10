@@ -164,7 +164,7 @@ function getOverClocks(): array
         );
     }
     return array(
-        'none' => 'None'
+        'none' => 'Unavailable'
     );
 }
 
@@ -183,4 +183,9 @@ function isPiOne(): bool
 function isPiTwo(): bool
 {
     return shell_exec('grep -c "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]04[0-9a-fA-F]$" /proc/cpuinfo') > 0;
+}
+
+function overclockSupported(): bool
+{
+    return isPiZero() || isPiOne() || isPiTwo();
 }

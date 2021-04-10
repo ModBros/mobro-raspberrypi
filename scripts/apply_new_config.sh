@@ -194,8 +194,13 @@ configtxt_manual() {
 
 overclock() {
     log "configuration" "starting overclock"
-    local overclock
+    local overclock consent
+    consent=$(prop 'advanced_overclock_consent' "$1");
     overclock=$(prop 'advanced_overclock' "$1");
+    if [[ "$consent" != "1" ]]; then
+        log "configuration" "no consent to overclocking - skipping"
+        return
+    fi
     case "$overclock" in
         modest)
             if is_pione; then
@@ -475,7 +480,7 @@ network_config "$1"
 # handle display drivers
 display_config "$1"
 
-# handle overlock
+# handle overclock
 overclock "$1"
 
 # handle manual config txt

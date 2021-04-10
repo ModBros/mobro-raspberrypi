@@ -235,6 +235,7 @@ $display_delay = getOrDefault($props['display_delay'], '5');
 
 // advanced
 $advanced_overclock = getOrDefault($props['advanced_overclock'], 'none');
+$advanced_overclock_consent = getOrDefault($props['advanced_overclock_consent'], '0');
 
 $ssids = array();
 $file = fopen(Constants::FILE_SSID, "r");
@@ -793,11 +794,27 @@ $ssids = array_unique($ssids);
                     <div class="card-body">
                       <div class="form-row mt-2">
                         <div class="col">
+
                           <div class="mt-2 alert alert-warning font-weight-normal">
                             Overclocking is <b>completely at your own risk</b> and we do not take any responsibility for
                             any damages caused!<br>
                             Overclocking may reduce the lifetime of your Raspberry Pi and can cause system instability.
                           </div>
+
+                          <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="overclockConsentInput"
+                                   name="advanced_overclock_consent" aria-describedby="overclockConsentHelp"
+                                <?php if ($advanced_overclock_consent == '1') echo 'checked' ?> >
+                            <label class="form-check-label form-label" for="overclockConsentInput">
+                              That's fine with me, let's OC!
+                            </label>
+                          </div>
+                          <small id="overclockConsentHelp" class="form-text text-muted">
+                            By checking this you acknowledge the risks involved with overclocking.
+                          </small>
+
+                          <hr>
+
                           <label class="form-check-label form-label" for="overclockInput">
                             Overclock
                           </label>
@@ -808,7 +825,7 @@ $ssids = array_unique($ssids);
                               </span>
                             </div>
                             <select id="overclockInput" name="advanced_overclock" class="form-control selectpicker"
-                                    aria-describedby="overclockHelp">
+                                    aria-describedby="overclockHelp" disabled>
                                 <?php
                                 foreach (getOverClocks() as $key => $value) {
                                     $selected = $advanced_overclock == $key ? 'selected="selected"' : '';
@@ -819,13 +836,13 @@ $ssids = array_unique($ssids);
                           </div>
                           <small id="overclockHelp" class="form-text text-muted">
                             <p>
-                              Currently only supported for the Raspberry Pi 1, 2 and Zero (W).
+                              Currently only supported for the Raspberry Pi 1, 2 and Zero (W).<br>
                               These older and lower powered models do benefit the most from an overclock.
                             </p>
                             <p>
-                              You can still overclock the Pi 3 and 4 if you need to by manually setting the appropriate
-                              values in the config.txt above. However the performance gains for MoBro will be modest and
-                              most likely not worth the additional heat output.
+                              You can still overclock the Raspberry Pi 3 and 4 if you need to by manually setting the
+                              appropriate values in the config.txt below. However the performance gains for MoBro will
+                              be modest and most likely not worth the additional heat output.
                             </p>
                             <p class="font-weight-bold">
                               We do recommend to use at least a heatsink for additional cooling and to ensure good
@@ -855,26 +872,32 @@ $ssids = array_unique($ssids);
                         <div class="col">
                           <label class="form-check-label form-label" for="configTxtCurrent">Current</label>
                           <textarea class="form-control" id="configTxtCurrent" disabled
+                                    aria-describedby="configTxtCurrentHelp"
                                     rows="5"><?php echo file_get_contents(Constants::FILE_CONFIGTXT) ?></textarea>
+                          <small id="configTxtCurrentHelp" class="form-text text-muted">
+                            NOTE: This is the current config.txt file before applying this new configuration!
+                          </small>
                         </div>
                       </div>
                       <div class="form-row mt-2">
                         <div class="col">
                           <label class="form-check-label form-label" for="configTxtInput">Overrides / Additions</label>
                           <textarea class="form-control" id="configTxtInput" name="advanced_configtxt"
+                                    aria-describedby="configTxtInputHelp"
                                     rows="3"><?php echo file_get_contents(Constants::FILE_MOBRO_CONFIGTXT_READ) ?></textarea>
                           <small id="configTxtInputHelp" class="form-text text-muted">
                             <p>Manually override or add values to the config.txt file above</p>
                             <p>
-                              <b>NOTE:</b> In case a display driver is selected, the config.txt file might be altered by
-                              the driver installation before these overrides are applied
+                              NOTE: In case a display driver or overclock is selected, the config.txt file might
+                              be altered by the application of those settings <b>before</b> these overrides are applied
                             </p>
                             Order of application:
                             <ol>
-                              <li>config.txt file (as shown above)</li>
+                              <li>default config.txt file</li>
                               <li>display driver installation</li>
-                              <li>overclock</li>
-                              <li>manual overrides</li>
+                              <li>overclock settings</li>
+                              <li>manual overrides / additions</li>
+                              <li>OverlayFS settings</li>
                             </ol>
                           </small>
                         </div>
@@ -1181,7 +1204,18 @@ $ssids = array_unique($ssids);
 
   // PC config toggle
   let ipInput = $('#staticIpInput');
-  let connKeyInput = $('#connectionKeyInput');
+  let connKeyInput = $('#connectionKeyInput')
+  if ($('#discovery1').prop('checked')) {
+    ipInput.attr('disabled', 'disabled');
+    ipInput.removeClass('border-primary');
+    connKeyInput.removeAttr('disabled');
+    connKeyInput.addClass('border-primary');
+  } else {
+    connKeyInput.attr('disabled', 'disabled');
+    connKeyInput.removeClass('border-primary');
+    ipInput.removeAttr('disabled');
+    ipInput.addClass('border-primary');
+  }
   $('#discovery1').on('click', _ => {
     ipInput.attr('disabled', 'disabled');
     ipInput.removeClass('border-primary');
@@ -1249,6 +1283,16 @@ $ssids = array_unique($ssids);
       $('#passwordInputGroup i').removeClass("fa-eye-slash");
       $('#passwordInputGroup i').addClass("fa-eye");
     }
+  });
+
+  var overclockSupported = <?php echo overclockSupported() ? 'true' : 'false'; ?>;
+  $('#overclockConsentInput').on('change', _ => {
+    if (overclockSupported && $('#overclockConsentInput').prop('checked')) {
+      $('#overclockInput').prop('disabled', false);
+    } else {
+      $('#overclockInput').prop('disabled', true);
+    }
+    $('#overclockInput').selectpicker('refresh');
   });
 
 </script>
