@@ -36,6 +36,7 @@ MOBRO_CONFIG_BOOT="$CONF_DIR/mobro_config_boot"
 MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
 MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_configtxt_boot"
 MOBRO_CONFIG_TXT_DEFAULT="$CONF_DIR/config.txt"
+MOBRO_CMDLINE_DEFAULT="$CONF_DIR/cmdline.txt"
 CONFIG_TXT="/boot/config.txt"
 CMDLINE_TXT="/boot/cmdline.txt"
 
@@ -468,8 +469,9 @@ if [[ -n "$2" ]]; then
     cp -f "$2" "$MOBRO_CONFIG_TXT"
 fi
 
-log "configuration" "resetting config.txt"
+log "configuration" "resetting config.txt + cmdline.txt"
 cat "$MOBRO_CONFIG_TXT_DEFAULT" >"$CONFIG_TXT"
+cat "$MOBRO_CMDLINE_DEFAULT" >"$CMDLINE_TXT"
 
 # configure timezone
 timezone_config "$1"
