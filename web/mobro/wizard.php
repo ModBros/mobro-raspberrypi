@@ -234,7 +234,7 @@ $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
 $display_delay = getOrDefault($props['display_delay'], '5');
 
 // advanced
-$advanced_overclock = getOrDefault($props['advanced_overclock'], 'none');
+$advanced_overclock_mode = getOrDefault($props['advanced_overclock_mode'], 'none');
 $advanced_overclock_consent = getOrDefault($props['advanced_overclock_consent'], '0');
 
 $ssids = array();
@@ -831,11 +831,11 @@ $ssids = array_unique($ssids);
                                 <i class="fas fa-bolt"></i>
                               </span>
                             </div>
-                            <select id="overclockInput" name="advanced_overclock" class="form-control selectpicker"
+                            <select id="overclockInput" name="advanced_overclock_mode" class="form-control selectpicker"
                                     aria-describedby="overclockHelp" disabled>
                                 <?php
                                 foreach (getOverClocks() as $key => $value) {
-                                    $selected = $advanced_overclock == $key ? 'selected="selected"' : '';
+                                    $selected = $advanced_overclock_mode == $key ? 'selected="selected"' : '';
                                     echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                                 }
                                 ?>

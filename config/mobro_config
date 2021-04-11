@@ -12,3 +12,5 @@ display_driver=default
 display_rotation=0
 display_screensaver=disabled
 display_delay=5
+advanced_overclock_consent=0
+advanced_overclock_mode=none

@@ -199,7 +199,7 @@ overclock() {
     log "configuration" "starting overclock"
     local overclock consent
     consent=$(prop 'advanced_overclock_consent' "$1");
-    overclock=$(prop 'advanced_overclock' "$1");
+    overclock=$(prop 'advanced_overclock_mode' "$1");
     if [[ "$consent" != "1" ]]; then
         log "configuration" "no consent to overclocking - skipping"
         return
