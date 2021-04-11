@@ -1048,7 +1048,7 @@ $ssids = array_unique($ssids);
                 <a href="index.php" class="btn btn-danger ml-auto" role="button" title="Cancel">
                   <span><i class="fas fa-times"></i></span> Cancel
                 </a>
-                <button id="submitBtn" class="btn btn-success ml-4" type="submit" title="Apply">
+                <button id="submitBtn" class="btn btn-success ml-4" type="button" title="Apply">
                   <span><i class="fas fa-check"></i></span> Apply
                 </button>
               </div>
