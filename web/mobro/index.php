@@ -197,7 +197,7 @@ $screensavers = getScreensavers();
         <div class="col-1"><span><i class="fas fa-network-wired"></i></span></div>
         <div class="col-4 confirmation-title">Mode</div>
         <div class="col">
-            <?php echo $network_mode == 'eth' ? 'Ethernet' : 'Wireless' ?>
+            <?php echo $network_mode == 'eth' ? 'Ethernet' : ($network_mode == 'usb' ? 'USB' : 'Wireless') ?>
             <?php echo $connected ? ' (Connected)' : '(Not connected)' ?>
         </div>
       </div>

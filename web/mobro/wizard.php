@@ -236,6 +236,7 @@ $display_delay = getOrDefault($props['display_delay'], '5');
 // advanced
 $advanced_overclock_mode = getOrDefault($props['advanced_overclock_mode'], 'none');
 $advanced_overclock_consent = getOrDefault($props['advanced_overclock_consent'], '0');
+$advanced_fs_dis_overlayfs = getOrDefault($props['advanced_fs_dis_overlayfs'], '0');
 
 $ssids = array();
 $file = fopen(Constants::FILE_SSID, "r");
@@ -832,7 +833,7 @@ $ssids = array_unique($ssids);
                               </span>
                             </div>
                             <select id="overclockInput" name="advanced_overclock_mode" class="form-control selectpicker"
-                                    aria-describedby="overclockHelp" disabled>
+                                    aria-describedby="overclockHelp" <?php if ($advanced_overclock_consent != '1') echo 'disabled' ?> >
                                 <?php
                                 foreach (getOverClocks() as $key => $value) {
                                     $selected = $advanced_overclock_mode == $key ? 'selected="selected"' : '';
@@ -912,6 +913,53 @@ $ssids = array_unique($ssids);
                     </div>
                   </div>
                 </div>
+
+                <!-- filesystem -->
+                <div class="card">
+                  <div class="card-header m-0 p-0" id="headingCustomThree">
+                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
+                            data-target="#collapseCustomThree"
+                            aria-expanded="false" aria-controls="collapseCustomThree">
+                      <span><i class="fas fa-sd-card mr-3"></i></span>filesystem
+                    </button>
+                  </div>
+
+                  <div id="collapseCustomThree" class="collapse" aria-labelledby="headingCustomThree"
+                       data-parent="#accordionCustom">
+                    <div class="card-body">
+
+                      <div class="mt-2 alert alert-warning font-weight-normal">
+                        Disabling OverlayFS will reduce the lifespan of your SD card and exposes you to the risk
+                        of data corruption (e.g. when cutting the power without proper shutdown).
+                      </div>
+
+                      <div class="form-row mt-2">
+                        <div class="col">
+                          <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="overlayFsInput"
+                                   name="advanced_fs_dis_overlayfs" aria-describedby="overlayFsHelp"
+                                <?php if ($advanced_fs_dis_overlayfs == '1') echo 'checked' ?> >
+                            <label class="form-check-label form-label" for="overlayFsInput">
+                              Disable OverlayFS
+                            </label>
+                          </div>
+                          <small id="overlayFsHelp" class="form-text text-muted">
+                            <p>
+                              Disabling OverlayFS will cause file changes, etc. to be actually written and
+                              persisted to the SD card
+                            </p>
+                            <p>
+                              For the reasons stated above, we do <b>recommend to leave OverlayFS enabled</b> unless you
+                              have a specific reason to disable it and do understand the implications.
+                            </p>
+                          </small>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
               <div class="button-row d-flex mt-4">
@@ -1030,6 +1078,11 @@ $ssids = array_unique($ssids);
                 </div>
                 <div class="form-row">
                   <textarea class="form-control mt-1 mb-1" id="summaryConfigTxt" disabled rows="2">Test</textarea>
+                </div>
+                <div class="form-row">
+                  <div class="col-1"><span><i class="fas fa-sd-card"></i></span></div>
+                  <div class="col-4 confirmation-title">Disable OverlayFS</div>
+                  <div class="col" id="summaryOverlayFs">No</div>
                 </div>
                 <hr>
               </div>
@@ -1177,6 +1230,7 @@ $ssids = array_unique($ssids);
   $('#summaryPW').html(isWifi ? "*".repeat($('#passwordInput').val().length) : '<span><i class="fas fa-times"></i></span>');
   $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
   $('#summaryHiddenNet').html(isWifi ? $('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No' : '<span><i class="fas fa-times"></i></span>');
+  $('#summaryOverlayFs').html($('#overlayFsInput').prop('checked') ? 'Yes' : 'No')
   $('#summaryOverclock').html($('#overclockInput option:selected').text());
   $('#summaryConfigTxt').html($('#configTxtInput').val());
   if (isUsb) {
@@ -1220,6 +1274,7 @@ $ssids = array_unique($ssids);
   $('#hiddenNetworkInput').on('change', _ => $('#summaryHiddenNet').html($('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No'));
   $('#overclockInput').on('change', _ => $('#summaryOverclock').html($('#overclockInput option:selected').text()));
   $('#configTxtInput').on('change', _ => $('#summaryConfigTxt').html($('#configTxtInput').val()));
+  $('#overlayFsInput').on('change', _ => $('#summaryOverlayFs').html($('#overlayFsInput').prop('checked') ? 'Yes' : 'No'));
 
   // PC config toggle
   let ipInput = $('#staticIpInput');

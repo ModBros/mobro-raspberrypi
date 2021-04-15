@@ -65,6 +65,7 @@ $advanced_overclock_consent = empty($_POST['advanced_overclock_consent']) ? '0' 
 $advanced_configtxt = getPostValOrDefault('advanced_configtxt', '');
 $advanced_configtxt = preg_replace('~\R~u', "\n", $advanced_configtxt);
 $advanced_configtxt = $advanced_configtxt . "\n";
+$advanced_fs_dis_overlayfs = empty($_POST['advanced_fs_dis_overlayfs']) ? '0' : '1';
 
 // write configuration file
 $configuration_file_contents =
@@ -83,7 +84,8 @@ $configuration_file_contents =
     "display_screensaver={$display_screensaver}\n" .
     "display_delay={$display_delay}\n" .
     "advanced_overclock_consent={$advanced_overclock_consent}\n" .
-    "advanced_overclock_mode={$advanced_overclock_mode}\n";
+    "advanced_overclock_mode={$advanced_overclock_mode}\n" .
+    "advanced_fs_dis_overlayfs={$advanced_fs_dis_overlayfs}\n";
 
 file_put_contents(Constants::FILE_MOBRO_CONFIG_WRITE, $configuration_file_contents, LOCK_EX);
 file_put_contents(Constants::FILE_MOBRO_CONFIGTXT_WRITE, $advanced_configtxt, LOCK_EX);

@@ -515,6 +515,14 @@ get_overlay_now() {
     grep -q "boot=overlay" /proc/cmdline
 }
 
+overlay_disabled() {
+    if [[ $(prop 'advanced_fs_dis_overlayfs' "$MOBRO_CONFIG_FILE") == "1" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 config_boot() {
     if ! [ -s "$MOBRO_CONFIG_BOOT_FILE" ]; then
        log "config_boot" "skipping - no config to apply"
@@ -594,12 +602,22 @@ sleep_pi 2 5
 # check if we need to apply config
 config_boot
 
-if ! get_overlay_now; then
-    log "config_boot" "OverlayFS not active. enabling and rebooting"
-    {
-        sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
-        sudo shutdown -r now
-    } &>>$LOG_FILE
+if overlay_disabled; then
+    if get_overlay_now; then
+        log "config_boot" "OverlayFS disabled but still active. disabling and rebooting"
+        {
+            sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw root
+            sudo shutdown -r now
+        } &>>$LOG_FILE
+    fi
+else
+    if ! get_overlay_now; then
+        log "config_boot" "OverlayFS enabled but not active. enabling and rebooting"
+        {
+            sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
+            sudo shutdown -r now
+        } &>>$LOG_FILE
+    fi
 fi
 
 log "configuration" "remounting /home and /boot as read-only"

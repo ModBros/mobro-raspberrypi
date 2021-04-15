@@ -499,8 +499,10 @@ if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
     : >"$MOBRO_CONFIG_BOOT"
 fi
 
-log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
-sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro all &>>$LOG_FILE
+if [[ $(prop 'advanced_fs_dis_overlayfs' "$1") != "1" ]]; then
+    log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro all &>>$LOG_FILE
+fi
 
 log "configuration" "done - rebooting"
 sudo shutdown -r now
