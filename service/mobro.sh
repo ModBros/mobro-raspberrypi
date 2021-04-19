@@ -27,13 +27,15 @@ SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
 
 # Files
 MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
-MOBRO_CONFIG_BOOT_FILE="$CONFIG_DIR/mobro_config_boot"
-MOBRO_CONFIGTXT_BOOT_FILE="$CONFIG_DIR/mobro_configtxt_boot"
 VERSION_FILE="$CONFIG_DIR/version"
-SKIP_FLAG="/boot/.skip_mobro"
+
+# mobro partition files
+SKIP_FLAG="/mobro/skip_service"
+CONNECTED_HOST="/mobro/connected_host"
+MOBRO_CONFIG_BOOT_FILE="/mobro/mobro_config"
+MOBRO_CONFIGTXT_BOOT_FILE="/mobro/mobro_configtxt"
 
 # TMP files
-CONNECTED_HOST="$TMP_DIR/mobro_connected_host"
 MOBRO_FOUND_FLAG="$TMP_DIR/mobro_found"
 LOG_FILE="$TMP_DIR/mobro_log"
 HOSTS_FILE="$TMP_DIR/mobro_hosts"
@@ -190,9 +192,7 @@ show_page_chrome() {
         --incognito \
         --check-for-update-interval=2592000 \
         --kiosk \
-        --disk-cache-dir=/tmp/chromecache \
         --disk-cache-size=1000\
-        --user-data-dir=/tmp/chromeconfig \
         &>>$LOG_FILE &
     wait_window "chromium"
 }
@@ -281,7 +281,11 @@ is_access_point_open() {
 
 set_mobro_found() {
     echo "1" >$MOBRO_FOUND_FLAG
-    echo "$1" >$CONNECTED_HOST
+    local found_host
+    found_host=$(sed -n 1p <$CONNECTED_HOST)
+    if [[ "$found_host" != "$1" ]]; then
+        echo "$1" >$CONNECTED_HOST
+    fi
 }
 
 is_mobro_found() {
@@ -424,10 +428,12 @@ service_discovery() {
     fi
 
     if is_mobro_found; then
-        # found MoBro application
-        log "service_discovery" "MoBro application found on IP $ip"
+        # found MoBro
+        local found_host
+        found_host=$(sed -n 1p <$CONNECTED_HOST)
+        log "service_discovery" "MoBro application found on IP $found_host"
         show_image $IMAGE_FOUND 5
-        show_mobro "$(sed -n 1p <$CONNECTED_HOST)"
+        show_mobro "$found_host"
     else
         # couldn't find application -> delete IPs
         log "service_discovery" "no MoBro application found"
@@ -549,12 +555,13 @@ config_boot() {
 
 if [[ -f "$SKIP_FLAG" ]]; then
     # do not process if the service skip flag is present
+    log "startup" "skip flag for service is set"
     wait_endless
 fi
 
 log "startup" "starting service"
 
-# create temporary files
+# create files
 for arg in LOG_FILE MOBRO_FOUND_FLAG SSIDS_FILE HOSTS_FILE CONNECTED_HOST; do
     eval value=\$$arg
     sudo touch "$value"
@@ -605,26 +612,16 @@ config_boot
 if overlay_disabled; then
     if get_overlay_now; then
         log "config_boot" "OverlayFS disabled but still active. disabling and rebooting"
-        {
-            sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw root
-            sudo shutdown -r now
-        } &>>$LOG_FILE
+        sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw root
+        sudo shutdown -r now
     fi
 else
     if ! get_overlay_now; then
         log "config_boot" "OverlayFS enabled but not active. enabling and rebooting"
-        {
-            sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
-            sudo shutdown -r now
-        } &>>$LOG_FILE
+        sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
+        sudo shutdown -r now
     fi
 fi
-
-log "configuration" "remounting /home and /boot as read-only"
-{
-    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro boot
-    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro home
-} &>>$LOG_FILE
 
 # handle case if no connected display is found
 if [[ $NO_SCREEN == 1 ]]; then

@@ -11,8 +11,8 @@ Usage: ${0##*/} [-h|-r|-s|-w] [r|b|h|a]
 
     r, root       / (reboot required to apply!)
     b, boot       /boot partition
-    h, home       /home partition
-    a, all        /, /boot and /home
+    m, mobro      /mobro partition
+    a, all        /, /boot and /mobro
 TEXT
 }
 
@@ -28,12 +28,8 @@ get_bootro_now() {
   findmnt /boot | grep -q " ro,"
 }
 
-get_homero_now() {
-  findmnt /home | grep -q " ro,"
-}
-
-get_ro_now() {
-  findmnt $1 | grep -q " ro,"
+get_mobroro_now() {
+  findmnt /mobro | grep -q " ro,"
 }
 
 get_bootro_conf() {
@@ -198,16 +194,16 @@ print_status() {
     boot_status="RO"
     boot_color=$color_ro
   fi
-  local home_status="RW"
-  local home_color=$color_rw
-  if get_homero_now; then
-    home_status="RO"
-    home_color=$color_ro
+  local mobro_status="RW"
+  local mobro_color=$color_rw
+  if get_mobroro_now; then
+    mobro_status="RO"
+    mobro_color=$color_ro
   fi
 
-  printf "${color_path}/${color_white}     : ${overlay_color_status}%s ${color_white}(${overlay_color_conf} %s ${color_white}on next boot]\n" "$overlay_status" "$overlay_conf"
-  printf "${color_path}/boot${color_white} : ${boot_color}%s\n" "$boot_status"
-  printf "${color_path}/home${color_white} : ${home_color}%s\n" "$home_status"
+  printf "${color_path}/${color_white}      : ${overlay_color_status}%s ${color_white}(${overlay_color_conf}%s ${color_white}on next boot)\n" "$overlay_status" "$overlay_conf"
+  printf "${color_path}/boot${color_white}  : ${boot_color}%s\n" "$boot_status"
+  printf "${color_path}/mobro${color_white} : ${mobro_color}%s\n" "$mobro_status"
 }
 
 # Check whether user requests help
@@ -249,8 +245,8 @@ r | root)
 b | boot)
   PARTITION=/boot
   ;;
-h | home)
-  PARTITION=/home
+m | mobro)
+  PARTITION=/mobro
   ;;
 a | all)
   PARTITION=all
@@ -283,11 +279,11 @@ if [ "$PARTITION" = "/boot" ] || [ "$PARTITION" = "all" ]; then
   fi
 fi
 
-if [ "$PARTITION" = "/home" ] || [ "$PARTITION" = "all" ]; then
+if [ "$PARTITION" = "/mobro" ] || [ "$PARTITION" = "all" ]; then
   if [ "$ACTION" = "RW" ]; then
-    remount_rw /home
+    remount_rw /mobro
   elif [ "$ACTION" = "RO" ]; then
-    remount_ro /home
+    remount_ro /mobro
   fi
 fi
 

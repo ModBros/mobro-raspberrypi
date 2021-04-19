@@ -1363,8 +1363,10 @@ $ssids = array_unique($ssids);
   $('#overclockConsentInput').on('change', _ => {
     if (overclockSupported && $('#overclockConsentInput').prop('checked')) {
       $('#overclockInput').prop('disabled', false);
+      $('#summaryOverclock').html($('#overclockInput option:selected').text());
     } else {
       $('#overclockInput').prop('disabled', true);
+      $('#summaryOverclock').html('None');
     }
     $('#overclockInput').selectpicker('refresh');
   });

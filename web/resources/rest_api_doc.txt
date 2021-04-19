@@ -50,4 +50,4 @@ GET /api/hwstats
     return: stats of hardware components
             e.g. cpu usage, temperature, memory usage,...
     params:
-      filter: cpu,memory,filesystem (default=cpu,memory)
+      filter: cpu,memory,filesystem (default=none)

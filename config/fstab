@@ -1,4 +1,4 @@
-proc                  /proc           proc    defaults             0       0
-/dev/mmcblk0p1        /boot           vfat    defaults,noatime,ro  0       2
-/dev/mmcblk0p2        /               ext4    defaults,noatime     0       1
-/dev/mmcblk0p5        /home           ext4    defaults,noatime,ro  0       0
+proc            /proc           proc    defaults                                                           0       0
+/dev/mmcblk0p1  /boot           vfat    defaults,noatime,ro                                                0       2
+/dev/mmcblk0p2  /               ext4    defaults,noatime                                                   0       1
+/dev/mmcblk0p3  /mobro          vfat    defaults,noatime,user,exec,uid=1000,gid=100,dmask=0022,fmask=0111  0       0

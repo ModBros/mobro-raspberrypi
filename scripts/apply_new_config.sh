@@ -32,15 +32,16 @@ WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
 WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
 FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
 MOBRO_CONFIG="$CONF_DIR/mobro_config"
-MOBRO_CONFIG_BOOT="$CONF_DIR/mobro_config_boot"
 MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
-MOBRO_CONFIG_TXT_BOOT="$CONF_DIR/mobro_configtxt_boot"
 MOBRO_CONFIG_TXT_DEFAULT="$CONF_DIR/config.txt"
 MOBRO_CMDLINE_DEFAULT="$CONF_DIR/cmdline.txt"
 GETHER_CONFIG="$CONF_DIR/g_ether.conf"
 USB0_CONFIG="$CONF_DIR/usb0"
+
 CONFIG_TXT="/boot/config.txt"
 CMDLINE_TXT="/boot/cmdline.txt"
+MOBRO_CONFIG_BOOT="/mobro/mobro_config"
+MOBRO_CONFIG_TXT_BOOT="/mobro/mobro_configtxt"
 
 LOG_FILE="/tmp/mobro_log"
 
@@ -76,10 +77,6 @@ get_overlay_now() {
 
 get_bootro_now() {
     findmnt /boot | grep -q " ro,"
-}
-
-get_homero_now() {
-    findmnt /home | grep -q " ro,"
 }
 
 prop_changed() {
@@ -435,12 +432,6 @@ if [[ -n "$2" ]]; then
     fi
 fi
 
-# mount the home partition as writable if it isn't already
-if get_homero_now; then
-    log "configuration" "remounting /home as writable"
-    sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw home &>>$LOG_FILE
-fi
-
 # if overlayFS is currently active: save configuration and apply on reboot
 if get_overlay_now; then
     log "configuration" "disabling OverlayFS"
@@ -499,9 +490,16 @@ if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
     : >"$MOBRO_CONFIG_BOOT"
 fi
 
+# mount the boot partition as read-only again
+if get_bootro_now; then
+    log "configuration" "remounting /boot as writable"
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro boot &>>$LOG_FILE
+fi
+
+# enable OverlayFS again if not disabled
 if [[ $(prop 'advanced_fs_dis_overlayfs' "$1") != "1" ]]; then
-    log "configuration" "enabling OverlayFS + remounting /home and /boot as read-only"
-    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro all &>>$LOG_FILE
+    log "configuration" "enabling OverlayFS"
+    sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root &>>$LOG_FILE
 fi
 
 log "configuration" "done - rebooting"

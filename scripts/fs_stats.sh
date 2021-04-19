@@ -14,9 +14,9 @@ Usage: ${0##*/} [OPTION] [PARTITION]
    -j, --json        all values in json format
 
   partitions:
-    r, root          the root fs
-    b, boot          the boot partition
-    h, home          the home partition
+    r, root          the root fs (default)
+    b, boot          the boot
+    m, mobro         the custom mobro config partition
 TEXT
 }
 
@@ -37,7 +37,7 @@ get_available() {
 }
 
 get_load() {
-  echo "$1" | awk 'NR == 1 {print $5}'
+  echo "$1" | awk 'NR == 1 {print $5}' | sed 's/%//'
 }
 
 get_mount() {
@@ -77,12 +77,16 @@ r | root)
 b | boot)
   PARTITION=/boot
   ;;
-h | home)
-  PARTITION=/home
+m | mobro)
+  PARTITION=/mobro
   ;;
 *)
-  print_usage
-  exit 1
+  if [[ -z "$2" ]]; then
+      PARTITION=/
+  else
+      print_usage
+      exit 1
+  fi
   ;;
 esac
 

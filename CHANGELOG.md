@@ -13,7 +13,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * MoBro splashscreen instead of console boot log
 * new hardware stats rest api endpoint
 * OverlayFS to avoid SD card corruption
-* read-only /boot and /home partition to avoid SD card corruption
 * overclocking of Pi 1, 2 and Zero from configuration wizard
 * custom additions or overrides of config.txt from configuration wizard
 * support for USB gadget mode for Pi Zero

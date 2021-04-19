@@ -1,10 +1,10 @@
 #!/bin/bash
 
-LOG_DIR='/home/modbros/mobro-raspberrypi/log'
+LOG_DIR='/mobro/log'
 LOG_FILE='/tmp/mobro_log'
 
-# first remount the /home partition writable
-mount -o remount,rw /home
+# make sure the log dir exists
+mkdir -p "$LOG_DIR"
 
 # copy log files to preserve the previous 10 starts
 if [[ -f "$LOG_FILE" ]]; then

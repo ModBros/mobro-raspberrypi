@@ -18,56 +18,36 @@ Flash the image onto an SD card using
 e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/blog/raspberry-pi-imager-imaging-utility/)
 or [balena Etcher](https://www.balena.io/etcher/)
 
+### Setup user
+
+Creating our own 'modbros' user which will run our services.  
+Since there's no need for the default 'pi' user any more we will remove it.
+
+```bash
+adduser modbros
+usermod -aG sudo modbros
+userdel -r -f pi
+```
+
+Logout and login again using the newly created user.
+
 ### Set up partitions
 
-Set up a separate partition for /home. You can do this by using [gparted](https://gparted.org/)
+As we will be using OverlayFS for the root partition and therefore won't be able to persist anything to it, we need to
+create a new additional and separate 'mobro' partition. You can do this by using e.g. [gparted](https://gparted.org/).  
+We will mount this partition with write permissions, and it will be used by the service to persist configuration files
+before reboot as well as persisting log files (if enabled).
 
-We will be using OverlayFS for the root partition. The service needs to be able to re-mount the /home partition with
-write permissions without having to reboot in order to be able to occasionally alter configuration files.  
-This wouldn't be possible if /home was located on the OverlayFS partition, so we need to create a separate one.
+We will also configure the /boot partition to be mounted read-only. Simply append the 'ro' flag to the line containing
+the /boot partition.
 
-Once you're done the command **_fdisk -lu_** should return something like this:
-
-```
-Device         Boot   Start     End Sectors  Size Id Type
-/dev/mmcblk0p1         8192  532479  524288  256M  c W95 FAT32 (LBA)
-/dev/mmcblk0p2       532480 6823935 6291456    3G 83 Linux
-/dev/mmcblk0p3      6823936 7348223  524288  256M  5 Extended
-/dev/mmcblk0p5      6825984 7348223  522240  255M 83 Linux
-```
-
-Now we need to temporarly mount our new /home partition (/dev/mmcblk0p5 in this example) and copy over the existing user
-folders.  
-After that we can remove them on the old partition.
-
-```bash
-mount /dev/mmcblk0p5 /mnt
-cp /home/* /mnt/ -rp
-rm /home/* -r
-```
-
-Then proceed to edit the **/etc/fstab** which then should then look something like this:
+In the end the **/etc/fstab** should look something like this:
 
 ```
-proc                  /proc           proc    defaults             0       0
-/dev/mmcblk0p1        /boot           vfat    defaults,noatime,ro  0       2
-/dev/mmcblk0p2        /               ext4    defaults,noatime     0       1
-/dev/mmcblk0p5        /home           ext4    defaults,noatime,ro  0       0
-```
-
-Now reboot for the changes to take effect
-
-```bash
-reboot
-```
-
-Now (after the reboot) the /home and /boot partitions will be mounted read-only like we just specified in the /etc/fstab
-file.  
-In order to proceed the setup we need to remount them with write permissions:
-
-```bash
-mount -o remount,rw /home
-mount -o remount,rw /boot
+proc            /proc           proc    defaults                                                           0       0
+/dev/mmcblk0p1  /boot           vfat    defaults,noatime,ro                                                0       2
+/dev/mmcblk0p2  /               ext4    defaults,noatime                                                   0       1
+/dev/mmcblk0p3  /mobro          vfat    defaults,noatime,user,exec,uid=1000,gid=100,dmask=0022,fmask=0111  0       0
 ```
 
 ### Update Raspberry Pi
@@ -90,19 +70,6 @@ dphys-swapfile uninstall
 update-rc.d dphys-swapfile remove
 apt purge -y dphys-swapfile
 ```
-
-### Setup user
-
-Creating our own 'modbros' user which will run our services.  
-Since there's no need for the default 'pi' user any more we will remove it.
-
-```bash
-adduser modbros
-usermod -aG sudo modbros
-userdel -r -f pi
-```
-
-Logout and login again using the newly created user.
 
 ### Install dependencies
 
@@ -140,7 +107,6 @@ systemctl disable hostapd.service
 ```bash
 cd /home/modbros
 git clone https://github.com/oblique/create_ap
-chmod -R 755 create_ap
 cd create_ap
 make install
 ```
@@ -157,53 +123,29 @@ cd mobro-raspberrypi
 ### Set file permissions
 
 ```bash
-chmod 755 ./scripts/*.sh
-chmod 755 ./service/*.sh
+chmod 755 /home/modbros/mobro-raspberrypi/scripts/*.sh
+chmod 755 /home/modbros/mobro-raspberrypi/service/*.sh
 
-chmod 644 ./service/*.service
+chmod 644 /home/modbros/mobro-raspberrypi/service/*.service
+chmod 666 /home/modbros/mobro-raspberrypi/config/*
+chmod 444 /home/modbros/mobro-raspberrypi/resources/*
 
-chmod 666 ./config/*
-chmod 444 ./resources/*
-
-chmod 440 ./config/010_modbros-nopasswd
-chmod 440 ./config/010_wwwdata-scripts
-cp -f ./config/010_modbros-nopasswd /etc/sudoers.d
-cp -f ./config/010_wwwdata-scripts /etc/sudoers.d
+chmod 440 /home/modbros/mobro-raspberrypi/config/010_modbros-nopasswd
+chmod 440 /home/modbros/mobro-raspberrypi/config/010_wwwdata-scripts
 ```
 
-### Configure web server
-
-Configure PHP and the webserver that is used to host the configuration page and REST interface
+### Copying configurations
 
 ```bash
-rm -rf /var/www/*
+cat /home/modbros/mobro-raspberrypi/config/config.txt > /boot/config.txt
+cat /home/modbros/mobro-raspberrypi/config/cmdline.txt > /boot/cmdline.txt
+cat /home/modbros/mobro-raspberrypi/config/hostname > /etc/hostname
+cat /home/modbros/mobro-raspberrypi/config/hosts > /etc/hosts
+cat /home/modbros/mobro-raspberrypi/config/.bashrc >> /home/modbros/.bashrc
+cat /home/modbros/mobro-raspberrypi/config/99-fbturbo.conf > /usr/share/X11/xorg.conf.d/99-fbturbo.conf
 
-chmod +rx ./web/modbros/favicon.ico
-ln -s /home/modbros/mobro-raspberrypi/web /var/www/html
-
-sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.3/fpm/php.ini
-cat ./config/15-fastcgi-php.conf >/etc/lighttpd/conf-available/15-fastcgi-php.conf
-
-lighttpd-enable-mod fastcgi 
-lighttpd-enable-mod fastcgi-php 
-
-service lighttpd force-reload 
-service lighttpd restart 
-systemctl enable lighttpd.service 
-
-cp -f ./config/010_wwwdata-scripts /etc/sudoers.d
-chmod 440 /etc/sudoers.d/010_wwwdata-scripts
-```
-
-### Applying configurations
-
-```bash
-cat ./config/config.txt > /boot/config.txt
-cat ./config/cmdline.txt > /boot/cmdline.txt
-cat ./config/hostname > /etc/hostname
-cat ./config/hosts > /etc/hosts
-cat ./config/.bashrc >> /home/modbros/.bashrc
-cat ./config/99-fbturbo.conf > /usr/share/X11/xorg.conf.d/99-fbturbo.conf
+cp -f /home/modbros/mobro-raspberrypi/config/010_modbros-nopasswd /etc/sudoers.d
+cp -f /home/modbros/mobro-raspberrypi/config/010_wwwdata-scripts /etc/sudoers.d
 ```
 
 ### Set up display drivers
@@ -223,9 +165,30 @@ sed -i '/reboot/d' /home/modbros/display-drivers/GoodTFT/*show
 sed -i '/reboot/d' /home/modbros/display-drivers/Waveshare/*show
 ```
 
+### Configure web server
+
+Configure PHP and the webserver that is used to host the configuration page and REST interface
+
+```bash
+rm -rf /var/www/*
+
+chmod +rx /home/modbros/mobro-raspberrypi/web/resources/favicon.ico
+ln -s /home/modbros/mobro-raspberrypi/web /var/www/html
+
+sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=1/g" /etc/php/7.3/fpm/php.ini
+cat /home/modbros/mobro-raspberrypi/config/15-fastcgi-php.conf >/etc/lighttpd/conf-available/15-fastcgi-php.conf
+
+lighttpd-enable-mod fastcgi 
+lighttpd-enable-mod fastcgi-php 
+
+service lighttpd force-reload 
+service lighttpd restart 
+systemctl enable lighttpd.service 
+```
+
 ### Set up splashscreen (optional)
 
-Dedicated service to display a splashscreen sooner, even before the actual MoBro service is started
+Dedicated service to display a splashscreen right after boot, even before the actual MoBro service is started
 
 ```bash
 cp /home/modbros/mobro-raspberrypi/service/splashscreen.service /lib/systemd/system/splashscreen.service
@@ -237,8 +200,9 @@ systemctl enable splashscreen.service
 
 ### Set up service to persist logs (optional)
 
-Dedicated service that will remount the /home partition and copy the current log file over.  
-This is required if you want to persist the log file since it is only created and lives in the /tmp directory
+Dedicated service that will copy the current log files over to the 'mobro' partition before a shutdown.  
+This is required if you want to actually persist the log file to view it after a shutdown/reboot, since the log only
+lives in the /tmp directory
 
 ```bash
 cp /home/modbros/mobro-raspberrypi/service/shutdownlog.service /lib/systemd/system/shutdownlog.service
@@ -259,6 +223,8 @@ systemctl enable mobro.service
 ```
 
 ### Reboot
+
+A final reboot and we're done
 
 ```bash
 reboot

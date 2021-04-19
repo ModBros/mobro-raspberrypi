@@ -28,12 +28,7 @@ if (empty($filter) || strpos($filter, 'memory') !== false) {
     $arr['memory'] =json_decode(shell_exec(Constants::SCRIPT_MEMORY_STATS . " --json"));
 }
 if (empty($filter)|| strpos($filter, 'filesystem') !== false) {
-    $filesystems = array('root', 'home', 'boot');
-    $fsArray = array();
-    foreach ($filesystems as $fs) {
-        $fsArray[$fs] = json_decode(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --json $fs"));
-    }
-    $arr['filesystem'] = $fsArray;
+    $arr['filesystem'] = json_decode(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --json root"));
 }
 
 # put into cache before returning
