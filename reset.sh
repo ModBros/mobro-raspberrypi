@@ -44,6 +44,9 @@ rm -rf /etc/X11/xorg.conf.d/*
 rm -f /etc/network/interfaces.d/usb0
 rm -f /etc/modprobe.d/g_ether.conf
 rm -f /mobro/skip_service
+rm -f /mobro/connected_host
+rm -f /mobro/mobro_config
+rm -f /mobro/mobro_configtxt
 
 # overwrite free space of partitions
 # sfill -f -z -l -l -v /

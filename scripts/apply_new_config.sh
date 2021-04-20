@@ -486,8 +486,9 @@ if [[ -n "$2" ]]; then
 fi
 
 if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
-    # resetting config boot file
-    : >"$MOBRO_CONFIG_BOOT"
+    log "configuration" "just applied reboot configuration - removing"
+    rm -f "$MOBRO_CONFIG_BOOT"
+    rm -f "$MOBRO_CONFIG_TXT_BOOT"
 fi
 
 # mount the boot partition as read-only again
