@@ -369,7 +369,7 @@ display_config() {
     default)
         log "configuration" "display driver: default"
         log "configuration" "display rotation: $rotation"
-        echo -e "\ndisplay_rotate=$((rotation / 90))" >>"$CONFIG_TXT"
+        set_config_var display_rotate "$((rotation / 90))" "$CONFIG_TXT"
         cat "$FBTURBO_CONFIG" >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
         sudo rm -f /etc/X11/xorg.conf.d/*
         ;;
@@ -378,9 +378,9 @@ display_config() {
         log "configuration" "display rotation: $rotation"
         local rotation_value=$((rotation / 90))
         if [[ $rotation_value == 0 || $rotation_value == 2 ]]; then
-            echo -e "\nlcd_rotate=$rotation_value" >>"$CONFIG_TXT"
+            set_config_var lcd_rotate "$rotation_value" "$CONFIG_TXT"
         else
-            echo -e "\ndisplay_rotate=$rotation_value" >>"$CONFIG_TXT"
+            set_config_var display_rotate "$rotation_value" "$CONFIG_TXT"
         fi
         ;;
     *)
@@ -394,6 +394,11 @@ display_config() {
         sudo /bin/bash "$driver" "$rotation" >>$LOG_FILE
         ;;
     esac
+}
+
+nosplash_config() {
+    set_config_var start_x 0 "$CONFIG_TXT"
+    set_config_var disable_splash 1 "$CONFIG_TXT"
 }
 
 # ====================================================================================================================
@@ -473,6 +478,10 @@ timezone_config "$1"
 
 # handle display drivers
 display_config "$1"
+
+# set some of the config,txt values again that might
+# have been removed by the display driver
+nosplash_config
 
 # set new network configuration
 network_config "$1"
