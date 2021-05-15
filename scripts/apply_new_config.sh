@@ -396,6 +396,18 @@ display_config() {
     esac
 }
 
+persistent_logging() {
+    if [[ $(prop 'advanced_fs_persist_log' "$1") == "1" ]]; then
+        log "configuration" "enabling shutdownlog service"
+        sudo cp -f /home/modbros/mobro-raspberrypi/service/shutdownlog.service /lib/systemd/system/shutdownlog.service
+        sudo systemctl daemon-reload
+        sudo systemctl enable shutdownlog.service
+    else
+        log "configuration" "disabling shutdownlog service"
+        sudo systemctl disable shutdownlog.service
+    fi
+}
+
 nosplash_config() {
     set_config_var start_x 0 "$CONFIG_TXT"
     set_config_var disable_splash 1 "$CONFIG_TXT"
@@ -488,6 +500,9 @@ network_config "$1"
 
 # handle overclock
 overclock "$1"
+
+# enable/disable persistent logging
+persistent_logging "$1"
 
 # handle manual config txt
 if [[ -n "$2" ]]; then

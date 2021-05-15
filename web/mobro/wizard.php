@@ -237,6 +237,7 @@ $display_delay = getOrDefault($props['display_delay'], '5');
 $advanced_overclock_mode = getOrDefault($props['advanced_overclock_mode'], 'none');
 $advanced_overclock_consent = getOrDefault($props['advanced_overclock_consent'], '0');
 $advanced_fs_dis_overlayfs = getOrDefault($props['advanced_fs_dis_overlayfs'], '0');
+$advanced_fs_persist_log = getOrDefault($props['advanced_fs_persist_log'], '0');
 
 $ssids = array();
 $file = fopen(Constants::FILE_SSID, "r");
@@ -853,8 +854,8 @@ $ssids = array_unique($ssids);
                               be modest and most likely not worth the additional heat output.
                             </p>
                             <p class="font-weight-bold">
-                              We do recommend to use at least a heatsink for additional cooling and to ensure good
-                              airflow to the Raspberry Pi.
+                              We do recommend the use of at least a heatsink for additional cooling.<br>
+                              Also make sure there is enough airflow to the Raspberry Pi.
                             </p>
                           </small>
                         </div>
@@ -929,8 +930,10 @@ $ssids = array_unique($ssids);
                     <div class="card-body">
 
                       <div class="mt-2 alert alert-warning font-weight-normal">
-                        Disabling OverlayFS will reduce the lifespan of your SD card and exposes you to the risk
-                        of data corruption (e.g. when cutting the power without proper shutdown).
+                        We do <b>recommend to leave OverlayFS enabled</b> unless you have a specific reason to disable
+                        it and do understand the implications.<br>
+                        Disabling OverlayFS will <u>reduce the lifespan of your SD card</u> and exposes you to the risk
+                        of <u>data corruption</u> (e.g. when cutting the power without proper shutdown)!
                       </div>
 
                       <div class="form-row mt-2">
@@ -945,12 +948,27 @@ $ssids = array_unique($ssids);
                           </div>
                           <small id="overlayFsHelp" class="form-text text-muted">
                             <p>
-                              Disabling OverlayFS will cause file changes, etc. to be actually written and
-                              persisted to the SD card
+                              All file changes, etc. will be actually written to the SD card and persisted across
+                              reboots like usually
                             </p>
+                          </small>
+                        </div>
+                      </div>
+
+                      <div class="form-row mt-2">
+                        <div class="col">
+                          <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="persistLogInput"
+                                   name="advanced_fs_persist_log" aria-describedby="persistLogInputHelp"
+                                <?php if ($advanced_fs_persist_log == '1') echo 'checked' ?> >
+                            <label class="form-check-label form-label" for="persistLogInput">
+                              Persist log files
+                            </label>
+                          </div>
+                          <small id="persistLogInputHelp" class="form-text text-muted">
                             <p>
-                              For the reasons stated above, we do <b>recommend to leave OverlayFS enabled</b> unless you
-                              have a specific reason to disable it and do understand the implications.
+                              Copies the current log file to /mobro/log before regular shutdown<br>
+                              Rotates to persist the most recent 10 log files
                             </p>
                           </small>
                         </div>
@@ -1083,6 +1101,11 @@ $ssids = array_unique($ssids);
                   <div class="col-1"><span><i class="fas fa-sd-card"></i></span></div>
                   <div class="col-4 confirmation-title">Disable OverlayFS</div>
                   <div class="col" id="summaryOverlayFs">No</div>
+                </div>
+                <div class="form-row">
+                  <div class="col-1"><span><i class="fas fa-sd-card"></i></span></div>
+                  <div class="col-4 confirmation-title">Persist log files</div>
+                  <div class="col" id="summaryLogPersist">No</div>
                 </div>
                 <hr>
               </div>
@@ -1231,6 +1254,7 @@ $ssids = array_unique($ssids);
   $('#summarySecurity').html(isWifi ? $('#wpaInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
   $('#summaryHiddenNet').html(isWifi ? $('#hiddenNetworkInput').prop('checked') ? 'Yes' : 'No' : '<span><i class="fas fa-times"></i></span>');
   $('#summaryOverlayFs').html($('#overlayFsInput').prop('checked') ? 'Yes' : 'No')
+  $('#summaryLogPersist').html($('#persistLogInput').prop('checked') ? 'Yes' : 'No')
   $('#summaryOverclock').html($('#overclockInput option:selected').text());
   $('#summaryConfigTxt').html($('#configTxtInput').val());
   if (isUsb) {
@@ -1275,6 +1299,7 @@ $ssids = array_unique($ssids);
   $('#overclockInput').on('change', _ => $('#summaryOverclock').html($('#overclockInput option:selected').text()));
   $('#configTxtInput').on('change', _ => $('#summaryConfigTxt').html($('#configTxtInput').val()));
   $('#overlayFsInput').on('change', _ => $('#summaryOverlayFs').html($('#overlayFsInput').prop('checked') ? 'Yes' : 'No'));
+  $('#persistLogInput').on('change', _ => $('#summaryLogPersist').html($('#persistLogInput').prop('checked') ? 'Yes' : 'No'));
 
   // PC config toggle
   let ipInput = $('#staticIpInput');
