@@ -28,7 +28,6 @@
 Feel free to visit our [Forum](https://www.mod-bros.com/en/forum)
 or [Discord](https://discord.com/invite/DSNX4ds) if you run into issues or questions that are not already answered here.  
 Feedback as well as suggestions for additional features and improvements are always welcome!
----
 
 # What is MoBro?
 
