@@ -223,7 +223,7 @@ This API is subject to change.
 | GET | /api/syslog        | returns the current syslog file                                            | text   | - |
 | GET | /api/top           | returns the output of the "top" command. i.e.: CPU/RAM Usage, Processes... | text   | - |
 | GET | /api/configuration | returns the current configuration                                          | text   | - |
-| GET | /api/hwstats       | stats of the hardware components (e.g. CPU/RAM usage, temperature,...)     | json   | *filter*: cpu,memory,filesystem (default=none) |
+| GET | /api/hwstats       | stats of the hardware components (e.g. CPU/RAM usage, temperature,...)     | json   | *filter*: cpu,memory,filesystem,wifi (default=none) |
 | PUT | /api/restart       | restarts the Raspberry Pi                                                  | -      | *delay*: minutes before restart (default: 0) |
 | PUT | /api/shutdown      | shuts down the Raspberry Pi                                                | -      | *delay*: minutes before shutdown (default: 0) |
 | PUT | /api/service       | starts, stops or restarts the MoBro service                                | -      | *action*: start, stop, restart (default) |

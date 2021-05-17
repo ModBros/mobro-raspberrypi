@@ -27,4 +27,5 @@ class Constants
     public const SCRIPT_CPU_STATS = self::BASE_PATH . '/scripts/cpu_stats.sh';
     public const SCRIPT_MEMORY_STATS = self::BASE_PATH . '/scripts/memory_stats.sh';
     public const SCRIPT_FILESYSTEM_STATS = self::BASE_PATH . '/scripts/fs_stats.sh';
+    public const SCRIPT_WIFI_STATS = self::BASE_PATH . '/scripts/wifi_stats.sh';
 }

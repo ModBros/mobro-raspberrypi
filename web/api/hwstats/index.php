@@ -30,6 +30,9 @@ if (empty($filter) || strpos($filter, 'memory') !== false) {
 if (empty($filter)|| strpos($filter, 'filesystem') !== false) {
     $arr['filesystem'] = json_decode(shell_exec(Constants::SCRIPT_FILESYSTEM_STATS . " --json root"));
 }
+if (empty($filter)|| strpos($filter, 'wifi') !== false) {
+    $arr['wifi'] = json_decode(shell_exec(Constants::SCRIPT_WIFI_STATS . " --json wlan0"));
+}
 
 # put into cache before returning
 $response = json_encode($arr);

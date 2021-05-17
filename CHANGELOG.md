@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * log system throttled state
 * cleartext toggle for wifi password field
 * MoBro splashscreen instead of console boot log
-* new hardware stats rest api endpoint
+* rest api endpoint for hardware stats (cpu, memory, filesystem, wifi)
 * OverlayFS to avoid SD card corruption
 * overclocking of Pi 1, 2 and Zero from configuration wizard
 * custom additions or overrides of config.txt from configuration wizard
