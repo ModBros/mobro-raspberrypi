@@ -20,55 +20,55 @@
 # ====================================================================================================================
 
 # Directories
-TMP_DIR='/tmp'
-RESOURCES_DIR='/home/modbros/mobro-raspberrypi/resources'
-CONFIG_DIR='/home/modbros/mobro-raspberrypi/config'
-SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
+readonly TMP_DIR='/tmp'
+readonly RESOURCES_DIR='/home/modbros/mobro-raspberrypi/resources'
+readonly CONFIG_DIR='/home/modbros/mobro-raspberrypi/config'
+readonly SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
 
 # Files
-MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
-VERSION_FILE="$CONFIG_DIR/version"
+readonly MOBRO_CONFIG_FILE="$CONFIG_DIR/mobro_config"
+readonly VERSION_FILE="$CONFIG_DIR/version"
 
 # mobro partition files
-SKIP_FLAG="/mobro/skip_service"
-CONNECTED_HOST="/mobro/connected_host"
-MOBRO_CONFIG_BOOT_FILE="/mobro/mobro_config"
-MOBRO_CONFIGTXT_BOOT_FILE="/mobro/mobro_configtxt"
+readonly SKIP_FLAG="/mobro/skip_service"
+readonly CONNECTED_HOST="/mobro/connected_host"
+readonly MOBRO_CONFIG_BOOT_FILE="/mobro/mobro_config"
+readonly MOBRO_CONFIGTXT_BOOT_FILE="/mobro/mobro_configtxt"
 
 # TMP files
-MOBRO_FOUND_FLAG="$TMP_DIR/mobro_found"
-LOG_FILE="$TMP_DIR/mobro_log"
-HOSTS_FILE="$TMP_DIR/mobro_hosts"
-SSIDS_FILE="$TMP_DIR/mobro_ssids"
+readonly MOBRO_FOUND_FLAG="$TMP_DIR/mobro_found"
+readonly LOG_FILE="$TMP_DIR/mobro_log"
+readonly HOSTS_FILE="$TMP_DIR/mobro_hosts"
+readonly SSIDS_FILE="$TMP_DIR/mobro_ssids"
 
 # Scripts
-APPLY_CONFIG_SCRIPT="$SCRIPT_DIR/apply_new_config.sh"
-FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
+readonly APPLY_CONFIG_SCRIPT="$SCRIPT_DIR/apply_new_config.sh"
+readonly FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
 
 # Resources
-IMAGE_SPLASH="$RESOURCES_DIR/splashscreen.png"
-IMAGE_FOUND="$RESOURCES_DIR/found.png"
-IMAGE_NOTFOUND="$RESOURCES_DIR/notfound.png"
-IMAGE_CONNECTWIFI="$RESOURCES_DIR/connectwifi.png"
-IMAGE_DISCOVERY="$RESOURCES_DIR/discovery.png"
-IMAGE_HOTSPOT="$RESOURCES_DIR/hotspot.png"
-IMAGE_HOTSPOTCREATION="$RESOURCES_DIR/creatinghotspot.png"
-IMAGE_WIFIFAILED="$RESOURCES_DIR/wififailed.png"
-IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
-IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
-IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
-IMAGE_CONFIGURATION="$RESOURCES_DIR/applyconfig.png"
-IMAGE_USBSUCCESS="$RESOURCES_DIR/ethsuccess.png"
+readonly IMAGE_SPLASH="$RESOURCES_DIR/splashscreen.png"
+readonly IMAGE_FOUND="$RESOURCES_DIR/found.png"
+readonly IMAGE_NOTFOUND="$RESOURCES_DIR/notfound.png"
+readonly IMAGE_CONNECTWIFI="$RESOURCES_DIR/connectwifi.png"
+readonly IMAGE_DISCOVERY="$RESOURCES_DIR/discovery.png"
+readonly IMAGE_HOTSPOT="$RESOURCES_DIR/hotspot.png"
+readonly IMAGE_HOTSPOTCREATION="$RESOURCES_DIR/creatinghotspot.png"
+readonly IMAGE_WIFIFAILED="$RESOURCES_DIR/wififailed.png"
+readonly IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
+readonly IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
+readonly IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
+readonly IMAGE_CONFIGURATION="$RESOURCES_DIR/applyconfig.png"
+readonly IMAGE_USBSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 
 # Ports
-MOBRO_PORT='42100'            # port of the MoBro desktop application
+readonly MOBRO_PORT='42100'             # port of the MoBro desktop application
 
 # Global Constants
-AP_SSID='MoBro_Configuration' # ssid of the created access point
-LOOP_INTERVAL=60              # in seconds
-AP_RETRY_WAIT=20              # how long to wait for AP to start/stop before issuing command again (in s)
-AP_FAIL_WAIT=90               # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
-STARTUP_WIFI_WAIT=45          # seconds to wait for wifi connection on startup (if wifi configured)
+readonly AP_SSID='MoBro_Configuration'  # ssid of the created access point
+readonly LOOP_INTERVAL=60               # in seconds
+readonly AP_RETRY_WAIT=20               # how long to wait for AP to start/stop before issuing command again (in s)
+readonly AP_FAIL_WAIT=90                # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
+readonly STARTUP_WIFI_WAIT=45           # seconds to wait for wifi connection on startup (if wifi configured)
 
 # Global Vars
 LOOP_COUNTER=0                          # counter variable for main loop iterations

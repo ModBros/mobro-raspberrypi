@@ -20,30 +20,30 @@
 # ====================================================================================================================
 
 # Directories
-CONF_DIR='/home/modbros/mobro-raspberrypi/config'
-SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
+readonly CONF_DIR='/home/modbros/mobro-raspberrypi/config'
+readonly SCRIPT_DIR='/home/modbros/mobro-raspberrypi/scripts'
 
 # Scripts
-FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
+readonly FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
 
 # Files
-WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"
-WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
-WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
-FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
-MOBRO_CONFIG="$CONF_DIR/mobro_config"
-MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
-MOBRO_CONFIG_TXT_DEFAULT="$CONF_DIR/config.txt"
-MOBRO_CMDLINE_DEFAULT="$CONF_DIR/cmdline.txt"
-GETHER_CONFIG="$CONF_DIR/g_ether.conf"
-USB0_CONFIG="$CONF_DIR/usb0"
+readonly WPA_CONFIG_EMPTY="$CONF_DIR/wpa_supplicant_empty.conf"
+readonly WPA_CONFIG_CLEAN="$CONF_DIR/wpa_supplicant_clean.conf"
+readonly WPA_CONFIG_TEMP="$CONF_DIR/wpa_supplicant_temp.conf"
+readonly FBTURBO_CONFIG="$CONF_DIR/99-fbturbo.conf"
+readonly MOBRO_CONFIG="$CONF_DIR/mobro_config"
+readonly MOBRO_CONFIG_TXT="$CONF_DIR/mobro_configtxt"
+readonly MOBRO_CONFIG_TXT_DEFAULT="$CONF_DIR/config.txt"
+readonly MOBRO_CMDLINE_DEFAULT="$CONF_DIR/cmdline.txt"
+readonly GETHER_CONFIG="$CONF_DIR/g_ether.conf"
+readonly USB0_CONFIG="$CONF_DIR/usb0"
 
-CONFIG_TXT="/boot/config.txt"
-CMDLINE_TXT="/boot/cmdline.txt"
-MOBRO_CONFIG_BOOT="/mobro/mobro_config"
-MOBRO_CONFIG_TXT_BOOT="/mobro/mobro_configtxt"
+readonly CONFIG_TXT="/boot/config.txt"
+readonly CMDLINE_TXT="/boot/cmdline.txt"
+readonly MOBRO_CONFIG_BOOT="/mobro/mobro_config"
+readonly MOBRO_CONFIG_TXT_BOOT="/mobro/mobro_configtxt"
 
-LOG_FILE="/tmp/mobro_log"
+readonly LOG_FILE="/tmp/mobro_log"
 
 # ====================================================================================================================
 # Helper Functions
