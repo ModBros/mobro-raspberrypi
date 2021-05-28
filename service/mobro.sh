@@ -515,6 +515,7 @@ wait_wifi_connection() {
         sleep 5
         try_seconds=$((try_seconds + 5))
     done
+    return 1
 }
 
 get_overlay_now() {
