@@ -667,8 +667,6 @@ case $NETWORK_MODE in
     # unblock the wifi interface
     log "startup" "unblocking wifi interface"
     sudo rfkill unblock 0 &>>$LOG_FILE
-    # try to connect to wifi (if previously configured)
-    # and try to connect to mobro
 
     # check if wifi is configured
     # (skip if no ssid is set - e.g. first boot)
@@ -682,9 +680,18 @@ case $NETWORK_MODE in
 
     log "startup" "waiting for wifi connection to '$ssid'..."
     if ! wait_wifi_connection $STARTUP_WIFI_WAIT; then
-        log "startup" "couldn't connect to wifi network '$ssid'"
-        show_image $IMAGE_WIFIFAILED 10
-        access_point
+        log "startup" "failed to connect to '$ssid' after $STARTUP_WIFI_WAIT seconds"
+        log "startup" "restarting wlan0 interface, reconfiguring wpa and trying again"
+        {
+            sudo ifconfig wlan0 down
+            sudo ifconfig wlan0 up
+            sudo wpa_cli -i wlan0 reconfigure
+        } &>>$LOG_FILE
+        if ! wait_wifi_connection $STARTUP_WIFI_WAIT; then
+            log "startup" "couldn't connect to wifi network '$ssid'"
+            show_image $IMAGE_WIFIFAILED 10
+            access_point
+        fi
     fi
 
     log "startup" "connected to wifi network '$ssid'"
