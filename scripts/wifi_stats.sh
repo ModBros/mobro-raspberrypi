@@ -17,31 +17,31 @@ TEXT
 }
 
 get_ssid() {
-  echo "$1" | grep "ESSID" | sed -e 's/^.*ESSID:"\([^ ]*\)".*$/\1/'
+  echo "$1" | grep "ESSID" | sed -ne 's/^.*ESSID:"\([^ ]*\)".*$/\1/p'
 }
 
 get_frequency() {
-  echo "$1" | grep "Frequency" | sed -e 's/^.*Frequency:\([^ ]* [^ ]*\) .*$/\1/'
+  echo "$1" | grep "Frequency" | sed -ne 's/^.*Frequency:\([^ ]* [^ ]*\) .*$/\1/p'
 }
 
 get_access_point() {
-  echo "$1" | grep "Access Point" | sed -n -e 's/^.*Access Point: //p' | awk '{$1=$1};1'
+  echo "$1" | grep "Access Point" | sed -ne 's/^.*Access Point: //p' | awk '{$1=$1};1'
 }
 
 get_bit_rate() {
-  echo "$1" | grep "Bit Rate" | sed -e 's/^.*Bit Rate=\([^ ]* [^ ]*\) .*$/\1/'
+  echo "$1" | grep "Bit Rate" | sed -ne 's/^.*Bit Rate=\([^ ]* [^ ]*\) .*$/\1/p'
 }
 
 get_tx_power() {
-  echo "$1" | grep "Tx-Power" | sed -n -e 's/^.*Tx-Power=//p' | awk '{$1=$1};1'
+  echo "$1" | grep "Tx-Power" | sed -ne 's/^.*Tx-Power=//p' | awk '{$1=$1};1'
 }
 
 get_link_quality() {
-  echo "$1" | grep "Link Quality" | sed -e 's/^.*Link Quality=\([^ ]*\) .*$/\1/'
+  echo "$1" | grep "Link Quality" | sed -ne 's/^.*Link Quality=\([^ ]*\) .*$/\1/p'
 }
 
 get_signal_level() {
-  echo "$1" | grep "Signal level" | sed -n -e 's/^.*Signal level=//p' | awk '{$1=$1};1'
+  echo "$1" | grep "Signal level" | sed -ne 's/^.*Signal level=//p' | awk '{$1=$1};1'
 }
 
 [ "$#" != 2 -o "$1" = "--help" -o "$1" = "-h" ] && {
