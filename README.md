@@ -22,6 +22,7 @@
 * [Technical documentation](#technical-documentation)
   * [File system](#file-system)
   * [Configuration](#configuration)
+  * [Custom modifications](#custom-modifications)
   * [REST Api](#rest-api)
   * [Logging](#logging)
 
@@ -64,7 +65,7 @@ the house.
 
 ## What does this image do?
 
-This custom pre-configured image provides an easy way to setup the Raspberry Pi as a MoBro monitoring device.  
+This custom pre-configured image provides an easy way to set up the Raspberry Pi as a MoBro monitoring device.  
 It is ready to be flashed onto a micro SD card and put straight to use in a Raspberry Pi.   
 All the required configuration is done via an easy-to-use web based configuration wizard.
 
@@ -101,49 +102,61 @@ The disk of this image is split up into three partitions: / (root), /boot and /m
 
 ### root (OverlayFS)
 
-The __root__ partition is set up for [OverlayFS](https://en.wikipedia.org/wiki/OverlayFS). So the underlying partition is
-mounted read-only with an in memory read/write partition overlay on top if it.  
-As a consequence, all file changes while running are only stored in the overlay in RAM and not actually written to the
-SD card and therefore will be gone upon shutdown/reboot.  
+The __root__ partition is set up for [OverlayFS](https://en.wikipedia.org/wiki/OverlayFS). So the underlying partition
+is mounted read-only with an in memory read/write partition overlay on top if it.  
+As a consequence, all file changes will only be stored in the overlay in RAM and not actually written
+to the SD card and therefore will be gone after the next shutdown/reboot.  
+
 This has the following benefits:
 * no write operations to the SD card, which greatly extends its lifespan
 * reduced risk of data corruption in case the Pi is not shut down correctly (e.g. just cutting the power)
 * guarantee that the Pi is in the exact same state on every boot
 
-However, this approach also complicates certain things:  
-All custom modifications to configuration files on the root partition will be lost upon reboot or shutdown. In order to
-persist custom changes you will need to:
-* disable OverlayFS  
-  just call '[fsmount.sh](./scripts/fsmount.sh) --rw root' to disable OverlayFS for the next boot
-* temporarily disable the mobro service  
-  the service would automatically re-enable OverlayFS and reboot before we can do anything if we don't disable it  
-  create a file named 'skip_service' on the /mobro partition to skip the service on the next boot 
-  (just execute 'touch /mobro/skip_service')
-* reboot
-* apply your custom changes
-* enable the service again by removing the flag  
-  just execute 'rm -f /mobro/skip_service'
-* enable OverlayFS again  
-  just execute '[fsmount.sh](./scripts/fsmount.sh) --ro root'
-* reboot again
+However, this approach also complicates the configuration process as well as all custom modifications to the image.  
+See the section below ([Custom modifications](#custom-modifications)).
 
-Note:  
-The procedure explained above is only required if you need to install software or apply custom changes that are
-not covered by our configuration wizard. For all the changes done through our configuration wizard, the above scenario 
-is handled automatically by our scripts and requires no additional user handling or input. Just hist 'apply' as usual 
-and you're good ;)
-
-If you wish to disable OverlayFS altogether you can do this from the 'Advanced customization' step in the configuration 
-wizard.
+In case you wish to disable OverlayFS altogether you can do this from the 'Advanced customization' step in the 
+configuration wizard.
 
 ### /boot + /mobro
 The __/boot__ partition is mounted read-only per default. In case you need to manually alter e.g. the config.txt file you
 first need to remount /boot with write permissions.  
-Simply call '[fsmount.sh](./scripts/fsmount.sh) --status' to see the current mounting status and
-'[fsmount.sh](./scripts/fsmount.sh) --rw boot' to remount the /boot partition with write permissions.
+Simply call `status` to see the current mounting status and
+`set_boot_configurable` to remount the /boot partition with write permissions.
 
 __/mobro__ is a small dedicated partition that is mounted with write permissions and is used to store configuration
 files, flags etc. required by the mobro service.
+
+## Custom modifications 
+
+As a consequence of using OverlayFS, all custom modifications to configuration files on the root partition will be lost 
+upon reboot or shutdown. In order to persist custom changes you will need to:
+1. disable OverlayFS + temporarily disable the mobro service  
+   (the service would automatically re-enable OverlayFS and reboot before we can do anything if we don't disable it)
+   ```
+   set_root_configurable
+   ```
+   Note: the Pi will reboot after this
+2. re-mount /boot with write permissions
+   ```
+   set_boot_configurable
+   ```
+3. apply all your custom changes
+4. enabling OverlayFS + mobro service again
+   ```
+   set_default
+   ```
+   Note: This might take a minute. The Pi will again reboot after this
+
+Note:  
+The procedure explained above is only required if you need to install software or apply custom changes that are
+not covered by our configuration wizard. For all the changes done through our configuration wizard, the above scenario
+is handled automatically by our scripts and requires no additional user handling or input. Just hist 'apply' as usual
+and you're good ;)
+
+In case you wish to disable OverlayFS altogether you can do this from the 'Advanced customization' step in the 
+configuration wizard.
+
 
 ## Configuration
 
