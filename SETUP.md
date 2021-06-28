@@ -158,11 +158,8 @@ driver scripts.
 git clone https://github.com/goodtft/LCD-show.git /home/modbros/display-drivers/GoodTFT
 git clone https://github.com/waveshare/LCD-show.git /home/modbros/display-drivers/Waveshare
 
-chmod +x /home/modbros/display-drivers/GoodTFT/*show
-chmod +x /home/modbros/display-drivers/Waveshare/*show
-
-sed -i '/reboot/d' /home/modbros/display-drivers/GoodTFT/*show
-sed -i '/reboot/d' /home/modbros/display-drivers/Waveshare/*show
+chmod +x /home/modbros/display-drivers/{GoodTFT,Waveshare}/*{show,.sh}
+sed -i '/reboot/c\echo "removed reboot"' /home/modbros/display-drivers/{GoodTFT,Waveshare}/*{show,.sh}
 ```
 
 ### Configure web server
