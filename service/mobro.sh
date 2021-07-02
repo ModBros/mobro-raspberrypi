@@ -212,7 +212,11 @@ show_screensaver() {
         log "screensaver" "activating screensaver: $1"
     fi
     SCREENSAVER=1
-    show_page_chrome "http://localhost/screensavers/$1"
+    if [[ $1 == "http*" ]]; then
+        show_page_chrome "$1"
+    else
+        show_page_chrome "http://localhost/screensavers/$1"
+    fi
 }
 
 search_ssids() {
@@ -451,6 +455,13 @@ check_screensaver() {
     if [[ -z $screensaver || $screensaver == "disabled" ]]; then
         # no screensaver configured
         return
+    fi
+
+    if [[ $screensaver == "custom" ]]; then
+        screensaver=$(prop 'display_screensaver_url' $MOBRO_CONFIG_FILE)
+        if [[ $screensaver != "http*" ]]; then
+            screensaver="https://$screensaver";
+        fi
     fi
 
     # screensaver configured -> check delay

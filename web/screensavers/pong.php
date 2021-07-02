@@ -10,7 +10,7 @@ include '../util.php';
   <title>MoBro Screensaver Preview</title>
   <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
 
-  <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
+  <script src="../vendor/jquery-3.6.0.min.js"></script>
   <script src="../vendor/moment.min.js"></script>
   <script src="../vendor/moment-timezone-with-data-10-years.min.js"></script>
 

@@ -191,7 +191,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   </style>
 
-  <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
+  <script src="../vendor/jquery-3.6.0.min.js"></script>
   <script src="../vendor/bootstrap.bundle.min.js"></script>
   <script src="../vendor/bootstrap-select.min.js"></script>
 
@@ -231,6 +231,7 @@ $network_hidden = getOrDefault($props['network_hidden'], '0');
 $display_driver = getOrDefault($props['display_driver'], 'default');
 $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
+$display_screensaver_url = getOrDefault($props['display_screensaver_url'], '');
 $display_delay = getOrDefault($props['display_delay'], '5');
 
 // advanced
@@ -658,6 +659,7 @@ $ssids = array_unique($ssids);
                             $selected = $display_driver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
+                        echo '</optgroup>';
                         echo '<optgroup label="GoodTFT">';
                         foreach (getGoodTFTDrivers() as $key => $value) {
                             $selected = $display_driver == $key ? 'selected="selected"' : '';
@@ -721,15 +723,61 @@ $ssids = array_unique($ssids);
                     <select id="screensaverInput" name="display_screensaver" class="form-control selectpicker"
                             aria-describedby="screensaverInputHelp">
                         <?php
-                        foreach (getScreensavers() as $key => $value) {
+                        foreach (getDefaultScreensaverOptions() as $key => $value) {
                             $selected = $display_screensaver == $key ? 'selected="selected"' : '';
                             echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
                         }
+
+                        echo '<optgroup label="Clocks">';
+                        foreach (getClockScreensavers() as $key => $value) {
+                            $selected = $display_screensaver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
+                        echo '</optgroup>';
+
+                        echo '<optgroup label="Online *">';
+                        foreach (getOnlineScreensavers() as $key => $value) {
+                            $selected = $display_screensaver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
+                        echo '</optgroup>';
+
+                        echo '<optgroup label="Misc / Others">';
+                        foreach (getMiscScreensavers() as $key => $value) {
+                            $selected = $display_screensaver == $key ? 'selected="selected"' : '';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
+                        }
+                        echo '</optgroup>';
                         ?>
                     </select>
                   </div>
                   <small id="screensaverInputHelp" class="form-text text-muted">
-                    Shown in case the Raspberry Pi looses connection to the monitored PC
+                    Displayed while the Pi is not connected to a PC<br>
+                    * Online screensavers require an internet connection
+                    (no preview available when configuring via wifi hotspot)
+                  </small>
+                </div>
+              </div>
+
+              <div class="form-row mt-2">
+                <div class="col">
+                  <label class="form-check-label form-label" for="screensaverUrlInput">
+                    Custom URL
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-at"></i>
+                      </span>
+                    </div>
+                    <input class="multisteps-form__input form-control" id="screensaverUrlInput" type="text"
+                           name="display_screensaver_url" aria-describedby="screensaverUrlHelp"
+                        <?php if ($display_screensaver != 'custom') echo 'disabled' ?>
+                           value="<?php echo $display_screensaver_url ?>"
+                    />
+                  </div>
+                  <small id="screensaverUrlHelp" class="form-text text-muted">
+                    Custom URL to open as screensaver (requires active internet connection)
                   </small>
                 </div>
               </div>
@@ -1071,6 +1119,11 @@ $ssids = array_unique($ssids);
                 <div class="col" id="summaryScreensaver"></div>
               </div>
               <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-at"></i></span></div>
+                <div class="col-4 confirmation-title">Screensaver URL</div>
+                <div class="col" id="summaryScreensaverUrl"></div>
+              </div>
+              <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-stopwatch"></i></span></div>
                 <div class="col-4 confirmation-title">Screensaver delay</div>
                 <div class="col" id="summaryScreensaverDelay"></div>
@@ -1233,6 +1286,7 @@ $ssids = array_unique($ssids);
   const summaryIp = $('#summaryIp');
   const summaryScreenMode = $('#summaryScreenMode');
   const summaryScreensaver = $('#summaryScreensaver');
+  const summaryScreensaverUrl = $('#summaryScreensaverUrl');
   const summaryScreensaverDelay = $('#summaryScreensaverDelay');
 
   $('#summaryCountry').html($('#countryInput option:selected').text());
@@ -1243,6 +1297,7 @@ $ssids = array_unique($ssids);
   $('#summaryDriver').html($('#driverInput option:selected').text())
   $('#summaryRotation').html($('#rotationInput option:selected').text());
   summaryScreensaver.html($('#screensaverInput option:selected').text())
+  summaryScreensaverUrl.html($('#screensaverInput option:selected').val() != 'custom' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverUrlInput').val())
   summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val())
 
 
@@ -1341,24 +1396,36 @@ $ssids = array_unique($ssids);
   $('#driverInput').on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
   $('#rotationInput').on('change', _ => $('#summaryRotation').html($('#rotationInput option:selected').text()));
   let scrensaverDelayInput = $('#screensaverDelayInput');
+  let screensaverUrl = $('#screensaverUrlInput');
   let previewBtn = $('#screensaverPreviewButton');
   $('#screensaverInput').on('change', _ => {
     summaryScreensaver.html($('#screensaverInput option:selected').text());
-    let enabled = $('#screensaverInput option:selected').val() == 'disabled';
-    if (enabled) {
+    let disabled = $('#screensaverInput option:selected').val() == 'disabled';
+    let custom = $('#screensaverInput option:selected').val() == 'custom';
+    if (disabled) {
       scrensaverDelayInput.attr('disabled', 'disabled');
       previewBtn.attr('disabled', 'disabled');
+      screensaverUrl.attr('disabled', 'disabled');
     } else {
       scrensaverDelayInput.removeAttr('disabled');
       previewBtn.removeAttr('disabled');
+      if (custom) {
+        screensaverUrl.removeAttr('disabled');
+      } else {
+        screensaverUrl.attr('disabled', 'disabled');
+      }
     }
-    summaryScreensaverDelay.html(enabled ? '<span><i class="fas fa-times"></i></span>' : scrensaverDelayInput.val());
+    summaryScreensaverDelay.html(disabled ? '<span><i class="fas fa-times"></i></span>' : scrensaverDelayInput.val());
+    summaryScreensaverUrl.html(!custom ? '<span><i class="fas fa-times"></i></span>' : screensaverUrl.val());
   });
   $('#screensaverDelayInput').on('change', _ => {
-    let enabled = $('#screensaverInput option:selected').val() == 'disabled';
-    summaryScreensaverDelay.html(enabled ? '<span><i class="fas fa-times"></i></span>' : scrensaverDelayInput.val());
+    let disabled = $('#screensaverInput option:selected').val() == 'disabled';
+    summaryScreensaverDelay.html(disabled ? '<span><i class="fas fa-times"></i></span>' : scrensaverDelayInput.val());
   });
-
+  $('#screensaverUrlInput').on('change', _ => {
+    let custom = $('#screensaverInput option:selected').val() == 'custom';
+    summaryScreensaverUrl.html(!custom ? '<span><i class="fas fa-times"></i></span>' : screensaverUrl.val());
+  });
 
   $("#submitBtn").on("click", function () {
     $(this).prop("disabled", true);
@@ -1367,8 +1434,20 @@ $ssids = array_unique($ssids);
   });
 
   $("#screensaverPreviewButton").on("click", function () {
-    var val = $('#screensaverInput').val();
-    window.open('../screensavers/' + val, '_blank');
+    let custom = $('#screensaverInput option:selected').val() == 'custom';
+    let val;
+    if (custom) {
+      val = $('#screensaverUrlInput').val();
+      if (!val.startsWith('http')) {
+        val = 'https://' + val;
+      }
+    } else {
+      val = $('#screensaverInput').val();
+      if (!val.startsWith('http')) {
+        val = '../screensavers/' + val;
+      }
+    }
+    window.open(val, '_blank');
   });
 
   $("#passwordInputGroup a").on('click', function (event) {

@@ -59,7 +59,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     }
   </style>
 
-  <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
+  <script src="../vendor/jquery-3.6.0.min.js"></script>
   <script src="../vendor/bootstrap.bundle.min.js"></script>
 </head>
 
@@ -121,10 +121,11 @@ $network_hidden = getOrDefault($props['network_hidden'], '0');
 $display_driver = getOrDefault($props['display_driver'], 'default');
 $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
+$display_screensaver_url = getOrDefault($props['display_screensaver_url'], '');
 $display_delay = getOrDefault($props['display_delay'], '5');
 
 $drivers = getAllDrivers();
-$screensavers = getScreensavers();
+$screensavers = getAllScreensavers();
 
 ?>
 
@@ -283,6 +284,13 @@ $screensavers = getScreensavers();
         <div class="col-4 confirmation-title">Screensaver</div>
         <div class="col">
             <?php echo $screensavers[$display_screensaver] ?>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-at"></i></span></div>
+        <div class="col-4 confirmation-title">Screensaver URL</div>
+        <div class="col">
+            <?php echo $display_screensaver != 'custom' ? '<span><i class="fas fa-times"></i></span>' : $display_screensaver_url ?>
         </div>
       </div>
       <div class="row">

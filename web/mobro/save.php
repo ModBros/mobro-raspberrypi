@@ -57,6 +57,7 @@ $discovery_ip = getPostValOrDefault('discovery_ip', '');
 $display_driver = getPostValOrDefault('display_driver', '');
 $display_rotation = getPostValOrDefault('display_rotation', '0');
 $display_screensaver = getPostValOrDefault('display_screensaver', 'disabled');
+$display_screensaver_url = getPostValOrDefault('display_screensaver_url', 'disabled');
 $display_delay = getPostValOrDefault('display_delay', '5');
 
 // advanced
@@ -83,6 +84,7 @@ $configuration_file_contents =
     "display_driver={$display_driver}\n" .
     "display_rotation={$display_rotation}\n" .
     "display_screensaver={$display_screensaver}\n" .
+    "display_screensaver_url={$display_screensaver_url}\n" .
     "display_delay={$display_delay}\n" .
     "advanced_overclock_consent={$advanced_overclock_consent}\n" .
     "advanced_overclock_mode={$advanced_overclock_mode}\n" .

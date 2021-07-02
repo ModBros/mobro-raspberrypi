@@ -13,7 +13,7 @@ include '../util.php';
 
   <link href="../vendor/bootstrap.min.css" rel="stylesheet"/>
 
-  <script src="../vendor/jquery-3.3.1.slim.min.js"></script>
+  <script src="../vendor/jquery-3.6.0.min.js"></script>
   <script src="../vendor/moment.min.js"></script>
   <script src="../vendor/moment-timezone-with-data-10-years.min.js"></script>
 
@@ -26,7 +26,6 @@ include '../util.php';
       color: lightgray;
       text-align: center;
       font-size: 44px;
-      margin-top: 10%;
       font-family: sans-serif;
     }
 
@@ -34,7 +33,6 @@ include '../util.php';
       color: white;
       text-align: center;
       font-size: 60px;
-      margin-top: 20px;
       font-weight: bold;
       font-family: sans-serif;
     }
@@ -42,14 +40,26 @@ include '../util.php';
     hr {
       border: 1px solid grey;
     }
+
+    .container {
+        display: grid;
+        height: 100vh;
+    }
+
+    .center {
+        align-self: center;
+        justify-self: center;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <div id="date"></div>
-  <hr>
-  <div id="clock"></div>
+  <div class="center">
+    <div id="date"></div>
+    <hr>
+    <div id="clock"></div>
+  </div>
 </div>
 
 <script type="text/javascript">

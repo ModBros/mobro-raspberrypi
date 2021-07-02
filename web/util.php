@@ -123,20 +123,52 @@ function getAllDrivers(): array
     );
 }
 
-function getScreensavers(): array
+function getDefaultScreensaverOptions(): array
 {
     return [
         'disabled' => 'Disabled',
         'black.html' => 'Black',
-        'mobro_boot_light.html' => 'MoBro - Boot screen',
-        'mobro_boot_dark.html' => 'MoBro - Boot screen (dark)',
-        'mobro_logo_dark.html' => 'MoBro - Logo',
-        'mobro_logo_dark_bounce.html' => 'MoBro - Logo (bounce)',
-        'modbros_logo_dark.html' => 'ModBros - Logo',
-        'modbros_logo_dark_bounce.html' => 'ModBros - Logo (bounce)',
-        'clock_date.php' => 'Date + Clock',
-        'pong.php' => 'Pong Clock'
     ];
+}
+
+function getClockScreensavers(): array
+{
+    return [
+        'clock_date.php' => 'Date + Time',
+        'pong.php' => 'Pong',
+    ];
+}
+
+function getMiscScreensavers(): array
+{
+    return [
+        'mobro_boot_light.html' => 'MoBro Boot screen (light)',
+        'mobro_boot_dark.html' => 'MoBro Boot screen (dark)',
+        'mobro_logo_dark.html' => 'MoBro Logo',
+        'mobro_logo_dark_bounce.html' => 'MoBro Logo (animated)',
+        'modbros_logo_dark.html' => 'ModBros Logo',
+        'modbros_logo_dark_bounce.html' => 'ModBros Logo (animated)'
+    ];
+}
+
+function getOnlineScreensavers(): array
+{
+    return [
+        'custom' => 'Custom URL',
+        'https://www.windy.com' => 'Windy',
+        'https://www.flightradar24.com' => 'Flightradar',
+        'https://www.marinetraffic.com' => 'Marinetraffic'
+    ];
+}
+
+function getAllScreensavers(): array
+{
+    return array_merge(
+        getDefaultScreensaverOptions(),
+        getClockScreensavers(),
+        getOnlineScreensavers(),
+        getMiscScreensavers()
+    );
 }
 
 function getOverClocks(): array

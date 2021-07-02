@@ -5,18 +5,28 @@
   <title>MoBro Screensaver Preview</title>
   <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
   <style>
-    img {
-      width: 80%;
-      margin-left: 10%;
-      margin-top: 10%;
-    }
+      img {
+          width: 70%;
+      }
 
-    html {
-      background: black;
-    }
+      html {
+          background: black;
+      }
+
+      .container {
+          display: grid;
+          height: 95vh;
+      }
+
+      .center {
+          align-self: center;
+          justify-self: center;
+      }
   </style>
 </head>
 <body>
-  <img src="../resources/mobro_logo_light.svg">
+<div class="container">
+  <img class="center" src="../resources/mobro_logo_light.svg">
+</div>
 </body>
 </html>
