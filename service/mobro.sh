@@ -94,7 +94,11 @@ log() {
 }
 
 prop() {
-    grep "$1" "$2" | cut -d '=' -f2
+    grep "$1=" "$2" | cut -d '=' -f2 | sed 's/ //g'
+}
+
+begins_with() {
+    case $2 in "$1"*) true;; *) false;; esac;
 }
 
 wait_window() {
@@ -212,7 +216,7 @@ show_screensaver() {
         log "screensaver" "activating screensaver: $1"
     fi
     SCREENSAVER=1
-    if [[ $1 == "http*" ]]; then
+    if begins_with "http" "$1"; then
         show_page_chrome "$1"
     else
         show_page_chrome "http://localhost/screensavers/$1"
@@ -459,7 +463,7 @@ check_screensaver() {
 
     if [[ $screensaver == "custom" ]]; then
         screensaver=$(prop 'display_screensaver_url' $MOBRO_CONFIG_FILE)
-        if [[ $screensaver != "http*" ]]; then
+        if ! begins_with "http" "$screensaver"; then
             screensaver="https://$screensaver";
         fi
     fi
