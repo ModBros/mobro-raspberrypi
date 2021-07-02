@@ -57,7 +57,7 @@ $discovery_ip = getPostValOrDefault('discovery_ip', '');
 $display_driver = getPostValOrDefault('display_driver', '');
 $display_rotation = getPostValOrDefault('display_rotation', '0');
 $display_screensaver = getPostValOrDefault('display_screensaver', 'disabled');
-$display_screensaver_url = getPostValOrDefault('display_screensaver_url', 'disabled');
+$display_screensaver_url = getPostValOrDefault('display_screensaver_url', '');
 $display_delay = getPostValOrDefault('display_delay', '5');
 
 // advanced
