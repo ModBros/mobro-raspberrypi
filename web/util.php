@@ -160,6 +160,7 @@ function getOnlineScreensavers(): array
 {
     return [
         'custom' => 'Custom URL',
+        'unsplash.html' => 'Random Unsplash images',
         'https://www.windy.com' => 'Windy',
         'https://www.flightradar24.com' => 'Flightradar',
         'https://www.marinetraffic.com' => 'Marinetraffic'

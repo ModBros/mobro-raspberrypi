@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>MoBro Screensaver Preview</title>
+  <link rel="shortcut icon" href="../resources/favicon.ico" type="image/x-icon"/>
+
+  <script src="../vendor/jquery-3.6.0.min.js"></script>
+
+  <style>
+      body {
+          margin: 0;
+          background: black;
+      }
+
+      #img {
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          height: 100vh;
+          width: 100vw;
+      }
+  </style>
+</head>
+<body>
+
+<div id="img"></div>
+
+<script>
+  const refreshRate = 60000;
+  const url = 'https://source.unsplash.com/random/' + window.innerWidth + 'x' + window.innerHeight
+  const img = $('#img');
+
+  img.hide().css({
+    'background-image': 'url("' + url + '")'
+  }).fadeIn(5000);
+
+  let count = 0;
+  setInterval(() => {
+    img.fadeOut(5000, () => {
+      img.css({
+        'background-image': 'url("' + url + '?t=' + count++ + '")'
+      });
+      img.fadeIn(5000);
+    })
+  }, refreshRate);
+
+</script>
+</body>
+</html>

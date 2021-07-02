@@ -177,7 +177,8 @@ Current settings and their meaning:
 | discovery_ip               | the static IP address of the PC (only in 'manual' network mode) |
 | display_driver             | 'default', 'pi7' or path to the driver install executable |
 | display_rotation           | one of: 0 (default), 90, 180, 270 |
-| display_screensaver        | 'disabled' or screensaver file |
+| display_screensaver        | 'disabled', 'custom', screensaver file or URL |
+| display_screensaver_url    | URL used as screensaver when mode set to 'custom' |
 | display_delay              | delay for the screensaver in minutes, default=5 |
 | advanced_overclock_mode    | overclock configuration to apply, default=none |
 | advanced_overclock_consent | explicit consent to overclocking. has to be set to '1' for the overclock to be applied |

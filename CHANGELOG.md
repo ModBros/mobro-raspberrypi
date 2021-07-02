@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## v12.1 - WIP / Unreleased
 
+### Added
+
+* allow custom Url as screensaver
+* added additional screensavers
+
 ### Fixed
 * display rotation for some GoodTFT and Waveshare drivers 
 
