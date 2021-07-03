@@ -146,7 +146,7 @@ function getMiscScreensavers(): array
     return [
         'particle.html' => 'Particles (animated)',
         'snow.html' => 'Snow (animated)',
-        'njancat.html' => 'Njancat (animated)',
+        'nyancat.html' => 'Nyan Cat 🌈 (animated)',
         'mobro_boot_light.html' => 'MoBro Boot screen (light)',
         'mobro_boot_dark.html' => 'MoBro Boot screen (dark)',
         'mobro_logo_dark.html' => 'MoBro Logo',
