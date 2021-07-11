@@ -37,8 +37,8 @@ get_bootro_conf() {
 }
 
 enable_overlayfs() {
-  KERN=$(uname -r)
-  INITRD=initrd.img-"$KERN"-overlay
+  local KERN=$(uname -r)
+  local INITRD=initrd.img-"$KERN"-overlay
 
   # mount the boot partition as writable if it isn't already
   if get_bootro_now; then
@@ -46,9 +46,6 @@ enable_overlayfs() {
       echo "Unable to mount boot partition as writable - cannot enable"
       return 1
     fi
-    BOOTRO=yes
-  else
-    BOOTRO=no
   fi
 
   cat >/etc/initramfs-tools/scripts/overlay <<'EOF'
@@ -127,25 +124,16 @@ EOF
   if ! grep -q "boot=overlay" /boot/cmdline.txt; then
     sed -i /boot/cmdline.txt -e "s/^/boot=overlay /"
   fi
-
-  if [ "$BOOTRO" = "yes" ]; then
-    if ! mount -o remount,ro /boot 2>/dev/null; then
-      echo "Unable to remount boot partition as read-only"
-    fi
-  fi
 }
 
 disable_overlayfs() {
-  KERN=$(uname -r)
+  local KERN=$(uname -r)
   # mount the boot partition as writable if it isn't already
   if get_bootro_now; then
     if ! mount -o remount,rw /boot 2>/dev/null; then
       echo "Unable to mount boot partition as writable - cannot disable"
       return 1
     fi
-    BOOTRO=yes
-  else
-    BOOTRO=no
   fi
 
   # modify config.txt
@@ -154,12 +142,6 @@ disable_overlayfs() {
 
   # modify command line
   sed -i /boot/cmdline.txt -e "s/\(.*\)boot=overlay \(.*\)/\1\2/"
-
-  if [ "$BOOTRO" = "yes" ]; then
-    if ! mount -o remount,ro /boot 2>/dev/null; then
-      echo "Unable to remount boot partition as read-only"
-    fi
-  fi
 }
 
 remount_ro() {

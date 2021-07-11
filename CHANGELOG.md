@@ -13,7 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * added additional screensavers
 
 ### Fixed
-* display rotation for some GoodTFT and Waveshare drivers 
+* display rotation for some GoodTFT and Waveshare drivers
+* ethernet connection problems
 
 ## [v12](https://github.com/ModBros/mobro-raspberrypi/compare/v11.1...v12) - 2021-06-20
 

@@ -49,16 +49,18 @@ readonly FS_MOUNT_SCRIPT="$SCRIPT_DIR/fsmount.sh"
 readonly IMAGE_SPLASH="$RESOURCES_DIR/splashscreen.png"
 readonly IMAGE_FOUND="$RESOURCES_DIR/found.png"
 readonly IMAGE_NOTFOUND="$RESOURCES_DIR/notfound.png"
-readonly IMAGE_CONNECTWIFI="$RESOURCES_DIR/connectwifi.png"
+readonly IMAGE_CONNECTWIFI="$RESOURCES_DIR/wifi_connect.png"
 readonly IMAGE_DISCOVERY="$RESOURCES_DIR/discovery.png"
 readonly IMAGE_HOTSPOT="$RESOURCES_DIR/hotspot.png"
 readonly IMAGE_HOTSPOTCREATION="$RESOURCES_DIR/creatinghotspot.png"
-readonly IMAGE_WIFIFAILED="$RESOURCES_DIR/wififailed.png"
-readonly IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifisuccess.png"
-readonly IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/nowifiinterface.png"
-readonly IMAGE_ETHSUCCESS="$RESOURCES_DIR/ethsuccess.png"
+readonly IMAGE_WIFIFAILED="$RESOURCES_DIR/wifi_failed.png"
+readonly IMAGE_WIFISUCCESS="$RESOURCES_DIR/wifi_success.png"
+readonly IMAGE_NOWIFIINTERFACE="$RESOURCES_DIR/wifi_nointerface.png"
+readonly IMAGE_ETHSUCCESS="$RESOURCES_DIR/eth_success.png"
+readonly IMAGE_ETHFAILED="$RESOURCES_DIR/eth_failed.png"
+readonly IMAGE_ETHNOLINK="$RESOURCES_DIR/eth_nolink.png"
+readonly IMAGE_ETHCONNECT="$RESOURCES_DIR/eth_connect.png"
 readonly IMAGE_CONFIGURATION="$RESOURCES_DIR/applyconfig.png"
-readonly IMAGE_USBSUCCESS="$RESOURCES_DIR/ethsuccess.png"
 
 # Ports
 readonly MOBRO_PORT='42100'             # port of the MoBro desktop application
@@ -68,7 +70,7 @@ readonly AP_SSID='MoBro_Configuration'  # ssid of the created access point
 readonly LOOP_INTERVAL=60               # in seconds
 readonly AP_RETRY_WAIT=20               # how long to wait for AP to start/stop before issuing command again (in s)
 readonly AP_FAIL_WAIT=90                # how long to wait until AP creation/stopping is considered failed -> reboot (in s)
-readonly STARTUP_WIFI_WAIT=45           # seconds to wait for wifi connection on startup (if wifi configured)
+readonly STARTUP_CONNECTION_WAIT=45     # seconds to wait for network connection on startup
 
 # Global Vars
 LOOP_COUNTER=0                          # counter variable for main loop iterations
@@ -99,6 +101,10 @@ prop() {
 
 begins_with() {
     case $2 in "$1"*) true;; *) false;; esac;
+}
+
+get_network_ip() {
+  ifconfig "$1" | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'
 }
 
 wait_window() {
@@ -401,7 +407,7 @@ service_discovery() {
         # fallback: get current ip of pi to try all host in range
         log "service_discovery" "fallback"
         local pi_ip
-        pi_ip=$(ifconfig "$interface" | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' 2>>$LOG_FILE)
+        pi_ip=$(get_network_ip "$interface")
         if [[ -n $pi_ip ]]; then
             local pi_ip_1 pi_ip_2 pi_ip_3 pi_ip_4
             pi_ip_1=$(echo "$pi_ip" | cut -d . -f 1)
@@ -499,7 +505,7 @@ background_check() {
 
     # try multiple times to make sure we didn't just drop connection for a few seconds
     local response_code
-    response_code=$(curl -o /dev/null --silent --connect-timeout 5 --retry 5 --write-out '%{http_code}' "$ip:$MOBRO_PORT/discover")
+    response_code=$(curl -o /dev/null --silent --connect-timeout 10 --retry 3 --write-out '%{http_code}' "$ip:$MOBRO_PORT/discover")
     if [[ $response_code == 403 || $response_code == 200 ]]; then
         # reachable
         log "background_check" "MoBro on $ip reachable"
@@ -530,6 +536,41 @@ wait_wifi_connection() {
         sleep 5
         try_seconds=$((try_seconds + 5))
     done
+    return 1
+}
+
+wait_ip() {
+    local try_seconds=0
+    until [[ $try_seconds -ge $2 ]]; do
+        if check_network_ip_valid "$1"; then
+            return 0
+        fi
+        sleep 5
+        try_seconds=$((try_seconds + 5))
+    done
+    return 1
+}
+
+check_network_link() {
+    local operstate
+    operstate=$(cat "/sys/class/net/$1/operstate")
+    if [[ $operstate == "up" ]]; then
+        return 0;
+    fi
+    return 1;
+}
+
+check_network_ip_valid() {
+    local ip
+    ip=$(get_network_ip "$1")
+    log "check_network_ip_valid" "$1: $ip"
+    if [[ -n $ip ]]; then
+        if ! begins_with "169.254." "$ip"; then
+            return 0
+        fi
+        # The 169.254.x.x range is used when no DHCP server is found on the local network
+        # or it cannot issue a new IP address to the requesting device
+    fi
     return 1
 }
 
@@ -571,7 +612,9 @@ config_boot() {
 
 if [[ -f "$SKIP_FLAG" ]]; then
     # do not process if the service skip flag is present
+    # but start networking so we can connect via SSH
     log "startup" "skip flag for service is set"
+    sudo systemctl start dhcpcd.service
     wait_endless
 fi
 
@@ -627,24 +670,26 @@ config_boot
 
 if overlay_disabled; then
     if get_overlay_now; then
-        log "config_boot" "OverlayFS disabled but still active. disabling and rebooting"
+        log "startup" "OverlayFS disabled but still active. disabling and rebooting"
         sudo /bin/bash "$FS_MOUNT_SCRIPT" --rw root
         sudo shutdown -r now
     fi
 else
     if ! get_overlay_now; then
-        log "config_boot" "OverlayFS enabled but not active. enabling and rebooting"
+        log "startup" "OverlayFS enabled but not active. enabling and rebooting"
         sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root
         sudo shutdown -r now
     fi
 fi
 
+# from this point onwards, we require networking -> start dhcpcd
+log "startup" "starting dhcpcd service"
+sudo systemctl start dhcpcd.service
+
 # handle case if no connected display is found
 if [[ $NO_SCREEN == 1 ]]; then
     log "startup" "no screen found - waiting for configuration"
-    if [[ $NETWORK_MODE == "wifi" ]]; then
-        access_point
-    fi
+    access_point
     wait_endless
 fi
 
@@ -663,7 +708,7 @@ show_image $IMAGE_SPLASH 7
 NETWORK_MODE=$(prop 'network_mode' $MOBRO_CONFIG_FILE)
 if [[ -z "$NETWORK_MODE" ]]; then
     log "startup" "no network mode in config, trying to determine connection"
-    if [[ $(grep up /sys/class/net/*/operstate | grep eth0 -c) -gt 0 ]]; then
+    if check_network_link "eth0"; then
         NETWORK_MODE='eth'
     else
         NETWORK_MODE='wifi'
@@ -671,8 +716,15 @@ if [[ -z "$NETWORK_MODE" ]]; then
 fi
 log "startup" "network mode set to $NETWORK_MODE"
 
+NETWORK_INTERFACE=''
 case $NETWORK_MODE in
-"wifi")
+wifi) NETWORK_INTERFACE='wlan0' ;;
+eth) NETWORK_INTERFACE='eth0' ;;
+usb) NETWORK_INTERFACE='usb0' ;;
+esac
+
+case $NETWORK_MODE in
+wifi)
     # check for wifi interface
     if [[ $(ifconfig -a | grep wlan -c) -lt 1 ]]; then
         log "startup" "no wifi interface detected, aborting"
@@ -691,18 +743,17 @@ case $NETWORK_MODE in
         access_point
     fi
 
-    show_image $IMAGE_CONNECTWIFI
+    show_image $IMAGE_CONNECTWIFI 2
 
     log "startup" "waiting for wifi connection to '$ssid'..."
-    if ! wait_wifi_connection $STARTUP_WIFI_WAIT; then
-        log "startup" "failed to connect to '$ssid' after $STARTUP_WIFI_WAIT seconds"
-        log "startup" "restarting wlan0 interface, reconfiguring wpa and trying again"
+    if ! wait_wifi_connection $STARTUP_CONNECTION_WAIT; then
+        log "startup" "failed to connect to '$ssid', restarting wlan0, reconfiguring wpa and trying again"
         {
             sudo ifconfig wlan0 down
             sudo ifconfig wlan0 up
             sudo wpa_cli -i wlan0 reconfigure
         } &>>$LOG_FILE
-        if ! wait_wifi_connection $STARTUP_WIFI_WAIT; then
+        if ! wait_wifi_connection $STARTUP_CONNECTION_WAIT; then
             log "startup" "couldn't connect to wifi network '$ssid'"
             show_image $IMAGE_WIFIFAILED 10
             access_point
@@ -711,21 +762,39 @@ case $NETWORK_MODE in
 
     log "startup" "connected to wifi network '$ssid'"
     show_image $IMAGE_WIFISUCCESS 3
+    ;;
 
-    # now search the network for the MoBro desktop application
-    service_discovery
-    ;;
-"eth")
+eth|usb)
+    # check for network link
+    while ! check_network_link $NETWORK_INTERFACE; do
+        show_image $IMAGE_ETHNOLINK
+        sleep 2
+    done
+
+    show_image $IMAGE_ETHCONNECT 2
+
+    if ! check_network_ip_valid $NETWORK_INTERFACE; then
+        log "startup" "$NETWORK_INTERFACE not connected correctly, re-negotiate and try again"
+        {
+            sudo systemctl restart dhcpcd.service
+            sudo ethtool -r eth0
+            sleep 5
+        } &>>$LOG_FILE
+
+        if ! (wait_ip $NETWORK_INTERFACE $STARTUP_CONNECTION_WAIT); then
+            log "startup" "couldn't connect to $NETWORK_MODE network"
+            show_image $IMAGE_ETHFAILED 20
+            sudo shutdown -r now
+        fi
+    fi
+
     show_image $IMAGE_ETHSUCCESS 3
-    # search network for application
-    service_discovery
-    ;;
-"usb")
-    show_image $IMAGE_USBSUCCESS 3
-    # search network for application
-    service_discovery
     ;;
 esac
+
+# search network for application
+log "startup" "connected to $NETWORK_INTERFACE"
+service_discovery
 
 # ====================================================================================================================
 # Main Loop
@@ -737,16 +806,13 @@ while true; do
     LOOP_COUNTER=$((LOOP_COUNTER + 1))
 
     case $NETWORK_MODE in
-    "wifi")
+    wifi)
         while ! wait_wifi_connection 15; do
           show_image $IMAGE_CONNECTWIFI
         done
         background_check
         ;;
-    "eth")
-        background_check
-        ;;
-    "usb")
+    eth|usb)
         background_check
         ;;
     esac

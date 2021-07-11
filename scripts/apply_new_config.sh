@@ -109,6 +109,11 @@ is_pizero() {
    return $?
 }
 
+is_pifour() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F]3[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
 set_config_var() {
   log "configuration" "setting $1 to $2"
   lua - "$1" "$2" "$3" <<EOF > "$3.bak"
@@ -355,13 +360,13 @@ network_config() {
 
 display_config() {
     log "configuration" "starting display driver configuration"
-    local driver rotation
+    local driver rotation rotation_val
     driver=$(prop 'display_driver' "$1")
     rotation=$(prop 'display_rotation' "$1")
     if [[ -z "$rotation" ]]; then
         rotation=0
     fi
-
+    rotation_val=$((rotation / 90))
     case "$driver" in
     "")
         log "configuration" "no driver set"
@@ -369,18 +374,21 @@ display_config() {
     default)
         log "configuration" "display driver: default"
         log "configuration" "display rotation: $rotation"
-        set_config_var display_rotate "$((rotation / 90))" "$CONFIG_TXT"
         cat "$FBTURBO_CONFIG" >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
         sudo rm -f /etc/X11/xorg.conf.d/*
+        if [[ $rotation_val == 0 ]]; then
+            clear_config_var display_rotate "$CONFIG_TXT"
+        else
+            set_config_var display_rotate "$rotation_val" "$CONFIG_TXT"
+        fi
         ;;
     pi7)
         log "configuration" "display driver: pi 7"
         log "configuration" "display rotation: $rotation"
-        local rotation_value=$((rotation / 90))
-        if [[ $rotation_value == 0 || $rotation_value == 2 ]]; then
-            set_config_var lcd_rotate "$rotation_value" "$CONFIG_TXT"
+        if [[ $rotation_val == 0 || $rotation_val == 2 ]]; then
+            set_config_var lcd_rotate "$rotation_val" "$CONFIG_TXT"
         else
-            set_config_var display_rotate "$rotation_value" "$CONFIG_TXT"
+            set_config_var display_rotate "$rotation_val" "$CONFIG_TXT"
         fi
         ;;
     *)
@@ -524,6 +532,9 @@ fi
 # enable OverlayFS again if not disabled
 if [[ $(prop 'advanced_fs_dis_overlayfs' "$1") != "1" ]]; then
     log "configuration" "enabling OverlayFS"
+    sudo dhcpcd --release
+    sudo systemctl stop dhcpcd
+    sudo rm -rf /var/lib/dhcpcd5/*
     sudo /bin/bash "$FS_MOUNT_SCRIPT" --ro root &>>$LOG_FILE
 fi
 

@@ -223,6 +223,11 @@ function isPiTwo(): bool
     return shell_exec('grep -c "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]04[0-9a-fA-F]$" /proc/cpuinfo') > 0;
 }
 
+function isPiFour(): bool
+{
+    return shell_exec('grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F]3[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo') > 0;
+}
+
 function overclockSupported(): bool
 {
     return isPiZero() || isPiOne() || isPiTwo();

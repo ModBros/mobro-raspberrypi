@@ -56,3 +56,14 @@ rm -f /mobro/mobro_configtxt
 # delete cache + bash history
 rm -rf /home/modbros/.cache/*
 : >/home/modbros/.bash_history
+
+# enable overlayfs
+sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --rw mobro
+sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --ro root
+
+# clean dhcp leases
+sudo dhcpcd --release
+sudo systemctl stop dhcpcd
+sudo rm -rf /var/lib/dhcpcd5/*
+
+sudo shutdown -h now

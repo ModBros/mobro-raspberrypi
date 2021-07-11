@@ -25,11 +25,21 @@ set_bash_prompt() {
   export PS1="${orange}\u@\h${white}[${ofs_color}${ofs_mode}${white}|${boot_color}${boot_mode}${white}]:${path}\w${white}\$ "
 }
 
+set_default_fun() {
+  sudo rm -f /mobro/skip_service
+  sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --rw mobro
+  sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --ro root
+  sudo dhcpcd --release
+  sudo systemctl stop dhcpcd
+  sudo rm -rf /var/lib/dhcpcd5/*
+  sudo reboot
+}
+
 alias fsmount='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh'
 alias status='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --status'
 alias set_boot_configurable='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --rw boot'
 alias set_root_configurable='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --rw root && sudo touch /mobro/skip_service && sudo reboot'
-alias set_default='sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --ro root && sudo /home/modbros/mobro-raspberrypi/scripts/fsmount.sh --rw mobro && sudo rm -f /mobro/skip_service && sudo reboot'
+alias set_default='set_default_fun'
 
 PROMPT_COMMAND=set_bash_prompt
 
