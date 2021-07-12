@@ -83,7 +83,7 @@ include '../util.php';
 <script>
   particlesJS("particles-js", {
     "particles": {
-      "number": {"value": 400, "density": {"enable": true, "value_area": 800}},
+      "number": {"value": 200, "density": {"enable": true, "value_area": 800}},
       "color": {"value": "#fff"},
       "shape": {
         "type": "circle",
