@@ -27,3 +27,4 @@ rng-tools
 secure-delete
 fbi
 busybox-syslogd
+upower
