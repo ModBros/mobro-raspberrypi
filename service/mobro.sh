@@ -334,6 +334,41 @@ try_ip() {
     fi
 }
 
+check_screensaver() {
+    # check if screensaver is configured
+    local screensaver
+    screensaver=$(prop 'display_screensaver' $MOBRO_CONFIG_FILE)
+    if [[ -z $screensaver || $screensaver == "disabled" ]]; then
+        # no screensaver configured
+        return
+    fi
+
+    if [[ $screensaver == "custom" ]]; then
+        screensaver=$(prop 'display_screensaver_url' $MOBRO_CONFIG_FILE)
+        if ! begins_with "http" "$screensaver"; then
+            screensaver="https://$screensaver";
+        fi
+    fi
+
+    # screensaver configured -> check delay
+    local delay
+    delay=$(prop 'display_delay' $MOBRO_CONFIG_FILE)
+    if [[ -n $delay ]]; then
+        local diff now
+        now=$(date +%s)
+        diff=$((now - LAST_CONNECTED))
+        delay=$((delay * 60))
+        log "screensaver" "delay: $diff/$delay"
+        if [[ $diff -gt $delay ]]; then
+            # delay reached -> show
+            show_screensaver "$screensaver"
+        fi
+    else
+        # no delay -> just show screensaver
+        show_screensaver "$screensaver"
+    fi
+}
+
 service_discovery() {
 
     echo "0" >$MOBRO_FOUND_FLAG
@@ -362,7 +397,8 @@ service_discovery() {
         else
             log "service_discovery" "no MoBro application found on static ip $ip"
             if [[ $SCREENSAVER == 0 ]]; then
-                show_image $IMAGE_NOTFOUND
+                show_image $IMAGE_NOTFOUND 5
+                check_screensaver
             fi
         fi
         return
@@ -454,42 +490,8 @@ service_discovery() {
         truncate -s 0 $HOSTS_FILE
         if [[ $SCREENSAVER == 0 ]]; then
             show_image $IMAGE_NOTFOUND 5
+            check_screensaver
         fi
-    fi
-}
-
-check_screensaver() {
-    # check if screensaver is configured
-    local screensaver
-    screensaver=$(prop 'display_screensaver' $MOBRO_CONFIG_FILE)
-    if [[ -z $screensaver || $screensaver == "disabled" ]]; then
-        # no screensaver configured
-        return
-    fi
-
-    if [[ $screensaver == "custom" ]]; then
-        screensaver=$(prop 'display_screensaver_url' $MOBRO_CONFIG_FILE)
-        if ! begins_with "http" "$screensaver"; then
-            screensaver="https://$screensaver";
-        fi
-    fi
-
-    # screensaver configured -> check delay
-    local delay
-    delay=$(prop 'display_delay' $MOBRO_CONFIG_FILE)
-    if [[ -n $delay ]]; then
-        local diff now
-        now=$(date +%s)
-        diff=$((now - LAST_CONNECTED))
-        delay=$((delay * 60))
-        log "screensaver" "delay: $diff/$delay"
-        if [[ $diff -gt $delay ]]; then
-            # delay reached -> show
-            show_screensaver "$screensaver"
-        fi
-    else
-        # no delay -> just show screensaver
-        show_screensaver "$screensaver"
     fi
 }
 
