@@ -172,18 +172,9 @@ configtxt_manual() {
         log "configuration" "given manual config.txt file '$1' does not exist - skipping"
         return
     fi
-    local line key val
-    while read -r line; do
-        log "configuration" "processing config.txt line '$line'"
-        if [[ -z "$line" ]]; then
-          continue
-        fi
-        key=$( echo "$line" | cut -d '=' -f1 | sed 's/ //g')
-        val=$( echo "$line" | cut -d '=' -f2 | sed 's/ //g')
-        if [[ -n "$key" && -n "$val" ]]; then
-            set_config_var "$key" "$val" "$CONFIG_TXT"
-        fi
-    done <"$1"
+    log "configuration" "adding manual entries to config.txt:"
+    cat -n "$1" &>>$LOG_FILE
+    cat "$1" >>$CONFIG_TXT
 }
 
 overclock() {

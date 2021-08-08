@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Fixed
 * usage of Wi-Fi SSIDs containing spaces
+* application of custom config.txt entries
 
 ## [v12.1](https://github.com/ModBros/mobro-raspberrypi/compare/v12...v12.1) - 2021-07-12
 
