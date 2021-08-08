@@ -58,7 +58,7 @@ log() {
 }
 
 prop() {
-    grep "$1=" "$2" | cut -d '=' -f2 | sed 's/ //g'
+    grep "$1=" "$2" | cut -d '=' -f2
 }
 
 add_wpa() {
@@ -77,17 +77,6 @@ get_overlay_now() {
 
 get_bootro_now() {
     findmnt /boot | grep -q " ro,"
-}
-
-prop_changed() {
-    local prop1 prop2
-    prop1=$(prop "$1" "$2")
-    prop2=$(prop "$1" "$3")
-    if [ "$prop1" != "$prop2" ]; then
-        return 0;
-    else
-        return 1;
-    fi
 }
 
 is_pione() {

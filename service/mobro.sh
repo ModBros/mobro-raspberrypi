@@ -96,7 +96,7 @@ log() {
 }
 
 prop() {
-    grep "$1=" "$2" | cut -d '=' -f2 | sed 's/ //g'
+    grep "$1=" "$2" | cut -d '=' -f2
 }
 
 begins_with() {
