@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 * Significantly reduced time until screensaver is shown after booting up
+* Added modbros user to video group
 
 ### Fixed
 * usage of Wi-Fi SSIDs containing spaces

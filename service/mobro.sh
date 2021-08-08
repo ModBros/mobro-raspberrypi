@@ -632,6 +632,9 @@ done
 log "startup" "Pi Model: $PI_MODEL"
 log "startup" "Version: $VERSION"
 
+log "startup" "Current configuration:"
+cat -n "$MOBRO_CONFIG_FILE" | sed '/network_pw/d' &>>$LOG_FILE
+
 # env vars
 export DISPLAY=:0
 

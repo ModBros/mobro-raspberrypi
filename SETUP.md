@@ -26,6 +26,7 @@ Since there's no need for the default 'pi' user any more we will remove it.
 ```bash
 adduser modbros
 usermod -aG sudo modbros
+usermod -aG video modbros
 userdel -r -f pi
 ```
 

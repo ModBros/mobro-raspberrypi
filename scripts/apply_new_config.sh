@@ -497,6 +497,12 @@ if [[ -n "$2" ]]; then
     configtxt_manual "$2"
 fi
 
+log "configuration" "new config.txt file:"
+cat -n "$CONFIG_TXT" &>>$LOG_FILE
+
+log "configuration" "new cmdline.txt file:"
+cat -n "$CMDLINE_TXT" &>>$LOG_FILE
+
 if [ "$1" = "$MOBRO_CONFIG_BOOT" ]; then
     log "configuration" "just applied reboot configuration - removing"
     rm -f "$MOBRO_CONFIG_BOOT"
