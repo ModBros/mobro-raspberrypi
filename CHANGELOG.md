@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## Unreleased
+## [v12.2](https://github.com/ModBros/mobro-raspberrypi/compare/v12.1...v12.2) - 2021-08-10
 
 ### Changed
 * Significantly reduced time until screensaver is shown after booting up
