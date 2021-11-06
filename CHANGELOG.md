@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [v12.3](https://github.com/ModBros/mobro-raspberrypi/compare/v12.2...v12.3) - WIP
+
+### Added
+* support for the new Raspberry Pi Zero 2 W
+* resolution selection for displays connected over HDMI
+
+### Changed
+* updated included display driver repositories
+* updated to the latest version of Raspberry Pi OS
+* replaced deprecated 'display_rotate' with 'display_hdmi_rotate' and 'display_lcd_rotate' 
+
 ## [v12.2](https://github.com/ModBros/mobro-raspberrypi/compare/v12.1...v12.2) - 2021-08-10
 
 ### Changed
