@@ -395,7 +395,7 @@ $ssids = array_unique($ssids);
                       >Wireless
                       </option>
                         <?php
-                        if (isPiZero()) {
+                        if (isPiZero1() || isPiZero2()) {
                             echo '<option data-content="<span><i class=\'fab fa-usb mr-2\'></i></span> USB" value="usb"';
                             if ($network_mode == 'usb') echo 'selected="selected"';
                             echo '>USB</option>';

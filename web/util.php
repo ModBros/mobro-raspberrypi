@@ -239,6 +239,11 @@ function isPiZero1(): bool
     return shell_exec('grep -c "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[9cC][0-9a-fA-F]$" /proc/cpuinfo') > 0;
 }
 
+function isPiZero2(): bool
+{
+    return shell_exec('grep -c "^Raspberry Pi Zero 2 Rev .*$" /proc/device-tree/model') > 0;
+}
+
 function isPiOne(): bool
 {
     $isPiOne = shell_exec('grep -c "^Revision\s*:\s*00[0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo') > 0;
