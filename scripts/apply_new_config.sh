@@ -352,14 +352,28 @@ display_config() {
         log "configuration" "no driver set"
         ;;
     default)
+        local hdmi_mode
+        hdmi_mode=$(prop 'display_hdmi_mode' "$1")
         log "configuration" "display driver: default"
         log "configuration" "display rotation: $rotation"
+        log "configuration" "hdmi mode: $hdmi_mode"
         cat "$FBTURBO_CONFIG" >/usr/share/X11/xorg.conf.d/99-fbturbo.conf
         sudo rm -f /etc/X11/xorg.conf.d/*
         if [[ $rotation_val == 0 ]]; then
-            clear_config_var display_rotate "$CONFIG_TXT"
+            clear_config_var display_lcd_rotate "$CONFIG_TXT"
+            clear_config_var display_hdmi_rotate  "$CONFIG_TXT"
         else
-            set_config_var display_rotate "$rotation_val" "$CONFIG_TXT"
+            set_config_var display_lcd_rotate "$rotation_val" "$CONFIG_TXT"
+            set_config_var display_hdmi_rotate "$rotation_val" "$CONFIG_TXT"
+        fi
+        if [[ -n "$hdmi_mode" ]]; then
+            local arr
+            arr=(${hdmi_mode//:/ })
+            set_config_var hdmi_group "${arr[0]}" "$CONFIG_TXT"
+            set_config_var hdmi_mode "${arr[1]}" "$CONFIG_TXT"
+        else
+            clear_config_var hdmi_group "$CONFIG_TXT"
+            clear_config_var hdmi_mode "$CONFIG_TXT"
         fi
         ;;
     pi7)
@@ -368,7 +382,7 @@ display_config() {
         if [[ $rotation_val == 0 || $rotation_val == 2 ]]; then
             set_config_var lcd_rotate "$rotation_val" "$CONFIG_TXT"
         else
-            set_config_var display_rotate "$rotation_val" "$CONFIG_TXT"
+            set_config_var display_lcd_rotate "$rotation_val" "$CONFIG_TXT"
         fi
         ;;
     *)
@@ -397,7 +411,6 @@ persistent_logging() {
 }
 
 nosplash_config() {
-    set_config_var start_x 0 "$CONFIG_TXT"
     set_config_var disable_splash 1 "$CONFIG_TXT"
 }
 

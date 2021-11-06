@@ -55,6 +55,7 @@ $discovery_ip = getPostValOrDefault('discovery_ip', '');
 
 // display
 $display_driver = getPostValOrDefault('display_driver', '');
+$display_hdmi_mode = getPostValOrDefault('display_hdmi_mode', '');
 $display_rotation = getPostValOrDefault('display_rotation', '0');
 $display_screensaver = getPostValOrDefault('display_screensaver', 'disabled');
 $display_screensaver_url = getPostValOrDefault('display_screensaver_url', '');
@@ -82,6 +83,7 @@ $configuration_file_contents =
     "discovery_key={$discovery_key}\n" .
     "discovery_ip={$discovery_ip}\n" .
     "display_driver={$display_driver}\n" .
+    "display_hdmi_mode={$display_hdmi_mode}\n" .
     "display_rotation={$display_rotation}\n" .
     "display_screensaver={$display_screensaver}\n" .
     "display_screensaver_url={$display_screensaver_url}\n" .

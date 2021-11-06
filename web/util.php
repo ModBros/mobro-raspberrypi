@@ -179,7 +179,7 @@ function getAllScreensavers(): array
 
 function getOverClocks(): array
 {
-    if (isPiZero()) {
+    if (isPiZero1()) {
         return array(
             'none' => 'None',
             'high' => 'High: 1050MHz ARM, 450MHz core, 450MHz SDRAM, 6 overvolt',
@@ -206,7 +206,35 @@ function getOverClocks(): array
     );
 }
 
-function isPiZero(): bool
+function getSupportedHdmiModesGrouped(): array
+{
+    return [
+        'CEA' => getSupportedModes('CEA', 1),
+        'DMT' => getSupportedModes('DMT', 2)
+    ];
+}
+
+function getSupportedHdmiModes(): array
+{
+    return array_merge(
+        getSupportedModes('CEA', 1),
+        getSupportedModes('DMT', 2)
+    );
+}
+
+function getSupportedModes(string $group, int $prefix): array
+{
+    $json = shell_exec('/opt/vc/bin/tvservice -m ' . $group . ' -j');
+    $dec = json_decode($json);
+    $result = array();
+    for ($idx = 0; $idx < count($dec); $idx++) {
+        $obj = (array)$dec[$idx];
+        $result[$prefix . ':' . $obj["code"]] = $obj["width"] . 'x' . $obj["height"] . ' ' . $obj["rate"] . 'Hz (' . $obj["aspect_ratio"] . ')';
+    }
+    return $result;
+}
+
+function isPiZero1(): bool
 {
     return shell_exec('grep -c "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[9cC][0-9a-fA-F]$" /proc/cpuinfo') > 0;
 }
@@ -230,5 +258,5 @@ function isPiFour(): bool
 
 function overclockSupported(): bool
 {
-    return isPiZero() || isPiOne() || isPiTwo();
+    return isPiZero1() || isPiOne() || isPiTwo();
 }

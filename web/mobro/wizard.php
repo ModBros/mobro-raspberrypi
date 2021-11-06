@@ -233,6 +233,7 @@ $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
 $display_screensaver_url = getOrDefault($props['display_screensaver_url'], '');
 $display_delay = getOrDefault($props['display_delay'], '5');
+$display_hdmi_mode = getOrDefault($props['display_hdmi_mode'], '');
 
 // advanced
 $advanced_overclock_mode = getOrDefault($props['advanced_overclock_mode'], 'none');
@@ -494,9 +495,7 @@ $ssids = array_unique($ssids);
                       </span>
                       </div>
                       <select id="wpaInput" name="network_wpa" class="form-control selectpicker"
-                              aria-describedby="wpaInputHelp"
-                          <?php if ($network_mode != 'wifi') echo 'disabled' ?>
-                      >
+                              aria-describedby="wpaInputHelp">
                         <option value="" <?php if (empty($network_wpa)) echo 'selected="selected"' ?>>
                           Automatic
                         </option>
@@ -526,9 +525,7 @@ $ssids = array_unique($ssids);
                   <div class="col">
                     <div class="form-check">
                       <input type="checkbox" class="form-check-input" id="hiddenNetworkInput" name="network_hidden"
-                             aria-describedby="hiddenNetworkHelp" <?php if ($network_hidden == '1') echo 'checked' ?>
-                          <?php if ($network_mode != 'wifi') echo 'disabled' ?>
-                      >
+                             aria-describedby="hiddenNetworkHelp" <?php if ($network_hidden == '1') echo 'checked' ?>>
                       <label class="form-check-label form-label" for="hiddenNetworkInput">
                         <span><i class="fas fa-ghost"></i></span> Hidden wireless network
                       </label>
@@ -683,6 +680,43 @@ $ssids = array_unique($ssids);
 
               <div class="form-row mt-2">
                 <div class="col">
+                  <label class="form-check-label form-label" for="hdmiModeInput">
+                    Resolution
+                  </label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-ruler-combined"></i>
+                      </span>
+                    </div>
+                    <select id="hdmiModeInput" name="display_hdmi_mode" class="form-control selectpicker"
+                            aria-describedby="hdmiModeInputHelp">
+                      <option value="" <?php echo $display_hdmi_mode == '' ? 'selected' : '' ?>>Auto</option>
+                        <?php
+                        foreach (getSupportedHdmiModesGrouped() as $group => $modes) {
+                            if (empty($modes)) {
+                                continue;
+                            }
+                            echo '<optgroup label="' . $group . '">';
+                            foreach ($modes as $value => $label) {
+                                $selected = $display_hdmi_mode == $value ? 'selected="selected"' : '';
+                                echo '<option value="' . $value . '" ' . $selected . '>' . $label . '</option>';
+                            }
+                            echo '</optgroup>';
+                        }
+                        ?>
+                    </select>
+                  </div>
+                  <small id="hdmiModeInputHelp" class="form-text text-muted">
+                    Resolution and frequency of the connected HDMI display<br>
+                    CEA (Consumer Electronics Association): the standard typically used by TVs<br>
+                    DMT (Display Monitor Timings): the standard typically used by monitors
+                  </small>
+                </div>
+              </div>
+
+              <div class="form-row mt-2">
+                <div class="col">
                   <label class="form-check-label form-label" for="rotationInput">
                     Rotation
                   </label>
@@ -701,8 +735,7 @@ $ssids = array_unique($ssids);
                     </select>
                   </div>
                   <small id="rotationInputHelp" class="form-text text-muted">
-                    Clockwise rotation of the display in degrees (0° = no rotation)<br>
-                    Does not apply on manual driver installation!
+                    Clockwise rotation of the display in degrees (0° = no rotation)
                   </small>
                 </div>
               </div>
@@ -1109,6 +1142,11 @@ $ssids = array_unique($ssids);
                 <div class="col" id="summaryDriver"></div>
               </div>
               <div class="form-row">
+                <div class="col-1"><span><i class="fas fa-ruler-combined"></i></span></div>
+                <div class="col-4 confirmation-title">HDMI Resolution</div>
+                <div class="col" id="summaryHdmiMode"></div>
+              </div>
+              <div class="form-row">
                 <div class="col-1"><span><i class="fas fa-sync-alt"></i></span></div>
                 <div class="col-4 confirmation-title">Rotation</div>
                 <div class="col" id="summaryRotation"></div>
@@ -1294,11 +1332,12 @@ $ssids = array_unique($ssids);
   summaryPcConnMode.html($('#discovery1').prop('checked') ? 'Automatic discovery' : 'Static IP');
   summaryConKey.html($('#discovery1').prop('checked') ? $('#connectionKeyInput').val() : '<span><i class="fas fa-times"></i></span>');
   summaryIp.html($('#discovery1').prop('checked') ? '<span><i class="fas fa-times"></i></span>' : $('#staticIpInput').val());
-  $('#summaryDriver').html($('#driverInput option:selected').text())
+  $('#summaryDriver').html($('#driverInput option:selected').text());
+  $('#summaryHdmiMode').html($('#driverInput option:selected').val() == 'default' ? $('#hdmiModeInput option:selected').text() : '<span><i class="fas fa-times"></i></span>');
   $('#summaryRotation').html($('#rotationInput option:selected').text());
-  summaryScreensaver.html($('#screensaverInput option:selected').text())
-  summaryScreensaverUrl.html($('#screensaverInput option:selected').val() != 'custom' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverUrlInput').val())
-  summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val())
+  summaryScreensaver.html($('#screensaverInput option:selected').text());
+  summaryScreensaverUrl.html($('#screensaverInput option:selected').val() != 'custom' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverUrlInput').val());
+  summaryScreensaverDelay.html($('#screensaverInput option:selected').val() == 'disabled' ? '<span><i class="fas fa-times"></i></span>' : $('#screensaverDelayInput').val());
 
 
   $('#summaryNetworkMode').html($('#networkModeInput option:selected').text());
@@ -1331,13 +1370,9 @@ $ssids = array_unique($ssids);
     if (isWifi) {
       $('#ssidInput').removeAttr('disabled');
       $('#passwordInput').removeAttr('disabled');
-      $('#wpaInput').removeAttr('disabled');
-      $('#hiddenNetworkInput').removeAttr('disabled');
     } else {
       $('#ssidInput').attr('disabled', 'disabled');
       $('#passwordInput').attr('disabled', 'disabled');
-      $('#wpaInput').attr('disabled', 'disabled');
-      $('#hiddenNetworkInput').attr('disabled', 'disabled');
     }
     if (isUsb) {
       $('#networkModeUsbInfo').show();
@@ -1393,7 +1428,16 @@ $ssids = array_unique($ssids);
   $('#connectionKeyInput').on('change', _ => summaryConKey.html($('#connectionKeyInput').val()));
 
 
-  $('#driverInput').on('change', _ => $('#summaryDriver').html($('#driverInput option:selected').text()));
+  $('#driverInput').on('change', _ => {
+    $('#summaryDriver').html($('#driverInput option:selected').text());
+    let hdmi = $('#driverInput option:selected').val() == 'default';
+    $('#summaryHdmiMode').html(!hdmi ? '<span><i class="fas fa-times"></i></span>' : $('#hdmiModeInput option:selected').text());
+  });
+  $('#hdmiModeInput').on('change', _ => {
+    let hdmi = $('#driverInput option:selected').val() == 'default';
+    $('#summaryHdmiMode').html(!hdmi ? '<span><i class="fas fa-times"></i></span>' : $('#hdmiModeInput option:selected').text());
+  });
+
   $('#rotationInput').on('change', _ => $('#summaryRotation').html($('#rotationInput option:selected').text()));
   let scrensaverDelayInput = $('#screensaverDelayInput');
   let screensaverUrl = $('#screensaverUrlInput');

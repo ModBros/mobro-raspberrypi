@@ -177,6 +177,7 @@ Current settings and their meaning:
 | discovery_ip               | the static IP address of the PC (only in 'manual' network mode) |
 | display_driver             | 'default', 'pi7' or path to the driver install executable |
 | display_rotation           | one of: 0 (default), 90, 180, 270 |
+| display_hdmi_mode          | the hdmi_group and hdmi_mode seperated by ':' (e.g. 2:4) |
 | display_screensaver        | 'disabled', 'custom', screensaver file or URL |
 | display_screensaver_url    | URL used as screensaver when mode set to 'custom' |
 | display_delay              | delay for the screensaver in minutes, default=5 |
@@ -202,6 +203,7 @@ discovery_mode=auto
 discovery_key=mobro
 discovery_ip=
 display_driver=default
+display_hdmi_mode=
 display_rotation=0
 display_screensaver=clock_date.php
 display_delay=0

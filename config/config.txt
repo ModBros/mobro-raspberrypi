@@ -1,8 +1,2 @@
-temp_limit=75
-start_x=0
 dtoverlay=disable-bt
 disable_splash=1
-disable_overscan=1
-hdmi_group=0
-hdmi_drive=1
-hdmi_force_hotplug=1

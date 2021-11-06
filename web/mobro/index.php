@@ -119,6 +119,7 @@ $network_hidden = getOrDefault($props['network_hidden'], '0');
 
 // display
 $display_driver = getOrDefault($props['display_driver'], 'default');
+$display_hdmi_mode = getOrDefault($props['display_hdmi_mode'], '');
 $display_rotation = getOrDefault($props['display_rotation'], '0');
 $display_screensaver = getOrDefault($props['display_screensaver'], 'disabled');
 $display_screensaver_url = getOrDefault($props['display_screensaver_url'], '');
@@ -126,6 +127,7 @@ $display_delay = getOrDefault($props['display_delay'], '5');
 
 $drivers = getAllDrivers();
 $screensavers = getAllScreensavers();
+$resolutions = getSupportedHdmiModes();
 
 ?>
 
@@ -270,6 +272,14 @@ $screensavers = getAllScreensavers();
         <div class="col-4 confirmation-title">Driver</div>
         <div class="col">
             <?php echo $drivers[$display_driver] ?>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-1"><span><i class="fas fa-ruler-combined"></i></span></div>
+        <div class="col-4 confirmation-title">Resolution</div>
+        <div class="col">
+            <?php echo $display_driver != 'default' ? '<span><i class="fas fa-times"></i></span>' :
+                ($display_hdmi_mode == '' ? 'Auto' : $resolutions[$display_hdmi_mode]) ?>
         </div>
       </div>
       <div class="row">

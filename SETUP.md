@@ -80,6 +80,14 @@ Install all of the required dependencies. This might take a bit of time.
 apt-get -y install lighttpd php7.3-fpm libterm-readline-gnu-perl xserver-xorg xserver-xorg-video-fbturbo x11-xserver-utils xinit matchbox-window-manager libgles2-mesa chromium-browser xwit xdotool curl arp-scan util-linux procps iproute2 iw iptables net-tools hostapd dnsmasq git make feh rng-tools secure-delete fbi busybox-syslogd
 ```
 
+### User groups
+
+Add the 'www-data' user to the video group
+
+```bash
+usermod -aG video www-data
+```
+
 ### Remove unused packages
 
 We just installed the busybox in-memory logger to replace the standard syslog output. So we no longer need these
