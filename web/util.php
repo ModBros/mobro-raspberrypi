@@ -229,7 +229,8 @@ function getSupportedModes(string $group, int $prefix): array
     $result = array();
     for ($idx = 0; $idx < count($dec); $idx++) {
         $obj = (array)$dec[$idx];
-        $result[$prefix . ':' . $obj["code"]] = $obj["width"] . 'x' . $obj["height"] . ' ' . $obj["rate"] . 'Hz (' . $obj["aspect_ratio"] . ')';
+        $scan = $obj['scan'] == 'i' ? 'interlaced' : 'progressive';
+        $result[$prefix . ':' . $obj["code"]] = $obj["width"] . 'x' . $obj["height"] . ' @ ' . $obj["rate"] . 'Hz ' . $obj["aspect_ratio"] . ', ' . $scan;
     }
     return $result;
 }

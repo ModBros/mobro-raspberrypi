@@ -691,7 +691,7 @@ $ssids = array_unique($ssids);
                     </div>
                     <select id="hdmiModeInput" name="display_hdmi_mode" class="form-control selectpicker"
                             aria-describedby="hdmiModeInputHelp">
-                      <option value="" <?php echo $display_hdmi_mode == '' ? 'selected' : '' ?>>Auto</option>
+                      <option value="" <?php echo $display_hdmi_mode == '' ? 'selected' : '' ?>>Default</option>
                         <?php
                         foreach (getSupportedHdmiModesGrouped() as $group => $modes) {
                             if (empty($modes)) {

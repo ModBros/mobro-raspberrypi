@@ -279,7 +279,7 @@ $resolutions = getSupportedHdmiModes();
         <div class="col-4 confirmation-title">Resolution</div>
         <div class="col">
             <?php echo $display_driver != 'default' ? '<span><i class="fas fa-times"></i></span>' :
-                ($display_hdmi_mode == '' ? 'Auto' : $resolutions[$display_hdmi_mode]) ?>
+                ($display_hdmi_mode == '' ? 'Default' : $resolutions[$display_hdmi_mode]) ?>
         </div>
       </div>
       <div class="row">
