@@ -13,7 +13,7 @@ TEXT
 }
 
 get_load() {
-  awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else {printf "%.2f", (($2+$4-u1) * 100 / (t-t1))}; }' <(grep 'cpu ' /proc/stat) <(sleep 1;grep 'cpu ' /proc/stat)
+  top -b -n2 -p 1 | fgrep "Cpu(s)" | tail -1 | awk -F 'id,' '{ split($1, vs, ","); for (i in vs) ++count; v=vs[count]; printf "%.1f", 100 - v }'
 }
 
 get_temperature() {
@@ -35,7 +35,6 @@ get_num_processors() {
 
 case "$1" in
 --load | -l)
-  #cat <(grep 'cpu ' /proc/stat) <(sleep 0.1 && grep 'cpu ' /proc/stat) | awk -v RS="" '{printf "%.1f", ($13-$2+$15-$4)*100/($13-$2+$15-$4+$16-$5)}'
   get_load
   ;;
 --temperature | -t)
