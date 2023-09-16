@@ -2,10 +2,9 @@
 
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/ModBros/mobro-raspberrypi?label=version)
 ![GitHub](https://img.shields.io/github/license/ModBros/mobro-raspberrypi)
-[![Discord](https://img.shields.io/discord/620204412706750466?label=Discord)](https://discord.com/invite/DSNX4ds)
-[![FAQ](https://img.shields.io/badge/-FAQ-f30.svg)](https://www.mod-bros.com/en/faq/mobro)
 [![YouTube](https://img.shields.io/badge/-YouTube-red.svg)](https://www.youtube.com/channel/UCUU5DVHRzQEnGPVS5WKRg6A)
-[![Download](https://img.shields.io/badge/-Download-brightgreen.svg)](https://www.mod-bros.com/en/projects/mobro)
+[![MoBro](https://img.shields.io/badge/-MoBro-red.svg)](https://mobro.app)
+[![Discord](https://img.shields.io/discord/620204412706750466.svg?color=7389D8&labelColor=6A7EC2&logo=discord&logoColor=ffffff&style=flat-square)](https://discord.com/invite/DSNX4ds)
 
 **Official Raspberry Pi image of MoBro**
 
